@@ -24,7 +24,7 @@
 #include <libusb-1.0/libusb.h>
 
 /** Constants */
-const int VALIDITY_DEFAULT_WAIT_TIMEOUT = 5000;
+const int VALIDITY_DEFAULT_WAIT_TIMEOUT = 100;
 const unsigned char VALIDITY_SEND_ENDPOINT = 0x01;
 const unsigned char VALIDITY_RECEIVE_ENDPOINT = 0x81;
 const unsigned char VALIDITY_RECEIVE_ENDPOINT_LONG = 0x82; 
@@ -47,7 +47,8 @@ static int validity_find_device(void)
 
 /** Configuring device */
 static int validity_configure_device(void){
-	int r = libusb_control_transfer(devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 0, NULL, 0, VALIDITY_DEFAULT_WAIT_TIMEOUT); 
+	unsigned char data[] = "";
+	int r = libusb_control_transfer(devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 1, data, 0, VALIDITY_DEFAULT_WAIT_TIMEOUT); 
 	return r;
 }
 
@@ -91,7 +92,7 @@ static void validity_print_packet_long(unsigned char *data, int length){
  * if transfered < length - error
  */
 static int validity_send_data(unsigned char *data, int length){
-	validity_numerate_packet(data);
+	//validity_numerate_packet(data);
 	fprintf(stdout, "UP  : ");
 	validity_print_packet(data, length);
 	fprintf(stdout, "\n");
@@ -119,8 +120,8 @@ static int validity_receive_long_data(){
 
 static int validity_receive_data(){
 	int transferred = 0;
-	unsigned char data[50];
-	int r = libusb_bulk_transfer(devh, VALIDITY_RECEIVE_ENDPOINT, data, 50, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);
+	unsigned char data[64];
+	int r = libusb_bulk_transfer(devh, VALIDITY_RECEIVE_ENDPOINT, data, 64, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);
 	if (r < 0)
 		return r;
 	fprintf(stdout, "DOWN: ");
@@ -133,7 +134,7 @@ static int validity_swap_messages(unsigned char *data, int length){
 	int r = validity_send_data(data, length);
 	if (r != 0)
 		return r;
-	usleep(25000);
+	usleep(2000);
 	r = validity_receive_data();
 	if (r != 0)
 		return r;           
@@ -143,6 +144,33 @@ static int validity_swap_messages(unsigned char *data, int length){
 static int validity_reset_device(void){
 	unsigned char data[] = "\x01\x00\x00\x00\x01\x00";
 	int r = validity_send_data(data, (int) sizeof(data) - 1);
+	return r;
+}
+
+static int validity_cycle4(void){
+	usleep(100000);
+	unsigned char data1[] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
+	unsigned char data2[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
+	unsigned char data3[] = "\x03\x00\x00\x00\x12\x00\xF0\x1F\x00\x00\x04";
+	unsigned char data4[] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
+	unsigned char data5[] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
+	unsigned char data6[] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
+	unsigned char data7[] = "\x07\x00\x00\x00\x04\x00\x2E\x00";
+	unsigned char data8[] = "\x08\x00\x00\x00\x02\x00\x00";
+	unsigned char data9[] = "\x09\x00\x00\x00\x04\x00\x28\x00";
+	unsigned char data10[] = "\x0A\x00\x00\x00\x04\x00\x14\x00";
+        int r = 0;
+
+	r = validity_swap_messages(data1, (int) sizeof(data1) - 1); 
+	validity_swap_messages(data2, (int) sizeof(data2) - 1); 
+	validity_swap_messages(data3, (int) sizeof(data3) - 1); 
+	validity_swap_messages(data4, (int) sizeof(data4) - 1); 
+	validity_swap_messages(data5, (int) sizeof(data5) - 1); 
+	validity_swap_messages(data6, (int) sizeof(data6) - 1); 
+	validity_swap_messages(data7, (int) sizeof(data7) - 1); 
+	validity_swap_messages(data8, (int) sizeof(data8) - 1); 
+	validity_swap_messages(data9, (int) sizeof(data9) - 1); 
+	validity_swap_messages(data10, (int) sizeof(data10) - 1); 
 	return r;
 }
 
@@ -163,7 +191,7 @@ static int validity_cycle3(void){
 	unsigned char data14[] = "\x0E\x00\x00\x00\x04\x00\x14\x00";
 	unsigned char data15[] = "\x0F\x00\x00\x00\x0E\x00";
 	unsigned char data16[] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data17[] = "\x11\x00\x00\x00\x0E\x00\x00\x00";
+	unsigned char data17[] = "\x11\x00\x00\x00\x0E\x00";
 	unsigned char data18[] = "\x12\x00\x00\x00\x05\x00\x04\x00\x00\x00";
 	unsigned char data19[] = "\x13\x00\x00\x00\x05\x00\x05\x00\x00\x00";
 	unsigned char data20[] = "\x14\x00\x00\x00\x05\x00\x06\x00\x00\x00";
@@ -239,92 +267,101 @@ static int validity_cycle3(void){
 	unsigned char data90[] = "\x5A\x00\x00\x00\x05\x00\x64\x00\x18\x01";
 	unsigned char data91[] = "\x5B\x00\x00\x00\x06\x00";
 	unsigned char data92[] = "\x5C\x00\x00\x00\x05\x00\x46\x00\xF5\x00";
-	unsigned char data93[] = "\x5D\x00\x00\x00\x05\x00\x6D\x00\x32\x00";
-	unsigned char data94[] = "\x5E\x00\x00\x00\x05\x00\x6E\x00\x03\x00";
-	unsigned char data95[] = "\x5F\x00\x00\x00\x04\x00\x52\x00";
-	unsigned char data96[] = "\x60\x00\x00\x00\x05\x00\x52\x00\x20\x03";
-	unsigned char data97[] = "\x61\x00\x00\x00\x03\x00\x01\x00\x00\x00\x00\x00\x00\x01";
-	unsigned char data98[] = "\x62\x00\x00\x00\x02\x00\x00";
+	unsigned char data93[] = "\x5D\x00\x00\x00\x05\x00\x55\x00\x08\x00";
+	unsigned char data94[] = "\x5E\x00\x00\x00\x05\x00\x6D\x00\x32\x00";
+	unsigned char data95[] = "\x5F\x00\x00\x00\x05\x00\x6E\x00\x03\x00";
+	unsigned char data96[] = "\x60\x00\x00\x00\x04\x00\x52\x00";
+	unsigned char data97[] = "\x61\x00\x00\x00\x05\x00\x52\x00\x20\x03";
+	unsigned char data98[] = "\x62\x00\x00\x00\x03\x00\x01\x00\x00\x00\x00\x00\x00\x01";
 	unsigned char data99[] = "\x63\x00\x00\x00\x05\x00\x52\x00\xB4\x1E";
-	unsigned char data100[] = "\x64\x00\x00\x00\x05\x00\x55\x00\x08\x00";
-	unsigned char data101[] = "\x65\x00\x00\x00\x12\x00\x2C\x50\xFF\x00\x02";
-	unsigned char data102[] = "\x66\x00\x00\x00\x12\x00\x2E\x50\xFF\x00\x02";
-	unsigned char data103[] = "\x67\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data104[] = "\x68\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
-	unsigned char data105[] = "\x69\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x00\x00\x00\x00\x01";
-	unsigned char data106[] = "\x6A\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
-	unsigned char data107[] = "\x6B\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
-	unsigned char data108[] = "\x6C\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
-	unsigned char data109[] = "\x6D\x00\x00\x00\x13\x00\x06\x98\xFF\x00\x00\x00\x00\x00\x01";
-	unsigned char data110[] = "\x6E\x00\x00\x00\x03\x00\x64\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data111[] = "\x6F\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x00\x00\x00\x00\x01";
-	unsigned char data112[] = "\x70\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
-	unsigned char data113[] = "\x71\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x10\x00\x00\x00\x01";
-	unsigned char data114[] = "\x72\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
-	unsigned char data115[] = "\x73\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
-	unsigned char data116[] = "\x74\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
-	unsigned char data117[] = "\x75\x00\x00\x00\x03\x00\x64\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data118[] = "\x76\x00\x00\x00\x12\x00\x38\x50\xFF\x00\x01";
-	unsigned char data119[] = "\x77\x00\x00\x00\x12\x00\x0E\x50\xFF\x00\x02";
-	unsigned char data120[] = "\x78\x00\x00\x00\x12\x00\x32\x50\xFF\x00\x01";
-	unsigned char data121[] = "\x79\x00\x00\x00\x13\x00\x32\x50\xFF\x00\x12\x00\x00\x00\x01";
-	unsigned char data122[] = "\x7A\x00\x00\x00\x13\x00\x0E\x50\xFF\x00\x00\x40\x00\x00\x02";
-	unsigned char data123[] = "\x7B\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0F\x00\x00\x00\x01";
-	unsigned char data124[] = "\x7C\x00\x00\x00\x05\x00\x62\x00\x00\x00";
-	unsigned char data125[] = "\x7D\x00\x00\x00\x05\x00\x77\x00\x00\x00";
-	unsigned char data126[] = "\x7E\x00\x00\x00\x05\x00\x76\x00\x00\x00";
-	unsigned char data127[] = "\x7F\x00\x00\x00\x05\x00\x78\x00\x00\x00";
-	unsigned char data128[] = "\x80\x00\x00\x00\x03\x00\x02\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data129[] = "\x81\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data130[] = "\x82\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
-	unsigned char data131[] = "\x83\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x00\x00\x00\x00\x01";
-	unsigned char data132[] = "\x84\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
-	unsigned char data133[] = "\x85\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
-	unsigned char data134[] = "\x86\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
-	unsigned char data135[] = "\x87\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0E\x00\x00\x00\x01";
-	unsigned char data136[] = "\x88\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data137[] = "\x89\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0D\x00\x00\x00\x01";
-	unsigned char data138[] = "\x8A\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data139[] = "\x8B\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0C\x00\x00\x00\x01";
-	unsigned char data140[] = "\x8C\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data141[] = "\x8D\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0B\x00\x00\x00\x01";
-	unsigned char data142[] = "\x8E\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data143[] = "\x8F\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0A\x00\x00\x00\x01";
-	unsigned char data144[] = "\x90\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data145[] = "\x91\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x09\x00\x00\x00\x01";
-	unsigned char data146[] = "\x92\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data147[] = "\x93\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x08\x00\x00\x00\x01";
-	unsigned char data148[] = "\x94\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data149[] = "\x95\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x07\x00\x00\x00\x01";
-	unsigned char data150[] = "\x96\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data151[] = "\x97\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x00\x00\x00\x00\x01";
-	unsigned char data152[] = "\x98\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
-	unsigned char data153[] = "\x99\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x10\x00\x00\x00\x01";
-	unsigned char data154[] = "\x9A\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
-	unsigned char data155[] = "\x9B\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
-	unsigned char data156[] = "\x9C\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
-	unsigned char data157[] = "\x9D\x00\x00\x00\x13\x00\x06\x98\xFF\x00\x00\x00\x00\x00\x01";
-	unsigned char data158[] = "\x9E\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data159[] = "\x9F\x00\x00\x00\x05\x00\x77\x00\x07\x00";
-	unsigned char data160[] = "\xA0\x00\x00\x00\x05\x00\x76\x00\x12\x00";
-	unsigned char data161[] = "\xA1\x00\x00\x00\x05\x00\x78\x00\x40\x21";
-	unsigned char data162[] = "\xA2\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x14\x00\x00\x00\x01";
-	unsigned char data163[] = "\xA3\x00\x00\x00\x13\x00\x0E\x50\xFF\x00\xA4\x21\x00\x00\x02";
-	unsigned char data164[] = "\xA4\x00\x00\x00\x13\x00\x32\x50\xFF\x00\x31\x00\x00\x00\x01";
-	unsigned char data165[] = "\xA5\x00\x00\x00\x05\x00\x62\x00\x32\x00";
-	unsigned char data166[] = "\xA6\x00\x00\x00\x0E\x00";
-	unsigned char data167[] = "\xA7\x00\x00\x00\x05\x00\x62\x00\x32\x00";
-	unsigned char data168[] = "\xA8\x00\x00\x00\x04\x00\x14\x00";
-	unsigned char data169[] = "\xA9\x00\x00\x00\x04\x00\x11\x00";
-	unsigned char data170[] = "\xAA\x00\x00\x00\x05\x00\x62\x00\x32\x00";
-	unsigned char data171[] = "\xAB\x00\x00\x00\x03\x00\x14\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data100[] = "\x64\x00\x00\x00\x12\x00\x2C\x50\xFF\x00\x02";
+	unsigned char data101[] = "\x65\x00\x00\x00\x12\x00\x2E\x50\xFF\x00\x02";
+	unsigned char data102[] = "\x66\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data103[] = "\x67\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
+	unsigned char data104[] = "\x68\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x00\x00\x00\x00\x01";
+	unsigned char data105[] = "\x69\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
+	unsigned char data106[] = "\x6A\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
+	unsigned char data107[] = "\x6B\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
+	unsigned char data108[] = "\x6C\x00\x00\x00\x13\x00\x06\x98\xFF\x00\x00\x00\x00\x00\x01";
+	unsigned char data109[] = "\x6D\x00\x00\x00\x03\x00\x64\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data110[] = "\x6E\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x00\x00\x00\x00\x01";
+	unsigned char data111[] = "\x6F\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
+	unsigned char data112[] = "\x70\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x10\x00\x00\x00\x01";
+	unsigned char data113[] = "\x71\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
+	unsigned char data114[] = "\x72\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
+	unsigned char data115[] = "\x73\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
+	unsigned char data116[] = "\x74\x00\x00\x00\x03\x00\x64\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data117[] = "\x75\x00\x00\x00\x12\x00\x38\x50\xFF\x00\x01";
+	unsigned char data118[] = "\x76\x00\x00\x00\x12\x00\x0E\x50\xFF\x00\x02";
+	unsigned char data119[] = "\x77\x00\x00\x00\x12\x00\x32\x50\xFF\x00\x01";
+	unsigned char data120[] = "\x78\x00\x00\x00\x13\x00\x32\x50\xFF\x00\x12\x00\x00\x00\x01";
+	unsigned char data121[] = "\x79\x00\x00\x00\x13\x00\x0E\x50\xFF\x00\x00\x40\x00\x00\x02";
+	unsigned char data122[] = "\x7A\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0F\x00\x00\x00\x01";
+	unsigned char data123[] = "\x7B\x00\x00\x00\x05\x00\x62\x00\x00\x00";
+	unsigned char data124[] = "\x7C\x00\x00\x00\x05\x00\x77\x00\x00\x00";
+	unsigned char data125[] = "\x7D\x00\x00\x00\x05\x00\x76\x00\x00\x00";
+	unsigned char data126[] = "\x7E\x00\x00\x00\x05\x00\x78\x00\x00\x00";
+	unsigned char data127[] = "\x7F\x00\x00\x00\x03\x00\x02\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data128[] = "\x80\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data129[] = "\x81\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
+	unsigned char data130[] = "\x82\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x00\x00\x00\x00\x01";
+	unsigned char data131[] = "\x83\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
+	unsigned char data132[] = "\x84\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
+	unsigned char data133[] = "\x85\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
+	unsigned char data134[] = "\x86\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0E\x00\x00\x00\x01";
+	unsigned char data135[] = "\x87\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data136[] = "\x88\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0D\x00\x00\x00\x01";
+	unsigned char data137[] = "\x89\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data138[] = "\x8A\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0C\x00\x00\x00\x01";
+	unsigned char data139[] = "\x8B\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data140[] = "\x8C\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0B\x00\x00\x00\x01";
+	unsigned char data141[] = "\x8D\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data142[] = "\x8E\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0A\x00\x00\x00\x01";
+	unsigned char data143[] = "\x8F\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data144[] = "\x90\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x09\x00\x00\x00\x01";
+	unsigned char data145[] = "\x91\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data146[] = "\x92\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x08\x00\x00\x00\x01";
+	unsigned char data147[] = "\x93\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data148[] = "\x94\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x07\x00\x00\x00\x01";
+	unsigned char data149[] = "\x95\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data150[] = "\x96\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x00\x00\x00\x00\x01";
+	unsigned char data151[] = "\x97\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
+	unsigned char data152[] = "\x98\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x10\x00\x00\x00\x01";
+	unsigned char data153[] = "\x99\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
+	unsigned char data154[] = "\x9A\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
+	unsigned char data155[] = "\x9B\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
+	unsigned char data156[] = "\x9C\x00\x00\x00\x13\x00\x06\x98\xFF\x00\x00\x00\x00\x00\x01";
+	unsigned char data157[] = "\x9D\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data158[] = "\x9E\x00\x00\x00\x05\x00\x77\x00\x07\x00";
+	unsigned char data159[] = "\x9F\x00\x00\x00\x05\x00\x76\x00\x12\x00";
+	unsigned char data160[] = "\xA0\x00\x00\x00\x05\x00\x78\x00\xA0\x21";
+	unsigned char data161[] = "\xA1\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x14\x00\x00\x00\x01";
+	unsigned char data162[] = "\xA2\x00\x00\x00\x13\x00\x0E\x50\xFF\x00\xB4\x21\x00\x00\x02";
+	unsigned char data163[] = "\xA3\x00\x00\x00\x13\x00\x32\x50\xFF\x00\x31\x00\x00\x00\x01";
+	unsigned char data164[] = "\xA4\x00\x00\x00\x05\x00\x62\x00\x32\x00";
+	unsigned char data165[] = "\xA5\x00\x00\x00\x0E\x00";
+	unsigned char data166[] = "\xA6\x00\x00\x00\x05\x00\x62\x00\x32\x00";
+	unsigned char data167[] = "\xA7\x00\x00\x00\x04\x00\x14\x00";
+	unsigned char data168[] = "\xA8\x00\x00\x00\x04\x00\x11\x00";
+	unsigned char data169[] = "\xA9\x00\x00\x00\x05\x00\x62\x00\x32\x00";
+	unsigned char data170[] = "\xAA\x00\x00\x00\x03\x00\x14\x00\x00\x01\x00\x00\x00\x01";
+	unsigned char data171[] = "\xAB\x00\x00\x00\x04\x00\x14\x00";
 	unsigned char data172[] = "\xAC\x00\x00\x00\x04\x00\x14\x00";
-	unsigned char data173[] = "\xAD\x00\x00\x00\x04\x00\x14\x00";
-	unsigned char data174[] = "\xAE\x00\x00\x00\x0E\x00";
-	unsigned char data175[] = "\xAF\x00\x00\x00\x04\x00\x11\x00";
-	unsigned char data176[] = "\xB0\x00\x00\x00\x05\x00\x62\x00\x32\x00";
-	unsigned char data177[] = "\xB1\x00\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01";
+	unsigned char data173[] = "\xAD\x00\x00\x00\x0E\x00";
+	unsigned char data174[] = "\xAE\x00\x00\x00\x04\x00\x11\x00";
+	unsigned char data175[] = "\xAF\x00\x00\x00\x05\x00\x62\x00\x32\x00";
+	unsigned char data176[] = "\xB0\x00\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01";
+	unsigned char data177[] = "\xB1\x00\x00\x00\x16\x00";
 	unsigned char data178[] = "\xB2\x00\x00\x00\x16\x00";
+	unsigned char data179[] = "\xB3\x00\x00\x00\x16\x00";
+	unsigned char data180[] = "\xB4\x00\x00\x00\x16\x00";
+	unsigned char data181[] = "\xB5\x00\x00\x00\x16\x00";
+	unsigned char data182[] = "\xB6\x00\x00\x00\x16\x00";
+	unsigned char data183[] = "\xB7\x00\x00\x00\x16\x00";
+	unsigned char data184[] = "\xB8\x00\x00\x00\x16\x00";
+	unsigned char data185[] = "\xB9\x00\x00\x00\x16\x00";
+	unsigned char data186[] = "\xBA\x00\x00\x00\x16\x00";
+	unsigned char data187[] = "\xBB\x00\x00\x00\x16\x00";
         int r = 0;
 	validity_swap_messages(data1, (int) sizeof(data1) - 1); 
 	validity_swap_messages(data2, (int) sizeof(data2) - 1); 
@@ -341,6 +378,8 @@ static int validity_cycle3(void){
 	validity_swap_messages(data13, (int) sizeof(data13) - 1); 
 	validity_swap_messages(data14, (int) sizeof(data14) - 1); 
 	validity_swap_messages(data15, (int) sizeof(data15) - 1); 
+	r = validity_receive_long_data();
+	r = validity_receive_long_data();
 	validity_swap_messages(data16, (int) sizeof(data16) - 1); 
 	validity_swap_messages(data17, (int) sizeof(data17) - 1); 
 	validity_swap_messages(data18, (int) sizeof(data18) - 1); 
@@ -423,8 +462,8 @@ static int validity_cycle3(void){
 	validity_swap_messages(data95, (int) sizeof(data95) - 1); 
 	validity_swap_messages(data96, (int) sizeof(data96) - 1); 
 	validity_swap_messages(data97, (int) sizeof(data97) - 1); 
-	r = validity_receive_long_data();
 	validity_swap_messages(data98, (int) sizeof(data98) - 1); 
+	r = validity_receive_long_data();
 	validity_swap_messages(data99, (int) sizeof(data99) - 1); 
 	validity_swap_messages(data100, (int) sizeof(data100) - 1); 
 	validity_swap_messages(data101, (int) sizeof(data101) - 1); 
@@ -436,16 +475,16 @@ static int validity_cycle3(void){
 	validity_swap_messages(data107, (int) sizeof(data107) - 1); 
 	validity_swap_messages(data108, (int) sizeof(data108) - 1); 
 	validity_swap_messages(data109, (int) sizeof(data109) - 1); 
-	validity_swap_messages(data110, (int) sizeof(data110) - 1); 
 	r = validity_receive_long_data();
+	validity_swap_messages(data110, (int) sizeof(data110) - 1); 
 	validity_swap_messages(data111, (int) sizeof(data111) - 1); 
 	validity_swap_messages(data112, (int) sizeof(data112) - 1); 
 	validity_swap_messages(data113, (int) sizeof(data113) - 1); 
 	validity_swap_messages(data114, (int) sizeof(data114) - 1); 
 	validity_swap_messages(data115, (int) sizeof(data115) - 1); 
 	validity_swap_messages(data116, (int) sizeof(data116) - 1); 
-	validity_swap_messages(data117, (int) sizeof(data117) - 1); 
 	r = validity_receive_long_data();
+	validity_swap_messages(data117, (int) sizeof(data117) - 1); 
 	validity_swap_messages(data118, (int) sizeof(data118) - 1); 
 	validity_swap_messages(data119, (int) sizeof(data119) - 1); 
 	validity_swap_messages(data120, (int) sizeof(data120) - 1); 
@@ -456,8 +495,8 @@ static int validity_cycle3(void){
 	validity_swap_messages(data125, (int) sizeof(data125) - 1); 
 	validity_swap_messages(data126, (int) sizeof(data126) - 1); 
 	validity_swap_messages(data127, (int) sizeof(data127) - 1); 
-	validity_swap_messages(data128, (int) sizeof(data128) - 1); 
 	r = validity_receive_long_data();
+	validity_swap_messages(data128, (int) sizeof(data128) - 1); 
 	validity_swap_messages(data129, (int) sizeof(data129) - 1); 
 	validity_swap_messages(data130, (int) sizeof(data130) - 1); 
 	validity_swap_messages(data131, (int) sizeof(data131) - 1); 
@@ -465,29 +504,29 @@ static int validity_cycle3(void){
 	validity_swap_messages(data133, (int) sizeof(data133) - 1); 
 	validity_swap_messages(data134, (int) sizeof(data134) - 1); 
 	validity_swap_messages(data135, (int) sizeof(data135) - 1); 
+	r = validity_receive_long_data();
 	validity_swap_messages(data136, (int) sizeof(data136) - 1); 
-	r = validity_receive_long_data();
 	validity_swap_messages(data137, (int) sizeof(data137) - 1); 
+	r = validity_receive_long_data();
 	validity_swap_messages(data138, (int) sizeof(data138) - 1); 
-	r = validity_receive_long_data();
 	validity_swap_messages(data139, (int) sizeof(data139) - 1); 
+	r = validity_receive_long_data();
 	validity_swap_messages(data140, (int) sizeof(data140) - 1); 
-	r = validity_receive_long_data();
 	validity_swap_messages(data141, (int) sizeof(data141) - 1); 
+	r = validity_receive_long_data();
 	validity_swap_messages(data142, (int) sizeof(data142) - 1); 
-	r = validity_receive_long_data();
 	validity_swap_messages(data143, (int) sizeof(data143) - 1); 
+	r = validity_receive_long_data();
 	validity_swap_messages(data144, (int) sizeof(data144) - 1); 
-	r = validity_receive_long_data();
 	validity_swap_messages(data145, (int) sizeof(data145) - 1); 
+	r = validity_receive_long_data();
 	validity_swap_messages(data146, (int) sizeof(data146) - 1); 
-	r = validity_receive_long_data();
 	validity_swap_messages(data147, (int) sizeof(data147) - 1); 
+	r = validity_receive_long_data();
 	validity_swap_messages(data148, (int) sizeof(data148) - 1); 
-	r = validity_receive_long_data();
 	validity_swap_messages(data149, (int) sizeof(data149) - 1); 
-	validity_swap_messages(data150, (int) sizeof(data150) - 1); 
 	r = validity_receive_long_data();
+	validity_swap_messages(data150, (int) sizeof(data150) - 1); 
 	validity_swap_messages(data151, (int) sizeof(data151) - 1); 
 	validity_swap_messages(data152, (int) sizeof(data152) - 1); 
 	validity_swap_messages(data153, (int) sizeof(data153) - 1); 
@@ -495,8 +534,8 @@ static int validity_cycle3(void){
 	validity_swap_messages(data155, (int) sizeof(data155) - 1); 
 	validity_swap_messages(data156, (int) sizeof(data156) - 1); 
 	validity_swap_messages(data157, (int) sizeof(data157) - 1); 
-	validity_swap_messages(data158, (int) sizeof(data158) - 1); 
 	r = validity_receive_long_data();
+	validity_swap_messages(data158, (int) sizeof(data158) - 1); 
 	validity_swap_messages(data159, (int) sizeof(data159) - 1); 
 	validity_swap_messages(data160, (int) sizeof(data160) - 1); 
 	validity_swap_messages(data161, (int) sizeof(data161) - 1); 
@@ -504,24 +543,27 @@ static int validity_cycle3(void){
 	validity_swap_messages(data163, (int) sizeof(data163) - 1); 
 	validity_swap_messages(data164, (int) sizeof(data164) - 1); 
 	validity_swap_messages(data165, (int) sizeof(data165) - 1); 
+	r = validity_receive_long_data();
+	r = validity_receive_long_data();
 	validity_swap_messages(data166, (int) sizeof(data166) - 1); 
 	validity_swap_messages(data167, (int) sizeof(data167) - 1); 
 	validity_swap_messages(data168, (int) sizeof(data168) - 1); 
 	validity_swap_messages(data169, (int) sizeof(data169) - 1); 
 	validity_swap_messages(data170, (int) sizeof(data170) - 1); 
-	validity_swap_messages(data171, (int) sizeof(data171) - 1); 
 	r = validity_receive_long_data();
+	validity_swap_messages(data171, (int) sizeof(data171) - 1); 
 	validity_swap_messages(data172, (int) sizeof(data172) - 1); 
 	validity_swap_messages(data173, (int) sizeof(data173) - 1); 
+	r = validity_receive_long_data();
+	r = validity_receive_long_data();
 	validity_swap_messages(data174, (int) sizeof(data174) - 1); 
 	validity_swap_messages(data175, (int) sizeof(data175) - 1); 
 	validity_swap_messages(data176, (int) sizeof(data176) - 1); 
-	validity_swap_messages(data177, (int) sizeof(data177) - 1); 
 
 	int i = 0;
-	for (i; i < 500; i++)
-		validity_swap_messages(data178, (int) sizeof(data178) - 1); 
-		validity_receive_long_data();
+	for (i; i < 50; i++)
+		validity_swap_messages(data177, (int) sizeof(data177) - 1); 
+		usleep(750000);
 	return 0;
 }
 
@@ -639,13 +681,21 @@ static int validity_cycle1(void){
 		return r;                                         
 
 	r = validity_receive_long_data();
+	r = validity_receive_long_data();
 
 	r = validity_swap_messages(data16, (int) sizeof(data16) - 1);
 	if (r != 0)                                               
 		return r;                                         
+
+	r = validity_receive_long_data();
+	
 	r = validity_swap_messages(data17, (int) sizeof(data17) - 1);
 	if (r != 0)                                               
 		return r;                                         
+
+	r = validity_receive_long_data();
+	r = validity_receive_long_data();
+
 	r = validity_swap_messages(data18, (int) sizeof(data18) - 1);
 	if (r != 0)                                               
 		return r;                                         
@@ -772,14 +822,13 @@ static int validity_cycle0(void){
 	unsigned char data44[] = "\xF5\x00\x00\x00\x16\x00"; 
 
 	validity_swap_messages(data36, (int) sizeof(data36) - 1);
-	validity_swap_messages(data171, (int) sizeof(data171) - 1);
+//	validity_swap_messages(data171, (int) sizeof(data171) - 1);
 //	validity_receive_long_data();	
 
 	int i = 0;
 
-	for (i; i < 50; i++){
+	for (i; i < 10; i++){
 		validity_swap_messages(data44, (int) sizeof(data44) - 1);
-		validity_receive_long_data();
 	}
 
 	return 0; 
@@ -854,6 +903,21 @@ int main(void)
 	}
 	fprintf(stdout, "Device found!\n");
 
+	fprintf(stdout, "Checking active kernel driver...\n");
+
+	int i = 0;
+	for (i; i < 1000000; i++){
+		r = libusb_kernel_driver_active(devh, i);
+		if ( r == 1 ){
+			fprintf(stdout, "Detaching kernel driver... \n");
+			r = libusb_detach_kernel_driver(devh, 4);
+			if (r < 0)
+				fprintf(stderr, "Error detaching kernel driver!\n");
+			else
+				fprintf(stdout, "Kernel driver detached!\n");
+		}
+	}
+
 
 	fprintf(stdout, "Claiming interface...\n");
 	r = libusb_claim_interface(devh, 0);
@@ -863,7 +927,10 @@ int main(void)
 	}
 	fprintf(stdout, "claimed interface\n");
 
-
+	r = libusb_reset_device(devh);
+	if (r != 0)
+		fprintf(stdout, "Error resetting device");
+/*
 	fprintf(stdout, "Resetting device\n");
 	r = validity_reset_device();
 	if (r < 0) {
@@ -894,6 +961,7 @@ int main(void)
 		goto out;
 	}
 	fprintf(stdout, "claimed interface\n");
+*/
 /*
 	r = 
 	if (r < 0) {
@@ -903,7 +971,7 @@ int main(void)
 	fprintf(stdout, "Device reset success!");
 	goto out;
 */
-
+    
 	fprintf(stdout, "Configuring device...\n");
 	r = validity_configure_device();
         if (r < 0) {
@@ -911,9 +979,9 @@ int main(void)
 		goto out_release;
 	}
 	fprintf(stdout, "Device configured!\n");
-
+     
 	fprintf(stdout, "Entering main cycle...\n");
-	r = validity_cycle3();
+	r = validity_cycle4();
 	if (r != 0) {
 		fprintf(stderr, "got error in main cycle %d\n", r);
 		goto out_release;
