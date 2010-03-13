@@ -337,6 +337,36 @@ static void LoadImage (struct vfs_dev *dev)
 
 
 /******************************************************************************************************
+ * Debug printing routines
+ */
+
+static void dump_packet (unsigned char *data, int length)
+{
+	int i = 0;
+	for (i; i < length; i++)
+		fprintf(stdout, "0x%02X ", data[i]);
+}
+
+static void dump_image (unsigned char *data, int length)
+{
+	int i;
+
+	fprintf(stdout, "Image data, %d bytes\n", length);
+	for (i = 0; i < length; i++){
+		fprintf(stdout, "%02X ", data[i]);
+		if (i & 15 == 15){
+			int z;
+			fprintf(stdout, "                       ");
+			for (z = i - 16; z < i; z++)
+				fprintf(stdout, "%c", data[z]);
+			fprintf(stdout, "\n");
+		}
+	}
+	if (i & 15)
+		fprintf(stdout, "\n");
+}
+
+/******************************************************************************************************
  * Stuff
  */
 
@@ -355,36 +385,12 @@ static int validity_configure_device(struct vfs_dev *dev){
 	return r;
 }
 
-static void validity_print_packet(unsigned char *data, int length){
-	int i = 0;
-	for (i; i < length; i++)
-		fprintf(stdout, "0x%.2X ", data[i]);
-}
-
-static void validity_print_packet_long(unsigned char *data, int length){
-	int i = 0;
-	int z = 0;
-	int c = 0;
-
-	for (i; i < length; i++){
-		fprintf(stdout, "%.2X ", data[i]);
-		c++;
-		if (c == 16){
-			fprintf(stdout, "                       ");
-			for (z = i - 16; z < i; z++)
-				fprintf(stdout, "%c", data[z]);
-			fprintf(stdout, "\n");
-			c = 0;
-		}
-	}
-	fprintf(stdout, "\nPrinted %d bytes", length);
-}
 /** Sends data to device 
  * if transfered < length - error
  */
 static int validity_send_data(struct vfs_dev *dev, unsigned char *data, int length){
-	fprintf(stdout, "UP  : ");
-	validity_print_packet(data, length);
+	fprintf(stdout, ">>> : ");
+	dump_packet(data, length);
 	fprintf(stdout, "\n");
 
 	int transferred = 0;
@@ -402,8 +408,8 @@ static int validity_receive_long_data(struct vfs_dev *dev){
 	int r = libusb_bulk_transfer(dev->devh, VALIDITY_RECEIVE_ENDPOINT_LONG, data, 50000, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);
 	if (r < 0)
 		return r;
-	fprintf(stdout, "DOWN: \n");
-	validity_print_packet_long(data, transferred);
+	fprintf(stdout, "    : \n");
+	dump_image(data, transferred);
 	fprintf(stdout, "\n");
 	return 0;
 }
@@ -414,8 +420,8 @@ static int validity_receive_data(struct vfs_dev *dev){
 	int r = libusb_bulk_transfer(dev->devh, VALIDITY_RECEIVE_ENDPOINT, data, 64, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);
 	if (r < 0)
 		return r;
-	fprintf(stdout, "DOWN: ");
-	validity_print_packet(data, transferred);
+	fprintf(stdout, "    : ");
+	dump_packet(data, transferred);
 	fprintf(stdout, "\n");
 	return 0;
 }
