@@ -79,10 +79,10 @@ static inline unsigned short xx (int h, int l)
 static void dump_packet (unsigned char *data, int length, unsigned char *prefix)
 {
 	int i = 0;
-	printf("%s ", prefix);
+	fprintf(stdout, "%s ", prefix);
 	for (i; i < length; i++)
 		fprintf(stdout, "0x%02X ", data[i]);
-	putchar('\n');
+	fprintf(stdout, "\n");
 }
 
 static void dump_image (unsigned char *data, int length)
@@ -102,6 +102,7 @@ static void dump_image (unsigned char *data, int length)
 	}
 	if (i & 15)
 		fprintf(stdout, "\n");
+	fprintf(stdout, "\n");
 }
 
 
@@ -155,7 +156,7 @@ static int recv(struct vfs_dev *dev)
 	if ((lo(dev->seq) != dev->buf[0]) || (hi(dev->seq) != dev->buf[1])) {
 		fprintf(stderr, "*********** Seqnum mismatch, got %04x, expected %04x\n", xx(dev->buf[1],dev->buf[0]), dev->seq);
 	}
-	printf("\n");
+	fprintf(stdout, "\n");
 
 	dev->seq++;
 
@@ -223,7 +224,7 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
      00 00 16 00    - GetFingerState 
 */
 
-#define _() fprintf(stderr, "%s\n", __FUNCTION__)
+#define _() fprintf(stdout, "%s\n", __FUNCTION__)
 
 /* Reset (00 00 01 00)
  *
@@ -326,6 +327,7 @@ static int GetFingerState (struct vfs_dev *dev)
 
 static void LoadImage (struct vfs_dev *dev)
 {
+	_();
 	load(dev, dev->ibuf, &dev->ilen);
 	dump_image(dev->ibuf, dev->ilen);
 }
