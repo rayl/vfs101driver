@@ -221,9 +221,9 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
  */
 static void Reset (struct vfs_dev *dev)
 {
-	unsigned char q1[0x07] = { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00 };
+	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 };
 	//fp_dbg("");
-	swap (dev, q1, 0x07);
+	swap (dev, q1, 0x06);
 	dump (dev);
 }
 
@@ -429,12 +429,6 @@ static int validity_swap_messages(struct vfs_dev *dev, unsigned char *data, int 
 	if (r != 0)
 		return r;           
 	return 0;
-}
-
-static int validity_reset_device(struct vfs_dev *dev){
-	unsigned char data[] = "\x01\x00\x00\x00\x01\x00";
-	int r = validity_send_data(dev, data, (int) sizeof(data) - 1);
-	return r;
 }
 
 static int validity_cycle4(struct vfs_dev *dev){
@@ -1220,6 +1214,7 @@ int main(void)
 	}
 	fprintf(stdout, "claimed interface\n");
 
+	fprintf(stdout, "Resetting device...\n");
 	r = libusb_reset_device(dev->devh);
 	if (r != 0)
 		fprintf(stdout, "Error resetting device");
