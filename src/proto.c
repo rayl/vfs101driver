@@ -33,8 +33,6 @@ const unsigned char VALIDITY_RECEIVE_ENDPOINT_LONG = 0x82;
 /** Variables */
 static struct libusb_device_handle *devh = NULL;
 static struct libusb_context *ctx = NULL;
-static int packet_num_l = 1;
-static int packet_num_h = 0;
 
 
 /** Functions */
@@ -348,18 +346,6 @@ static int validity_configure_device(void){
 	return r;
 }
 
-static void validity_numerate_packet(unsigned char *data){
-	unsigned char *pNum = data;
-	*pNum = packet_num_l;
-	pNum = pNum + 1;
-	*pNum = packet_num_h;
-	packet_num_l++;
-	if (packet_num_l == 0x100){
-		packet_num_l = 0;
-		packet_num_h++;
-	}
-}
-
 static void validity_print_packet(unsigned char *data, int length){
 	int i = 0;
 	for (i; i < length; i++)
@@ -388,7 +374,6 @@ static void validity_print_packet_long(unsigned char *data, int length){
  * if transfered < length - error
  */
 static int validity_send_data(unsigned char *data, int length){
-	//validity_numerate_packet(data);
 	fprintf(stdout, "UP  : ");
 	validity_print_packet(data, length);
 	fprintf(stdout, "\n");
