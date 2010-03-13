@@ -1223,48 +1223,7 @@ int main(void)
 	r = libusb_reset_device(dev->devh);
 	if (r != 0)
 		fprintf(stdout, "Error resetting device");
-/*
-	fprintf(stdout, "Resetting device\n");
-	r = validity_reset_device(dev);
-	if (r < 0) {
-		fprintf(stderr, "Error resetting device %d\n", r);
-		goto out;
-	}
-	fprintf(stdout, "Device resetted. Begin initialization...\n");
 
-	usleep(2000000);
-	
-	libusb_release_interface(dev->devh, 0);
-	libusb_reset_device(dev->devh); 
-	libusb_close(dev->devh);
-
-	fprintf(stdout, "Searching for device...\n");
-	r = validity_find_device();
-	if (r != 0){
-		fprintf(stderr, "Can't find validity device!\n");
-		goto out;
-	}
-	fprintf(stdout, "Device found!\n");
-
-
-	fprintf(stdout, "Claiming interface...\n");
-	r = libusb_claim_interface(dev->devh, 0);
-	if (r < 0) {
-		fprintf(stderr, "usb_claim_interface error %d\n", r);
-		goto out;
-	}
-	fprintf(stdout, "claimed interface\n");
-*/
-/*
-	r = 
-	if (r < 0) {
-		fprintf(stderr, "Error resetting device");
-		goto out_release;
-	}
-	fprintf(stdout, "Device reset success!");
-	goto out;
-*/
-    
 	fprintf(stdout, "Configuring device...\n");
 	r = validity_configure_device(dev);
         if (r < 0) {
