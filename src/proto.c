@@ -27,6 +27,11 @@
 /** Constants */
 const unsigned char VALIDITY_RECEIVE_ENDPOINT_LONG = 0x82; 
 
+/* The device seems to send back 16 frames of 292 bytes at a time */
+const unsigned int PKTSIZE = 292;
+const unsigned int N_PKTS = 16;
+
+
 
 /******************************************************************************************************
  * Context structure for this driver.
@@ -87,10 +92,10 @@ static void dump_image (unsigned char *data, int length)
 {
 	int i;
 
-	fprintf(stdout, "Image data, %d bytes\n", length);
+	fprintf(stdout, "Image data, %d bytes%s\n", length, (length%PKTSIZE) ? " (incomplete packet(s)?)" : "");
 	for (i = 0; i < length; i++){
 		fprintf(stdout, "%02X ", data[i]);
-		if (i & 15 == 15){
+		if ((i & 15) == 15){
 			int z;
 			fprintf(stdout, "                       ");
 			for (z = i - 16; z < i; z++)
@@ -160,10 +165,6 @@ static int recv(struct vfs_dev *dev)
 
 	return 0;
 }
-
-/* The device seems to send back 16 frames of 292 bytes at a time */
-#define PKTSIZE 292
-#define N_PKTS   16
 
 static int load (struct vfs_dev *dev, unsigned char *buf, int *len)
 {
@@ -365,10 +366,7 @@ static int GetFingerState (struct vfs_dev *dev)
 static void LoadImage (struct vfs_dev *dev)
 {
 	load(dev, dev->ibuf, &dev->ilen);
-	//fp_dbg("  Got %d bytes", dev->ilen);
-	if (dev->ilen % PKTSIZE) {
-		//fp_err("  incomplete packet?");
-	}
+	dump_image(dev->ibuf, dev->ilen);
 }
 
 
@@ -378,14 +376,7 @@ static void LoadImage (struct vfs_dev *dev)
 
 
 static int validity_receive_long_data(struct vfs_dev *dev){
-	int transferred = 0;
-	unsigned char data[50000];
-	int r = libusb_bulk_transfer(dev->devh, VALIDITY_RECEIVE_ENDPOINT_LONG, data, 50000, &transferred, BULK_TIMEOUT);
-	if (r < 0)
-		return r;
-	fprintf(stdout, "    : \n");
-	dump_image(data, transferred);
-	fprintf(stdout, "\n");
+	LoadImage(dev);
 	return 0;
 }
 
