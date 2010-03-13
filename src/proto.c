@@ -338,15 +338,6 @@ static void LoadImage (struct vfs_dev *dev)
  */
 
 
-static int validity_receive_long_data(struct vfs_dev *dev){
-	LoadImage(dev);
-	return 0;
-}
-
-static int validity_swap_messages(struct vfs_dev *dev, unsigned char *data, int length){
-	return swap(dev, data, length);
-}
-
 static int validity_cycle4(struct vfs_dev *dev){
 	usleep(100000);
 	unsigned char data1[] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
@@ -361,16 +352,16 @@ static int validity_cycle4(struct vfs_dev *dev){
 	unsigned char data10[] = "\x0A\x00\x00\x00\x04\x00\x14\x00";
         int r = 0;
 
-	r = validity_swap_messages(dev, data1, (int) sizeof(data1) - 1); 
-	validity_swap_messages(dev, data2, (int) sizeof(data2) - 1); 
-	validity_swap_messages(dev, data3, (int) sizeof(data3) - 1); 
-	validity_swap_messages(dev, data4, (int) sizeof(data4) - 1); 
-	validity_swap_messages(dev, data5, (int) sizeof(data5) - 1); 
-	validity_swap_messages(dev, data6, (int) sizeof(data6) - 1); 
-	validity_swap_messages(dev, data7, (int) sizeof(data7) - 1); 
-	validity_swap_messages(dev, data8, (int) sizeof(data8) - 1); 
-	validity_swap_messages(dev, data9, (int) sizeof(data9) - 1); 
-	validity_swap_messages(dev, data10, (int) sizeof(data10) - 1); 
+	r = swap(dev, data1, (int) sizeof(data1) - 1); 
+	swap(dev, data2, (int) sizeof(data2) - 1); 
+	swap(dev, data3, (int) sizeof(data3) - 1); 
+	swap(dev, data4, (int) sizeof(data4) - 1); 
+	swap(dev, data5, (int) sizeof(data5) - 1); 
+	swap(dev, data6, (int) sizeof(data6) - 1); 
+	swap(dev, data7, (int) sizeof(data7) - 1); 
+	swap(dev, data8, (int) sizeof(data8) - 1); 
+	swap(dev, data9, (int) sizeof(data9) - 1); 
+	swap(dev, data10, (int) sizeof(data10) - 1); 
 	return r;
 }
 
@@ -563,206 +554,206 @@ static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data186[] = "\xBA\x00\x00\x00\x16\x00";
 	unsigned char data187[] = "\xBB\x00\x00\x00\x16\x00";
         int r = 0;
-	validity_swap_messages(dev, data1, (int) sizeof(data1) - 1); 
-	validity_swap_messages(dev, data2, (int) sizeof(data2) - 1); 
-	validity_swap_messages(dev, data3, (int) sizeof(data3) - 1); 
-	validity_swap_messages(dev, data4, (int) sizeof(data4) - 1); 
-	validity_swap_messages(dev, data5, (int) sizeof(data5) - 1); 
-	validity_swap_messages(dev, data6, (int) sizeof(data6) - 1); 
-	validity_swap_messages(dev, data7, (int) sizeof(data7) - 1); 
-	validity_swap_messages(dev, data8, (int) sizeof(data8) - 1); 
-	validity_swap_messages(dev, data9, (int) sizeof(data9) - 1); 
-	validity_swap_messages(dev, data10, (int) sizeof(data10) - 1); 
-	validity_swap_messages(dev, data11, (int) sizeof(data11) - 1); 
-	validity_swap_messages(dev, data12, (int) sizeof(data12) - 1); 
-	validity_swap_messages(dev, data13, (int) sizeof(data13) - 1); 
-	validity_swap_messages(dev, data14, (int) sizeof(data14) - 1); 
-	validity_swap_messages(dev, data15, (int) sizeof(data15) - 1); 
-	r = validity_receive_long_data(dev);
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data16, (int) sizeof(data16) - 1); 
-	validity_swap_messages(dev, data17, (int) sizeof(data17) - 1); 
-	validity_swap_messages(dev, data18, (int) sizeof(data18) - 1); 
-	validity_swap_messages(dev, data19, (int) sizeof(data19) - 1); 
-	validity_swap_messages(dev, data20, (int) sizeof(data20) - 1); 
-	validity_swap_messages(dev, data21, (int) sizeof(data21) - 1); 
-	validity_swap_messages(dev, data22, (int) sizeof(data22) - 1); 
-	validity_swap_messages(dev, data23, (int) sizeof(data23) - 1); 
-	validity_swap_messages(dev, data24, (int) sizeof(data24) - 1); 
-	validity_swap_messages(dev, data25, (int) sizeof(data25) - 1); 
-	validity_swap_messages(dev, data26, (int) sizeof(data26) - 1); 
-	validity_swap_messages(dev, data27, (int) sizeof(data27) - 1); 
-	validity_swap_messages(dev, data28, (int) sizeof(data28) - 1); 
-	validity_swap_messages(dev, data29, (int) sizeof(data29) - 1); 
-	validity_swap_messages(dev, data30, (int) sizeof(data30) - 1); 
-	validity_swap_messages(dev, data31, (int) sizeof(data31) - 1); 
-	validity_swap_messages(dev, data32, (int) sizeof(data32) - 1); 
-	validity_swap_messages(dev, data33, (int) sizeof(data33) - 1); 
-	validity_swap_messages(dev, data34, (int) sizeof(data34) - 1); 
-	validity_swap_messages(dev, data35, (int) sizeof(data35) - 1); 
-	validity_swap_messages(dev, data36, (int) sizeof(data36) - 1); 
-	validity_swap_messages(dev, data37, (int) sizeof(data37) - 1); 
-	validity_swap_messages(dev, data38, (int) sizeof(data38) - 1); 
-	validity_swap_messages(dev, data39, (int) sizeof(data39) - 1); 
-	validity_swap_messages(dev, data40, (int) sizeof(data40) - 1); 
-	validity_swap_messages(dev, data41, (int) sizeof(data41) - 1); 
-	validity_swap_messages(dev, data42, (int) sizeof(data42) - 1); 
-	validity_swap_messages(dev, data43, (int) sizeof(data43) - 1); 
-	validity_swap_messages(dev, data44, (int) sizeof(data44) - 1); 
-	validity_swap_messages(dev, data45, (int) sizeof(data45) - 1); 
-	validity_swap_messages(dev, data46, (int) sizeof(data46) - 1); 
-	validity_swap_messages(dev, data47, (int) sizeof(data47) - 1); 
-	validity_swap_messages(dev, data48, (int) sizeof(data48) - 1); 
-	validity_swap_messages(dev, data49, (int) sizeof(data49) - 1); 
-	validity_swap_messages(dev, data50, (int) sizeof(data50) - 1); 
-	validity_swap_messages(dev, data51, (int) sizeof(data51) - 1); 
-	validity_swap_messages(dev, data52, (int) sizeof(data52) - 1); 
-	validity_swap_messages(dev, data53, (int) sizeof(data53) - 1); 
-	validity_swap_messages(dev, data54, (int) sizeof(data54) - 1); 
-	validity_swap_messages(dev, data55, (int) sizeof(data55) - 1); 
-	validity_swap_messages(dev, data56, (int) sizeof(data56) - 1); 
-	validity_swap_messages(dev, data57, (int) sizeof(data57) - 1); 
-	validity_swap_messages(dev, data58, (int) sizeof(data58) - 1); 
-	validity_swap_messages(dev, data59, (int) sizeof(data59) - 1); 
-	validity_swap_messages(dev, data60, (int) sizeof(data60) - 1); 
-	validity_swap_messages(dev, data61, (int) sizeof(data61) - 1); 
-	validity_swap_messages(dev, data62, (int) sizeof(data62) - 1); 
-	validity_swap_messages(dev, data63, (int) sizeof(data63) - 1); 
-	validity_swap_messages(dev, data64, (int) sizeof(data64) - 1); 
-	validity_swap_messages(dev, data65, (int) sizeof(data65) - 1); 
-	validity_swap_messages(dev, data66, (int) sizeof(data66) - 1); 
-	validity_swap_messages(dev, data67, (int) sizeof(data67) - 1); 
-	validity_swap_messages(dev, data68, (int) sizeof(data68) - 1); 
-	validity_swap_messages(dev, data69, (int) sizeof(data69) - 1); 
-	validity_swap_messages(dev, data70, (int) sizeof(data70) - 1); 
-	validity_swap_messages(dev, data71, (int) sizeof(data71) - 1); 
-	validity_swap_messages(dev, data72, (int) sizeof(data72) - 1); 
-	validity_swap_messages(dev, data73, (int) sizeof(data73) - 1); 
-	validity_swap_messages(dev, data74, (int) sizeof(data74) - 1); 
-	validity_swap_messages(dev, data75, (int) sizeof(data75) - 1); 
-	validity_swap_messages(dev, data76, (int) sizeof(data76) - 1); 
-	validity_swap_messages(dev, data77, (int) sizeof(data77) - 1); 
-	validity_swap_messages(dev, data78, (int) sizeof(data78) - 1); 
-	validity_swap_messages(dev, data79, (int) sizeof(data79) - 1); 
-	validity_swap_messages(dev, data80, (int) sizeof(data80) - 1); 
-	validity_swap_messages(dev, data81, (int) sizeof(data81) - 1); 
-	validity_swap_messages(dev, data82, (int) sizeof(data82) - 1); 
-	validity_swap_messages(dev, data83, (int) sizeof(data83) - 1); 
-	validity_swap_messages(dev, data84, (int) sizeof(data84) - 1); 
-	validity_swap_messages(dev, data85, (int) sizeof(data85) - 1); 
-	validity_swap_messages(dev, data86, (int) sizeof(data86) - 1); 
-	validity_swap_messages(dev, data87, (int) sizeof(data87) - 1); 
-	validity_swap_messages(dev, data88, (int) sizeof(data88) - 1); 
-	validity_swap_messages(dev, data89, (int) sizeof(data89) - 1); 
-	validity_swap_messages(dev, data90, (int) sizeof(data90) - 1); 
-	validity_swap_messages(dev, data91, (int) sizeof(data91) - 1); 
-	validity_swap_messages(dev, data92, (int) sizeof(data92) - 1); 
-	validity_swap_messages(dev, data93, (int) sizeof(data93) - 1); 
-	validity_swap_messages(dev, data94, (int) sizeof(data94) - 1); 
-	validity_swap_messages(dev, data95, (int) sizeof(data95) - 1); 
-	validity_swap_messages(dev, data96, (int) sizeof(data96) - 1); 
-	validity_swap_messages(dev, data97, (int) sizeof(data97) - 1); 
-	validity_swap_messages(dev, data98, (int) sizeof(data98) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data99, (int) sizeof(data99) - 1); 
-	validity_swap_messages(dev, data100, (int) sizeof(data100) - 1); 
-	validity_swap_messages(dev, data101, (int) sizeof(data101) - 1); 
-	validity_swap_messages(dev, data102, (int) sizeof(data102) - 1); 
-	validity_swap_messages(dev, data103, (int) sizeof(data103) - 1); 
-	validity_swap_messages(dev, data104, (int) sizeof(data104) - 1); 
-	validity_swap_messages(dev, data105, (int) sizeof(data105) - 1); 
-	validity_swap_messages(dev, data106, (int) sizeof(data106) - 1); 
-	validity_swap_messages(dev, data107, (int) sizeof(data107) - 1); 
-	validity_swap_messages(dev, data108, (int) sizeof(data108) - 1); 
-	validity_swap_messages(dev, data109, (int) sizeof(data109) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data110, (int) sizeof(data110) - 1); 
-	validity_swap_messages(dev, data111, (int) sizeof(data111) - 1); 
-	validity_swap_messages(dev, data112, (int) sizeof(data112) - 1); 
-	validity_swap_messages(dev, data113, (int) sizeof(data113) - 1); 
-	validity_swap_messages(dev, data114, (int) sizeof(data114) - 1); 
-	validity_swap_messages(dev, data115, (int) sizeof(data115) - 1); 
-	validity_swap_messages(dev, data116, (int) sizeof(data116) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data117, (int) sizeof(data117) - 1); 
-	validity_swap_messages(dev, data118, (int) sizeof(data118) - 1); 
-	validity_swap_messages(dev, data119, (int) sizeof(data119) - 1); 
-	validity_swap_messages(dev, data120, (int) sizeof(data120) - 1); 
-	validity_swap_messages(dev, data121, (int) sizeof(data121) - 1); 
-	validity_swap_messages(dev, data122, (int) sizeof(data122) - 1); 
-	validity_swap_messages(dev, data123, (int) sizeof(data123) - 1); 
-	validity_swap_messages(dev, data124, (int) sizeof(data124) - 1); 
-	validity_swap_messages(dev, data125, (int) sizeof(data125) - 1); 
-	validity_swap_messages(dev, data126, (int) sizeof(data126) - 1); 
-	validity_swap_messages(dev, data127, (int) sizeof(data127) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data128, (int) sizeof(data128) - 1); 
-	validity_swap_messages(dev, data129, (int) sizeof(data129) - 1); 
-	validity_swap_messages(dev, data130, (int) sizeof(data130) - 1); 
-	validity_swap_messages(dev, data131, (int) sizeof(data131) - 1); 
-	validity_swap_messages(dev, data132, (int) sizeof(data132) - 1); 
-	validity_swap_messages(dev, data133, (int) sizeof(data133) - 1); 
-	validity_swap_messages(dev, data134, (int) sizeof(data134) - 1); 
-	validity_swap_messages(dev, data135, (int) sizeof(data135) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data136, (int) sizeof(data136) - 1); 
-	validity_swap_messages(dev, data137, (int) sizeof(data137) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data138, (int) sizeof(data138) - 1); 
-	validity_swap_messages(dev, data139, (int) sizeof(data139) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data140, (int) sizeof(data140) - 1); 
-	validity_swap_messages(dev, data141, (int) sizeof(data141) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data142, (int) sizeof(data142) - 1); 
-	validity_swap_messages(dev, data143, (int) sizeof(data143) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data144, (int) sizeof(data144) - 1); 
-	validity_swap_messages(dev, data145, (int) sizeof(data145) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data146, (int) sizeof(data146) - 1); 
-	validity_swap_messages(dev, data147, (int) sizeof(data147) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data148, (int) sizeof(data148) - 1); 
-	validity_swap_messages(dev, data149, (int) sizeof(data149) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data150, (int) sizeof(data150) - 1); 
-	validity_swap_messages(dev, data151, (int) sizeof(data151) - 1); 
-	validity_swap_messages(dev, data152, (int) sizeof(data152) - 1); 
-	validity_swap_messages(dev, data153, (int) sizeof(data153) - 1); 
-	validity_swap_messages(dev, data154, (int) sizeof(data154) - 1); 
-	validity_swap_messages(dev, data155, (int) sizeof(data155) - 1); 
-	validity_swap_messages(dev, data156, (int) sizeof(data156) - 1); 
-	validity_swap_messages(dev, data157, (int) sizeof(data157) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data158, (int) sizeof(data158) - 1); 
-	validity_swap_messages(dev, data159, (int) sizeof(data159) - 1); 
-	validity_swap_messages(dev, data160, (int) sizeof(data160) - 1); 
-	validity_swap_messages(dev, data161, (int) sizeof(data161) - 1); 
-	validity_swap_messages(dev, data162, (int) sizeof(data162) - 1); 
-	validity_swap_messages(dev, data163, (int) sizeof(data163) - 1); 
-	validity_swap_messages(dev, data164, (int) sizeof(data164) - 1); 
-	validity_swap_messages(dev, data165, (int) sizeof(data165) - 1); 
-	r = validity_receive_long_data(dev);
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data166, (int) sizeof(data166) - 1); 
-	validity_swap_messages(dev, data167, (int) sizeof(data167) - 1); 
-	validity_swap_messages(dev, data168, (int) sizeof(data168) - 1); 
-	validity_swap_messages(dev, data169, (int) sizeof(data169) - 1); 
-	validity_swap_messages(dev, data170, (int) sizeof(data170) - 1); 
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data171, (int) sizeof(data171) - 1); 
-	validity_swap_messages(dev, data172, (int) sizeof(data172) - 1); 
-	validity_swap_messages(dev, data173, (int) sizeof(data173) - 1); 
-	r = validity_receive_long_data(dev);
-	r = validity_receive_long_data(dev);
-	validity_swap_messages(dev, data174, (int) sizeof(data174) - 1); 
-	validity_swap_messages(dev, data175, (int) sizeof(data175) - 1); 
-	validity_swap_messages(dev, data176, (int) sizeof(data176) - 1); 
+	swap(dev, data1, (int) sizeof(data1) - 1); 
+	swap(dev, data2, (int) sizeof(data2) - 1); 
+	swap(dev, data3, (int) sizeof(data3) - 1); 
+	swap(dev, data4, (int) sizeof(data4) - 1); 
+	swap(dev, data5, (int) sizeof(data5) - 1); 
+	swap(dev, data6, (int) sizeof(data6) - 1); 
+	swap(dev, data7, (int) sizeof(data7) - 1); 
+	swap(dev, data8, (int) sizeof(data8) - 1); 
+	swap(dev, data9, (int) sizeof(data9) - 1); 
+	swap(dev, data10, (int) sizeof(data10) - 1); 
+	swap(dev, data11, (int) sizeof(data11) - 1); 
+	swap(dev, data12, (int) sizeof(data12) - 1); 
+	swap(dev, data13, (int) sizeof(data13) - 1); 
+	swap(dev, data14, (int) sizeof(data14) - 1); 
+	swap(dev, data15, (int) sizeof(data15) - 1); 
+	LoadImage(dev);
+	LoadImage(dev);
+	swap(dev, data16, (int) sizeof(data16) - 1); 
+	swap(dev, data17, (int) sizeof(data17) - 1); 
+	swap(dev, data18, (int) sizeof(data18) - 1); 
+	swap(dev, data19, (int) sizeof(data19) - 1); 
+	swap(dev, data20, (int) sizeof(data20) - 1); 
+	swap(dev, data21, (int) sizeof(data21) - 1); 
+	swap(dev, data22, (int) sizeof(data22) - 1); 
+	swap(dev, data23, (int) sizeof(data23) - 1); 
+	swap(dev, data24, (int) sizeof(data24) - 1); 
+	swap(dev, data25, (int) sizeof(data25) - 1); 
+	swap(dev, data26, (int) sizeof(data26) - 1); 
+	swap(dev, data27, (int) sizeof(data27) - 1); 
+	swap(dev, data28, (int) sizeof(data28) - 1); 
+	swap(dev, data29, (int) sizeof(data29) - 1); 
+	swap(dev, data30, (int) sizeof(data30) - 1); 
+	swap(dev, data31, (int) sizeof(data31) - 1); 
+	swap(dev, data32, (int) sizeof(data32) - 1); 
+	swap(dev, data33, (int) sizeof(data33) - 1); 
+	swap(dev, data34, (int) sizeof(data34) - 1); 
+	swap(dev, data35, (int) sizeof(data35) - 1); 
+	swap(dev, data36, (int) sizeof(data36) - 1); 
+	swap(dev, data37, (int) sizeof(data37) - 1); 
+	swap(dev, data38, (int) sizeof(data38) - 1); 
+	swap(dev, data39, (int) sizeof(data39) - 1); 
+	swap(dev, data40, (int) sizeof(data40) - 1); 
+	swap(dev, data41, (int) sizeof(data41) - 1); 
+	swap(dev, data42, (int) sizeof(data42) - 1); 
+	swap(dev, data43, (int) sizeof(data43) - 1); 
+	swap(dev, data44, (int) sizeof(data44) - 1); 
+	swap(dev, data45, (int) sizeof(data45) - 1); 
+	swap(dev, data46, (int) sizeof(data46) - 1); 
+	swap(dev, data47, (int) sizeof(data47) - 1); 
+	swap(dev, data48, (int) sizeof(data48) - 1); 
+	swap(dev, data49, (int) sizeof(data49) - 1); 
+	swap(dev, data50, (int) sizeof(data50) - 1); 
+	swap(dev, data51, (int) sizeof(data51) - 1); 
+	swap(dev, data52, (int) sizeof(data52) - 1); 
+	swap(dev, data53, (int) sizeof(data53) - 1); 
+	swap(dev, data54, (int) sizeof(data54) - 1); 
+	swap(dev, data55, (int) sizeof(data55) - 1); 
+	swap(dev, data56, (int) sizeof(data56) - 1); 
+	swap(dev, data57, (int) sizeof(data57) - 1); 
+	swap(dev, data58, (int) sizeof(data58) - 1); 
+	swap(dev, data59, (int) sizeof(data59) - 1); 
+	swap(dev, data60, (int) sizeof(data60) - 1); 
+	swap(dev, data61, (int) sizeof(data61) - 1); 
+	swap(dev, data62, (int) sizeof(data62) - 1); 
+	swap(dev, data63, (int) sizeof(data63) - 1); 
+	swap(dev, data64, (int) sizeof(data64) - 1); 
+	swap(dev, data65, (int) sizeof(data65) - 1); 
+	swap(dev, data66, (int) sizeof(data66) - 1); 
+	swap(dev, data67, (int) sizeof(data67) - 1); 
+	swap(dev, data68, (int) sizeof(data68) - 1); 
+	swap(dev, data69, (int) sizeof(data69) - 1); 
+	swap(dev, data70, (int) sizeof(data70) - 1); 
+	swap(dev, data71, (int) sizeof(data71) - 1); 
+	swap(dev, data72, (int) sizeof(data72) - 1); 
+	swap(dev, data73, (int) sizeof(data73) - 1); 
+	swap(dev, data74, (int) sizeof(data74) - 1); 
+	swap(dev, data75, (int) sizeof(data75) - 1); 
+	swap(dev, data76, (int) sizeof(data76) - 1); 
+	swap(dev, data77, (int) sizeof(data77) - 1); 
+	swap(dev, data78, (int) sizeof(data78) - 1); 
+	swap(dev, data79, (int) sizeof(data79) - 1); 
+	swap(dev, data80, (int) sizeof(data80) - 1); 
+	swap(dev, data81, (int) sizeof(data81) - 1); 
+	swap(dev, data82, (int) sizeof(data82) - 1); 
+	swap(dev, data83, (int) sizeof(data83) - 1); 
+	swap(dev, data84, (int) sizeof(data84) - 1); 
+	swap(dev, data85, (int) sizeof(data85) - 1); 
+	swap(dev, data86, (int) sizeof(data86) - 1); 
+	swap(dev, data87, (int) sizeof(data87) - 1); 
+	swap(dev, data88, (int) sizeof(data88) - 1); 
+	swap(dev, data89, (int) sizeof(data89) - 1); 
+	swap(dev, data90, (int) sizeof(data90) - 1); 
+	swap(dev, data91, (int) sizeof(data91) - 1); 
+	swap(dev, data92, (int) sizeof(data92) - 1); 
+	swap(dev, data93, (int) sizeof(data93) - 1); 
+	swap(dev, data94, (int) sizeof(data94) - 1); 
+	swap(dev, data95, (int) sizeof(data95) - 1); 
+	swap(dev, data96, (int) sizeof(data96) - 1); 
+	swap(dev, data97, (int) sizeof(data97) - 1); 
+	swap(dev, data98, (int) sizeof(data98) - 1); 
+	LoadImage(dev);
+	swap(dev, data99, (int) sizeof(data99) - 1); 
+	swap(dev, data100, (int) sizeof(data100) - 1); 
+	swap(dev, data101, (int) sizeof(data101) - 1); 
+	swap(dev, data102, (int) sizeof(data102) - 1); 
+	swap(dev, data103, (int) sizeof(data103) - 1); 
+	swap(dev, data104, (int) sizeof(data104) - 1); 
+	swap(dev, data105, (int) sizeof(data105) - 1); 
+	swap(dev, data106, (int) sizeof(data106) - 1); 
+	swap(dev, data107, (int) sizeof(data107) - 1); 
+	swap(dev, data108, (int) sizeof(data108) - 1); 
+	swap(dev, data109, (int) sizeof(data109) - 1); 
+	LoadImage(dev);
+	swap(dev, data110, (int) sizeof(data110) - 1); 
+	swap(dev, data111, (int) sizeof(data111) - 1); 
+	swap(dev, data112, (int) sizeof(data112) - 1); 
+	swap(dev, data113, (int) sizeof(data113) - 1); 
+	swap(dev, data114, (int) sizeof(data114) - 1); 
+	swap(dev, data115, (int) sizeof(data115) - 1); 
+	swap(dev, data116, (int) sizeof(data116) - 1); 
+	LoadImage(dev);
+	swap(dev, data117, (int) sizeof(data117) - 1); 
+	swap(dev, data118, (int) sizeof(data118) - 1); 
+	swap(dev, data119, (int) sizeof(data119) - 1); 
+	swap(dev, data120, (int) sizeof(data120) - 1); 
+	swap(dev, data121, (int) sizeof(data121) - 1); 
+	swap(dev, data122, (int) sizeof(data122) - 1); 
+	swap(dev, data123, (int) sizeof(data123) - 1); 
+	swap(dev, data124, (int) sizeof(data124) - 1); 
+	swap(dev, data125, (int) sizeof(data125) - 1); 
+	swap(dev, data126, (int) sizeof(data126) - 1); 
+	swap(dev, data127, (int) sizeof(data127) - 1); 
+	LoadImage(dev);
+	swap(dev, data128, (int) sizeof(data128) - 1); 
+	swap(dev, data129, (int) sizeof(data129) - 1); 
+	swap(dev, data130, (int) sizeof(data130) - 1); 
+	swap(dev, data131, (int) sizeof(data131) - 1); 
+	swap(dev, data132, (int) sizeof(data132) - 1); 
+	swap(dev, data133, (int) sizeof(data133) - 1); 
+	swap(dev, data134, (int) sizeof(data134) - 1); 
+	swap(dev, data135, (int) sizeof(data135) - 1); 
+	LoadImage(dev);
+	swap(dev, data136, (int) sizeof(data136) - 1); 
+	swap(dev, data137, (int) sizeof(data137) - 1); 
+	LoadImage(dev);
+	swap(dev, data138, (int) sizeof(data138) - 1); 
+	swap(dev, data139, (int) sizeof(data139) - 1); 
+	LoadImage(dev);
+	swap(dev, data140, (int) sizeof(data140) - 1); 
+	swap(dev, data141, (int) sizeof(data141) - 1); 
+	LoadImage(dev);
+	swap(dev, data142, (int) sizeof(data142) - 1); 
+	swap(dev, data143, (int) sizeof(data143) - 1); 
+	LoadImage(dev);
+	swap(dev, data144, (int) sizeof(data144) - 1); 
+	swap(dev, data145, (int) sizeof(data145) - 1); 
+	LoadImage(dev);
+	swap(dev, data146, (int) sizeof(data146) - 1); 
+	swap(dev, data147, (int) sizeof(data147) - 1); 
+	LoadImage(dev);
+	swap(dev, data148, (int) sizeof(data148) - 1); 
+	swap(dev, data149, (int) sizeof(data149) - 1); 
+	LoadImage(dev);
+	swap(dev, data150, (int) sizeof(data150) - 1); 
+	swap(dev, data151, (int) sizeof(data151) - 1); 
+	swap(dev, data152, (int) sizeof(data152) - 1); 
+	swap(dev, data153, (int) sizeof(data153) - 1); 
+	swap(dev, data154, (int) sizeof(data154) - 1); 
+	swap(dev, data155, (int) sizeof(data155) - 1); 
+	swap(dev, data156, (int) sizeof(data156) - 1); 
+	swap(dev, data157, (int) sizeof(data157) - 1); 
+	LoadImage(dev);
+	swap(dev, data158, (int) sizeof(data158) - 1); 
+	swap(dev, data159, (int) sizeof(data159) - 1); 
+	swap(dev, data160, (int) sizeof(data160) - 1); 
+	swap(dev, data161, (int) sizeof(data161) - 1); 
+	swap(dev, data162, (int) sizeof(data162) - 1); 
+	swap(dev, data163, (int) sizeof(data163) - 1); 
+	swap(dev, data164, (int) sizeof(data164) - 1); 
+	swap(dev, data165, (int) sizeof(data165) - 1); 
+	LoadImage(dev);
+	LoadImage(dev);
+	swap(dev, data166, (int) sizeof(data166) - 1); 
+	swap(dev, data167, (int) sizeof(data167) - 1); 
+	swap(dev, data168, (int) sizeof(data168) - 1); 
+	swap(dev, data169, (int) sizeof(data169) - 1); 
+	swap(dev, data170, (int) sizeof(data170) - 1); 
+	LoadImage(dev);
+	swap(dev, data171, (int) sizeof(data171) - 1); 
+	swap(dev, data172, (int) sizeof(data172) - 1); 
+	swap(dev, data173, (int) sizeof(data173) - 1); 
+	LoadImage(dev);
+	LoadImage(dev);
+	swap(dev, data174, (int) sizeof(data174) - 1); 
+	swap(dev, data175, (int) sizeof(data175) - 1); 
+	swap(dev, data176, (int) sizeof(data176) - 1); 
 
 	int i = 0;
 	for (i; i < 50; i++)
-		validity_swap_messages(dev, data177, (int) sizeof(data177) - 1); 
+		swap(dev, data177, (int) sizeof(data177) - 1); 
 		usleep(750000);
 	return 0;
 }
@@ -776,14 +767,14 @@ static int validity_cycle2(struct vfs_dev *dev){
 	unsigned char data05 [] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
 	unsigned char data[] = "\xF5\x00\x00\x00\x16\x00"; 
 	
-	validity_swap_messages(dev, data00, (int) sizeof(data00) - 1);
-	validity_swap_messages(dev, data01, (int) sizeof(data01) - 1);
-	validity_swap_messages(dev, data02, (int) sizeof(data02) - 1);
-	validity_swap_messages(dev, data03, (int) sizeof(data03) - 1);
-	validity_swap_messages(dev, data04, (int) sizeof(data04) - 1);
-	validity_swap_messages(dev, data05, (int) sizeof(data05) - 1);
+	swap(dev, data00, (int) sizeof(data00) - 1);
+	swap(dev, data01, (int) sizeof(data01) - 1);
+	swap(dev, data02, (int) sizeof(data02) - 1);
+	swap(dev, data03, (int) sizeof(data03) - 1);
+	swap(dev, data04, (int) sizeof(data04) - 1);
+	swap(dev, data05, (int) sizeof(data05) - 1);
 
-	int r = validity_swap_messages(dev, data, (int) sizeof(data) - 1);
+	int r = swap(dev, data, (int) sizeof(data) - 1);
 	return r;
 }
 
@@ -831,168 +822,168 @@ static int validity_cycle1(struct vfs_dev *dev){
 
 	unsigned char data4[] = "\xF5\x00\x00\x00\x16\x00"; 
 
-	int r = validity_swap_messages(dev, data00, (int) sizeof(data00) - 1);
+	int r = swap(dev, data00, (int) sizeof(data00) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data01, (int) sizeof(data01) - 1);
+	r = swap(dev, data01, (int) sizeof(data01) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data02, (int) sizeof(data02) - 1);
+	r = swap(dev, data02, (int) sizeof(data02) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data03, (int) sizeof(data03) - 1);
+	r = swap(dev, data03, (int) sizeof(data03) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data04, (int) sizeof(data04) - 1);
+	r = swap(dev, data04, (int) sizeof(data04) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data05, (int) sizeof(data05) - 1);
+	r = swap(dev, data05, (int) sizeof(data05) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data06, (int) sizeof(data06) - 1);
+	r = swap(dev, data06, (int) sizeof(data06) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data07, (int) sizeof(data07) - 1);
+	r = swap(dev, data07, (int) sizeof(data07) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data08, (int) sizeof(data08) - 1);
+	r = swap(dev, data08, (int) sizeof(data08) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data09, (int) sizeof(data09) - 1);
+	r = swap(dev, data09, (int) sizeof(data09) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data10, (int) sizeof(data10) - 1);
+	r = swap(dev, data10, (int) sizeof(data10) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data11, (int) sizeof(data11) - 1);
+	r = swap(dev, data11, (int) sizeof(data11) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data12, (int) sizeof(data12) - 1);
+	r = swap(dev, data12, (int) sizeof(data12) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data13, (int) sizeof(data13) - 1);
+	r = swap(dev, data13, (int) sizeof(data13) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data14, (int) sizeof(data14) - 1);
+	r = swap(dev, data14, (int) sizeof(data14) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data15, (int) sizeof(data15) - 1);
-	if (r != 0)                                               
-		return r;                                         
-
-	r = validity_receive_long_data(dev);
-	r = validity_receive_long_data(dev);
-
-	r = validity_swap_messages(dev, data16, (int) sizeof(data16) - 1);
+	r = swap(dev, data15, (int) sizeof(data15) - 1);
 	if (r != 0)                                               
 		return r;                                         
 
-	r = validity_receive_long_data(dev);
+	LoadImage(dev);
+	LoadImage(dev);
+
+	r = swap(dev, data16, (int) sizeof(data16) - 1);
+	if (r != 0)                                               
+		return r;                                         
+
+	LoadImage(dev);
 	
-	r = validity_swap_messages(dev, data17, (int) sizeof(data17) - 1);
+	r = swap(dev, data17, (int) sizeof(data17) - 1);
 	if (r != 0)                                               
 		return r;                                         
 
-	r = validity_receive_long_data(dev);
-	r = validity_receive_long_data(dev);
+	LoadImage(dev);
+	LoadImage(dev);
 
-	r = validity_swap_messages(dev, data18, (int) sizeof(data18) - 1);
+	r = swap(dev, data18, (int) sizeof(data18) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data19, (int) sizeof(data19) - 1);
+	r = swap(dev, data19, (int) sizeof(data19) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data20, (int) sizeof(data20) - 1);
+	r = swap(dev, data20, (int) sizeof(data20) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data21, (int) sizeof(data21) - 1);
+	r = swap(dev, data21, (int) sizeof(data21) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data22, (int) sizeof(data22) - 1);
+	r = swap(dev, data22, (int) sizeof(data22) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data23, (int) sizeof(data23) - 1);
+	r = swap(dev, data23, (int) sizeof(data23) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data24, (int) sizeof(data24) - 1);
+	r = swap(dev, data24, (int) sizeof(data24) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data25, (int) sizeof(data25) - 1);
+	r = swap(dev, data25, (int) sizeof(data25) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data26, (int) sizeof(data26) - 1);
+	r = swap(dev, data26, (int) sizeof(data26) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data27, (int) sizeof(data27) - 1);
+	r = swap(dev, data27, (int) sizeof(data27) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data28, (int) sizeof(data28) - 1);
+	r = swap(dev, data28, (int) sizeof(data28) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data29, (int) sizeof(data29) - 1);
+	r = swap(dev, data29, (int) sizeof(data29) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data30, (int) sizeof(data30) - 1);
+	r = swap(dev, data30, (int) sizeof(data30) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data31, (int) sizeof(data31) - 1);
+	r = swap(dev, data31, (int) sizeof(data31) - 1);
 	if (r != 0)                                               
 		return r;                                         
 
-	r = validity_swap_messages(dev, data32, (int) sizeof(data32) - 1);
+	r = swap(dev, data32, (int) sizeof(data32) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data33, (int) sizeof(data33) - 1);
+	r = swap(dev, data33, (int) sizeof(data33) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data34, (int) sizeof(data34) - 1);
+	r = swap(dev, data34, (int) sizeof(data34) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data35, (int) sizeof(data35) - 1);
+	r = swap(dev, data35, (int) sizeof(data35) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data36, (int) sizeof(data36) - 1);
+	r = swap(dev, data36, (int) sizeof(data36) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data37, (int) sizeof(data37) - 1);
+	r = swap(dev, data37, (int) sizeof(data37) - 1);
 	if (r != 0)                                               
 		return r;                                         
 
 	int i = 0;
 	for (i; i < 80; i++){
-		r = validity_swap_messages(dev, data4, (int) sizeof(data4) - 1);
+		r = swap(dev, data4, (int) sizeof(data4) - 1);
 		if (r != 0)
 			return r;
 	}	
 /*	
-	r = validity_swap_messages(dev, data32, (int) sizeof(data32- 1));
+	r = swap(dev, data32, (int) sizeof(data32- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data33, (int) sizeof(data33- 1));
+	r = swap(dev, data33, (int) sizeof(data33- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data34, (int) sizeof(data34- 1));
+	r = swap(dev, data34, (int) sizeof(data34- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data35, (int) sizeof(data35- 1));
+	r = swap(dev, data35, (int) sizeof(data35- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data36, (int) sizeof(data36- 1));
+	r = swap(dev, data36, (int) sizeof(data36- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data37, (int) sizeof(data37- 1));
+	r = swap(dev, data37, (int) sizeof(data37- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data38, (int) sizeof(data38- 1));
+	r = swap(dev, data38, (int) sizeof(data38- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data39, (int) sizeof(data39- 1));
+	r = swap(dev, data39, (int) sizeof(data39- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data40, (int) sizeof(data40- 1));
+	r = swap(dev, data40, (int) sizeof(data40- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(dev, data41, (int) sizeof(data41- 1));
+	r = swap(dev, data41, (int) sizeof(data41- 1));
 	if (r != 0)
 		return r;
 */
@@ -1009,26 +1000,26 @@ static int validity_cycle0(struct vfs_dev *dev){
 	unsigned char data6[] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
 
 
-	validity_swap_messages(dev, data1, (int) sizeof(data1) - 1); 
-	validity_swap_messages(dev, data2, (int) sizeof(data2) - 1); 
-	validity_swap_messages(dev, data3, (int) sizeof(data3) - 1); 
-	validity_swap_messages(dev, data4, (int) sizeof(data4) - 1); 
-	validity_swap_messages(dev, data5, (int) sizeof(data5) - 1); 
-	validity_swap_messages(dev, data6, (int) sizeof(data6) - 1); 
+	swap(dev, data1, (int) sizeof(data1) - 1); 
+	swap(dev, data2, (int) sizeof(data2) - 1); 
+	swap(dev, data3, (int) sizeof(data3) - 1); 
+	swap(dev, data4, (int) sizeof(data4) - 1); 
+	swap(dev, data5, (int) sizeof(data5) - 1); 
+	swap(dev, data6, (int) sizeof(data6) - 1); 
 
 
 	unsigned char data36 [] = "\x04\x65\x00\x00\x05\x00\x62\x00\x32\x00";
 	unsigned char data171[] = "\xAB\x00\x00\x00\x03\x00\x14\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data44[] = "\xF5\x00\x00\x00\x16\x00"; 
 
-	validity_swap_messages(dev, data36, (int) sizeof(data36) - 1);
-//	validity_swap_messages(dev, data171, (int) sizeof(data171) - 1);
-//	validity_receive_long_data(dev)	;
+	swap(dev, data36, (int) sizeof(data36) - 1);
+//	swap(dev, data171, (int) sizeof(data171) - 1);
+//	LoadImage(dev)	;
 
 	int i = 0;
 
 	for (i; i < 10; i++){
-		validity_swap_messages(dev, data44, (int) sizeof(data44) - 1);
+		swap(dev, data44, (int) sizeof(data44) - 1);
 	}
 
 	return 0; 
@@ -1044,36 +1035,36 @@ static int validity_cycle(struct vfs_dev *dev){
 	unsigned char data6[] = "\xB2\x00\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01"; 
 	unsigned char data7[] = "\xB0\x00\x00\x00\x04\x00\x11\x00";
 
-	int r = validity_swap_messages(dev, data, (int) sizeof(data) - 1);
+	int r = swap(dev, data, (int) sizeof(data) - 1);
 	if (r != 0)
 		return r;
-	r = validity_swap_messages(dev, data1, (int) sizeof(data1) - 1);
+	r = swap(dev, data1, (int) sizeof(data1) - 1);
 	if (r != 0)
 		return r;
-	r = validity_swap_messages(dev, data2, (int) sizeof(data2) - 1);
+	r = swap(dev, data2, (int) sizeof(data2) - 1);
 	if (r != 0)
 		return r;
-	r = validity_receive_long_data(dev);
+	LoadImage(dev);
 
-	r = validity_swap_messages(dev, data3, (int) sizeof(data3) - 1);
-	if (r != 0)
-		return r;
-
-	r = validity_swap_messages(dev, data7, (int) sizeof(data7) - 1);
+	r = swap(dev, data3, (int) sizeof(data3) - 1);
 	if (r != 0)
 		return r;
 
-	r = validity_swap_messages(dev, data5, (int) sizeof(data5) - 1);
+	r = swap(dev, data7, (int) sizeof(data7) - 1);
 	if (r != 0)
 		return r;
 
-	r = validity_swap_messages(dev, data6, (int) sizeof(data6) - 1);
+	r = swap(dev, data5, (int) sizeof(data5) - 1);
+	if (r != 0)
+		return r;
+
+	r = swap(dev, data6, (int) sizeof(data6) - 1);
 	if (r != 0)
 		return r;
 
 	int i = 0;
 	for (i; i < 20; i++){
-		r = validity_swap_messages(dev, data4, (int) sizeof(data4) - 1);
+		r = swap(dev, data4, (int) sizeof(data4) - 1);
 		if (r != 0)
 			return r;
 	}	
