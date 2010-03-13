@@ -1,6 +1,7 @@
 /* vfs101 fingerprint driver 
  * 
  * Copyright (c) 2010 Damir Syabitov <dsyabitov@gmail.com>
+ * Copyright (c) 2010 Ray Lehtiniemi <rayl@mail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,6 +38,152 @@ static int packet_num_h = 0;
 
 
 /** Functions */
+
+/******************************************************************************************************
+ * Functions to deal with byte swapping.
+ */
+static inline unsigned char lo (int n)
+{
+	return n & 0xff;
+}
+
+static inline unsigned char hi (int n)
+{
+	return (n>>8) & 0xff;
+}
+
+static inline unsigned short xx (int h, int l)
+{
+	return (h<<8)|l;
+}
+
+
+/******************************************************************************************************
+ * Low level send/receive functions
+ */
+
+#define EP_IN(n)     (n | LIBUSB_ENDPOINT_IN)
+#define EP_OUT(n)    (n | LIBUSB_ENDPOINT_OUT)
+
+#define BULK_TIMEOUT 100
+
+/* sequence number for current send/recv transaction pair */
+static unsigned short vfs_seq;
+
+/* The first two bytes of data will be overwritten with vfs_seq */
+static int send(libusb_device_handle *dev, unsigned char *data, size_t len)
+{
+	int transferred;
+	int r;
+
+	//fp_dbg("seq:%04x len:%zd", vfs_seq, len);
+
+	data[0] = lo(vfs_seq);
+	data[1] = hi(vfs_seq);
+
+	r = libusb_bulk_transfer(dev, EP_OUT(1), data, len, &transferred, BULK_TIMEOUT);
+
+	if (r < 0) {
+		//fp_err("bulk write error %d", r);
+		return r;
+
+	} else if (transferred < len) {
+		//fp_err("unexpected short write %d/%zd", transferred, len);
+		return -EIO;
+
+	} else {
+		return 0;
+	}
+}
+
+/* The last response from the device, valid immediately after a swap() */
+static unsigned char vfs_buf[0x40];
+static int vfs_len;
+
+static int recv(libusb_device_handle *dev)
+{
+	int transferred;
+	int r;
+
+	r = libusb_bulk_transfer(dev, EP_IN(1), vfs_buf, 0x40, &vfs_len, BULK_TIMEOUT);
+
+	if (r < 0 && r != -7) {
+		//fp_err("bulk read error %d", r);
+		return r;
+	}
+
+	//fp_dbg("seq:%04x len:%zd", vfs_seq, vfs_len);
+
+	if ((lo(vfs_seq) != vfs_buf[0]) || (hi(vfs_seq) != vfs_buf[1])) {
+		//fp_err("Seqnum mismatch, got %04x, expected %04x", xx(vfs_buf[1],vfs_buf[0]), vfs_seq);
+	}
+
+	vfs_seq++;
+
+	return 0;
+}
+
+/* The device seems to send back 16 frames of 292 bytes at a time */
+#define PKTSIZE 292
+#define N_PKTS   16
+
+static int load (libusb_device_handle *dev, unsigned char *buf, int *len)
+{
+	int n;
+
+	*len = 0;
+
+	do {
+		int r = libusb_bulk_transfer(dev, EP_IN(2), buf, N_PKTS*PKTSIZE, &n, BULK_TIMEOUT);
+
+		buf += n;
+		*len += n;
+
+		if (r < 0 && r != -7) {
+			//fp_err("bulk read error %d", r);
+			return r;
+		}
+
+	} while (n == N_PKTS*PKTSIZE);
+
+	return 0;
+}
+
+static void dump (void)
+{
+	int x = 6;
+
+	//fp_dbg("Seq: %04x", xx(vfs_buf[1], vfs_buf[0]));
+	if ((vfs_buf[2] != 0) || (vfs_buf[3] != 0)) {
+		//fp_dbg("!!!: %02x %02x", vfs_buf[2], vfs_buf[3]);
+	}
+	//fp_dbg("Cmd: %02x %02x", vfs_buf[4], vfs_buf[5]);
+
+	while (vfs_len - x > 3) {
+		//fp_dbg("     %02x %02x %02x %02x", vfs_buf[x], vfs_buf[x+1], vfs_buf[x+2], vfs_buf[x+3]);
+		x += 4;
+	}
+	switch (vfs_len-x) {
+	case 3:
+		//fp_dbg("     %02x %02x %02x", vfs_buf[x], vfs_buf[x+1], vfs_buf[x+2]);
+		break;
+	case 2:
+		//fp_dbg("     %02x %02x", vfs_buf[x], vfs_buf[x+1]);
+		break;
+	case 1:
+		//fp_dbg("     %02x", vfs_buf[x]);
+		break;
+	}
+}
+
+static int swap (libusb_device_handle *dev, unsigned char *data, size_t len)
+{
+	send(dev, data, len);
+	usleep(2000);
+	recv(dev);
+}
+
+
 
 /** Searching our device */
 static int validity_find_device(void)
