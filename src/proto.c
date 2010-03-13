@@ -371,20 +371,6 @@ static void dump_image (unsigned char *data, int length)
  */
 
 
-/** Searching our device */
-static int validity_find_device(struct vfs_dev *dev)
-{
-	dev->devh = libusb_open_device_with_vid_pid(NULL, 0x138a, 0x0001);
-	return dev->devh ? 0 : -EIO;
-}
-
-/** Configuring device */
-static int validity_configure_device(struct vfs_dev *dev){
-	unsigned char data[] = "";
-	int r = libusb_control_transfer(dev->devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 1, data, 0, VALIDITY_DEFAULT_WAIT_TIMEOUT); 
-	return r;
-}
-
 /** Sends data to device 
  * if transfered < length - error
  */
@@ -1189,8 +1175,8 @@ int main(void)
 
 
 	fprintf(stdout, "Searching for device...\n");
-	r = validity_find_device(dev);
-	if (r != 0){
+	dev->devh = libusb_open_device_with_vid_pid(NULL, 0x138a, 0x0001);
+	if (dev->devh == NULL) {
 		fprintf(stderr, "Can't find validity device!\n");
 		goto out;
 	}
@@ -1226,7 +1212,7 @@ int main(void)
 		fprintf(stdout, "Error resetting device");
 
 	fprintf(stdout, "Configuring device...\n");
-	r = validity_configure_device(dev);
+	r = libusb_control_transfer(dev->devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 1, NULL, 0, VALIDITY_DEFAULT_WAIT_TIMEOUT); 
         if (r < 0) {
 		fprintf(stderr, "device configuring error %d\n", r);
 		goto out_release;
