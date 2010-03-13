@@ -30,12 +30,25 @@ const unsigned char VALIDITY_SEND_ENDPOINT = 0x01;
 const unsigned char VALIDITY_RECEIVE_ENDPOINT = 0x81;
 const unsigned char VALIDITY_RECEIVE_ENDPOINT_LONG = 0x82; 
 
-/** Variables */
-static struct libusb_device_handle *devh = NULL;
-static struct libusb_context *ctx = NULL;
 
+/******************************************************************************************************
+ * Context structure for this driver.
+ */
+struct vfs_dev {
+	/* context object for libusb library */
+	struct libusb_context *ctx;
 
-/** Functions */
+	/* libusb device handle for fingerprint reader */
+	struct libusb_device_handle *devh;
+
+	/* sequence number for current send/recv transaction pair */
+	unsigned short seq;
+
+	/* The last response from the device, valid immediately after a recv() */
+	unsigned char buf[0x40];
+	int len;
+};
+
 
 /******************************************************************************************************
  * Functions to deal with byte swapping.
@@ -65,21 +78,18 @@ static inline unsigned short xx (int h, int l)
 
 #define BULK_TIMEOUT 100
 
-/* sequence number for current send/recv transaction pair */
-static unsigned short vfs_seq;
-
-/* The first two bytes of data will be overwritten with vfs_seq */
-static int send(libusb_device_handle *dev, unsigned char *data, size_t len)
+/* The first two bytes of data will be overwritten with seq */
+static int send(struct vfs_dev *dev, unsigned char *data, size_t len)
 {
 	int transferred;
 	int r;
 
-	//fp_dbg("seq:%04x len:%zd", vfs_seq, len);
+	//fp_dbg("seq:%04x len:%zd", dev->seq, len);
 
-	data[0] = lo(vfs_seq);
-	data[1] = hi(vfs_seq);
+	data[0] = lo(dev->seq);
+	data[1] = hi(dev->seq);
 
-	r = libusb_bulk_transfer(dev, EP_OUT(1), data, len, &transferred, BULK_TIMEOUT);
+	r = libusb_bulk_transfer(dev->devh, EP_OUT(1), data, len, &transferred, BULK_TIMEOUT);
 
 	if (r < 0) {
 		//fp_err("bulk write error %d", r);
@@ -94,29 +104,25 @@ static int send(libusb_device_handle *dev, unsigned char *data, size_t len)
 	}
 }
 
-/* The last response from the device, valid immediately after a swap() */
-static unsigned char vfs_buf[0x40];
-static int vfs_len;
-
-static int recv(libusb_device_handle *dev)
+static int recv(struct vfs_dev *dev)
 {
 	int transferred;
 	int r;
 
-	r = libusb_bulk_transfer(dev, EP_IN(1), vfs_buf, 0x40, &vfs_len, BULK_TIMEOUT);
+	r = libusb_bulk_transfer(dev->devh, EP_IN(1), dev->buf, 0x40, &dev->len, BULK_TIMEOUT);
 
 	if (r < 0 && r != -7) {
 		//fp_err("bulk read error %d", r);
 		return r;
 	}
 
-	//fp_dbg("seq:%04x len:%zd", vfs_seq, vfs_len);
+	//fp_dbg("seq:%04x len:%zd", dev->seq, dev->len);
 
-	if ((lo(vfs_seq) != vfs_buf[0]) || (hi(vfs_seq) != vfs_buf[1])) {
-		//fp_err("Seqnum mismatch, got %04x, expected %04x", xx(vfs_buf[1],vfs_buf[0]), vfs_seq);
+	if ((lo(dev->seq) != dev->buf[0]) || (hi(dev->seq) != dev->buf[1])) {
+		//fp_err("Seqnum mismatch, got %04x, expected %04x", xx(dev->buf[1],dev->buf[0]), dev->seq);
 	}
 
-	vfs_seq++;
+	dev->seq++;
 
 	return 0;
 }
@@ -125,14 +131,14 @@ static int recv(libusb_device_handle *dev)
 #define PKTSIZE 292
 #define N_PKTS   16
 
-static int load (libusb_device_handle *dev, unsigned char *buf, int *len)
+static int load (struct vfs_dev *dev, unsigned char *buf, int *len)
 {
 	int n;
 
 	*len = 0;
 
 	do {
-		int r = libusb_bulk_transfer(dev, EP_IN(2), buf, N_PKTS*PKTSIZE, &n, BULK_TIMEOUT);
+		int r = libusb_bulk_transfer(dev->devh, EP_IN(2), buf, N_PKTS*PKTSIZE, &n, BULK_TIMEOUT);
 
 		buf += n;
 		*len += n;
@@ -147,34 +153,34 @@ static int load (libusb_device_handle *dev, unsigned char *buf, int *len)
 	return 0;
 }
 
-static void dump (void)
+static void dump (struct vfs_dev *dev)
 {
 	int x = 6;
 
-	//fp_dbg("Seq: %04x", xx(vfs_buf[1], vfs_buf[0]));
-	if ((vfs_buf[2] != 0) || (vfs_buf[3] != 0)) {
-		//fp_dbg("!!!: %02x %02x", vfs_buf[2], vfs_buf[3]);
+	//fp_dbg("Seq: %04x", xx(dev->buf[1], dev->buf[0]));
+	if ((dev->buf[2] != 0) || (dev->buf[3] != 0)) {
+		//fp_dbg("!!!: %02x %02x", dev->buf[2], dev->buf[3]);
 	}
-	//fp_dbg("Cmd: %02x %02x", vfs_buf[4], vfs_buf[5]);
+	//fp_dbg("Cmd: %02x %02x", dev->buf[4], dev->buf[5]);
 
-	while (vfs_len - x > 3) {
-		//fp_dbg("     %02x %02x %02x %02x", vfs_buf[x], vfs_buf[x+1], vfs_buf[x+2], vfs_buf[x+3]);
+	while (dev->len - x > 3) {
+		//fp_dbg("     %02x %02x %02x %02x", dev->buf[x], dev->buf[x+1], dev->buf[x+2], dev->buf[x+3]);
 		x += 4;
 	}
-	switch (vfs_len-x) {
+	switch (dev->len-x) {
 	case 3:
-		//fp_dbg("     %02x %02x %02x", vfs_buf[x], vfs_buf[x+1], vfs_buf[x+2]);
+		//fp_dbg("     %02x %02x %02x", dev->buf[x], dev->buf[x+1], dev->buf[x+2]);
 		break;
 	case 2:
-		//fp_dbg("     %02x %02x", vfs_buf[x], vfs_buf[x+1]);
+		//fp_dbg("     %02x %02x", dev->buf[x], dev->buf[x+1]);
 		break;
 	case 1:
-		//fp_dbg("     %02x", vfs_buf[x]);
+		//fp_dbg("     %02x", dev->buf[x]);
 		break;
 	}
 }
 
-static int swap (libusb_device_handle *dev, unsigned char *data, size_t len)
+static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
 {
 	send(dev, data, len);
 	usleep(2000);
@@ -213,31 +219,31 @@ static int swap (libusb_device_handle *dev, unsigned char *data, size_t len)
  *
  *  Cause the device to reenumerate on the USB bus.
  */
-static void Reset (libusb_device_handle *dev)
+static void Reset (struct vfs_dev *dev)
 {
 	unsigned char q1[0x07] = { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00 };
 	//fp_dbg("");
 	swap (dev, q1, 0x07);
-	dump ();
+	dump (dev);
 }
 
 /* GetVersion (00 00 01 00)
  *
  *  Retrieve version string from the device.
  */
-static void GetVersion (libusb_device_handle *dev)
+static void GetVersion (struct vfs_dev *dev)
 {
 	unsigned char q1[0x07] = { 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00 };
 	//fp_dbg("");
 	swap (dev, q1, 0x07);
-	dump ();
+	dump (dev);
 }
 
 /* GetPrint (00 00 03 00)
  *
  *  Retrieve fingerprint image information.
  */
-static void GetPrint (libusb_device_handle *dev, int count, unsigned char args[6])
+static void GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
 {
 	unsigned char q1[0x0e] = { 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	int i;
@@ -246,28 +252,28 @@ static void GetPrint (libusb_device_handle *dev, int count, unsigned char args[6
 	for (i=0; i<6; i++) q1[8+i] = args[i];
 	//fp_dbg("");
 	swap (dev, q1, 0x0e);
-	dump ();
+	dump (dev);
 }
 
 /* GetParam (00 00 04 00)
  *
  *  Retrieve a parameter value from the device.
  */
-static void GetParam (libusb_device_handle *dev, int param)
+static void GetParam (struct vfs_dev *dev, int param)
 {
 	unsigned char q1[0x08] = { 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00 };
 	q1[6] = lo(param);
 	q1[7] = hi(param);
 	//fp_dbg("%04x", param);
 	swap (dev, q1, 0x08);
-	dump();
+	dump(dev);
 }
 
 /* SetParam (00 00 05 00)
  *
  *  Set a parameter value on the device.
  */
-static void SetParam (libusb_device_handle *dev, int param, int value)
+static void SetParam (struct vfs_dev *dev, int param, int value)
 {
 	unsigned char q1[0x0a] = { 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	q1[6] = lo(param);
@@ -276,51 +282,51 @@ static void SetParam (libusb_device_handle *dev, int param, int value)
 	q1[9] = hi(value);
 	//fp_dbg("%04x = %04x", param, value);
 	swap (dev, q1, 0x0a);
-	dump();
+	dump(dev);
 }
 
 /* GetConfiguration (00 00 06 00)
  *
  *  Retrieve config info from the device.
  */
-static void GetConfiguration (libusb_device_handle *dev)
+static void GetConfiguration (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x06, 0x00 };
 	//fp_dbg("");
 	swap (dev, q1, 0x06);
-	dump();
+	dump(dev);
 }
 
 /* AbortPrint (00 00 0e 00)
  *
  *  Abort the current scan operation.
  */
-static void AbortPrint (libusb_device_handle *dev)
+static void AbortPrint (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x0E, 0x00 };
 	//fp_dbg("");
 	swap (dev, q1, 0x06);
-	dump();
+	dump(dev);
 }
 
 /* GetFingerState (00 00 16 00)
  *
  *  Poll device for current finger state.
  */
-static int GetFingerState (libusb_device_handle *dev)
+static int GetFingerState (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x16, 0x00 };
 	//fp_dbg("");
 	swap (dev, q1, 0x06);
-	dump();
-	return vfs_buf[0x0a];
+	dump(dev);
+	return dev->buf[0x0a];
 }
 
 /* buffer to hold raw image data packets */
 static unsigned char vfs_ibuf[1024*1024];
 static int vfs_ilen;
 
-static void LoadImage (libusb_device_handle *dev)
+static void LoadImage (struct vfs_dev *dev)
 {
 	load(dev, vfs_ibuf, &vfs_ilen);
 	//fp_dbg("  Got %d bytes", vfs_ilen);
@@ -330,19 +336,22 @@ static void LoadImage (libusb_device_handle *dev)
 }
 
 
+/******************************************************************************************************
+ * Stuff
+ */
 
 
 /** Searching our device */
-static int validity_find_device(void)
+static int validity_find_device(struct vfs_dev *dev)
 {
-	devh = libusb_open_device_with_vid_pid(NULL, 0x138a, 0x0001);
-	return devh ? 0 : -EIO;
+	dev->devh = libusb_open_device_with_vid_pid(NULL, 0x138a, 0x0001);
+	return dev->devh ? 0 : -EIO;
 }
 
 /** Configuring device */
-static int validity_configure_device(void){
+static int validity_configure_device(struct vfs_dev *dev){
 	unsigned char data[] = "";
-	int r = libusb_control_transfer(devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 1, data, 0, VALIDITY_DEFAULT_WAIT_TIMEOUT); 
+	int r = libusb_control_transfer(dev->devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 1, data, 0, VALIDITY_DEFAULT_WAIT_TIMEOUT); 
 	return r;
 }
 
@@ -373,13 +382,13 @@ static void validity_print_packet_long(unsigned char *data, int length){
 /** Sends data to device 
  * if transfered < length - error
  */
-static int validity_send_data(unsigned char *data, int length){
+static int validity_send_data(struct vfs_dev *dev, unsigned char *data, int length){
 	fprintf(stdout, "UP  : ");
 	validity_print_packet(data, length);
 	fprintf(stdout, "\n");
 
 	int transferred = 0;
-	int r = libusb_bulk_transfer(devh, VALIDITY_SEND_ENDPOINT, data, length, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);	
+	int r = libusb_bulk_transfer(dev->devh, VALIDITY_SEND_ENDPOINT, data, length, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);	
 	if (r < 0)
 		return r;
 	if (transferred < length)
@@ -387,10 +396,10 @@ static int validity_send_data(unsigned char *data, int length){
 	return 0;
 }
 
-static int validity_receive_long_data(){
+static int validity_receive_long_data(struct vfs_dev *dev){
 	int transferred = 0;
 	unsigned char data[50000];
-	int r = libusb_bulk_transfer(devh, VALIDITY_RECEIVE_ENDPOINT_LONG, data, 50000, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);
+	int r = libusb_bulk_transfer(dev->devh, VALIDITY_RECEIVE_ENDPOINT_LONG, data, 50000, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);
 	if (r < 0)
 		return r;
 	fprintf(stdout, "DOWN: \n");
@@ -399,10 +408,10 @@ static int validity_receive_long_data(){
 	return 0;
 }
 
-static int validity_receive_data(){
+static int validity_receive_data(struct vfs_dev *dev){
 	int transferred = 0;
 	unsigned char data[64];
-	int r = libusb_bulk_transfer(devh, VALIDITY_RECEIVE_ENDPOINT, data, 64, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);
+	int r = libusb_bulk_transfer(dev->devh, VALIDITY_RECEIVE_ENDPOINT, data, 64, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);
 	if (r < 0)
 		return r;
 	fprintf(stdout, "DOWN: ");
@@ -411,24 +420,24 @@ static int validity_receive_data(){
 	return 0;
 }
 
-static int validity_swap_messages(unsigned char *data, int length){
-	int r = validity_send_data(data, length);
+static int validity_swap_messages(struct vfs_dev *dev, unsigned char *data, int length){
+	int r = validity_send_data(dev, data, length);
 	if (r != 0)
 		return r;
 	usleep(2000);
-	r = validity_receive_data();
+	r = validity_receive_data(dev);
 	if (r != 0)
 		return r;           
 	return 0;
 }
 
-static int validity_reset_device(void){
+static int validity_reset_device(struct vfs_dev *dev){
 	unsigned char data[] = "\x01\x00\x00\x00\x01\x00";
-	int r = validity_send_data(data, (int) sizeof(data) - 1);
+	int r = validity_send_data(dev, data, (int) sizeof(data) - 1);
 	return r;
 }
 
-static int validity_cycle4(void){
+static int validity_cycle4(struct vfs_dev *dev){
 	usleep(100000);
 	unsigned char data1[] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
 	unsigned char data2[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
@@ -442,20 +451,20 @@ static int validity_cycle4(void){
 	unsigned char data10[] = "\x0A\x00\x00\x00\x04\x00\x14\x00";
         int r = 0;
 
-	r = validity_swap_messages(data1, (int) sizeof(data1) - 1); 
-	validity_swap_messages(data2, (int) sizeof(data2) - 1); 
-	validity_swap_messages(data3, (int) sizeof(data3) - 1); 
-	validity_swap_messages(data4, (int) sizeof(data4) - 1); 
-	validity_swap_messages(data5, (int) sizeof(data5) - 1); 
-	validity_swap_messages(data6, (int) sizeof(data6) - 1); 
-	validity_swap_messages(data7, (int) sizeof(data7) - 1); 
-	validity_swap_messages(data8, (int) sizeof(data8) - 1); 
-	validity_swap_messages(data9, (int) sizeof(data9) - 1); 
-	validity_swap_messages(data10, (int) sizeof(data10) - 1); 
+	r = validity_swap_messages(dev, data1, (int) sizeof(data1) - 1); 
+	validity_swap_messages(dev, data2, (int) sizeof(data2) - 1); 
+	validity_swap_messages(dev, data3, (int) sizeof(data3) - 1); 
+	validity_swap_messages(dev, data4, (int) sizeof(data4) - 1); 
+	validity_swap_messages(dev, data5, (int) sizeof(data5) - 1); 
+	validity_swap_messages(dev, data6, (int) sizeof(data6) - 1); 
+	validity_swap_messages(dev, data7, (int) sizeof(data7) - 1); 
+	validity_swap_messages(dev, data8, (int) sizeof(data8) - 1); 
+	validity_swap_messages(dev, data9, (int) sizeof(data9) - 1); 
+	validity_swap_messages(dev, data10, (int) sizeof(data10) - 1); 
 	return r;
 }
 
-static int validity_cycle3(void){
+static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data1[] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
 	unsigned char data2[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
 	unsigned char data3[] = "\x03\x00\x00\x00\x12\x00\xF0\x1F\x00\x00\x04";
@@ -644,211 +653,211 @@ static int validity_cycle3(void){
 	unsigned char data186[] = "\xBA\x00\x00\x00\x16\x00";
 	unsigned char data187[] = "\xBB\x00\x00\x00\x16\x00";
         int r = 0;
-	validity_swap_messages(data1, (int) sizeof(data1) - 1); 
-	validity_swap_messages(data2, (int) sizeof(data2) - 1); 
-	validity_swap_messages(data3, (int) sizeof(data3) - 1); 
-	validity_swap_messages(data4, (int) sizeof(data4) - 1); 
-	validity_swap_messages(data5, (int) sizeof(data5) - 1); 
-	validity_swap_messages(data6, (int) sizeof(data6) - 1); 
-	validity_swap_messages(data7, (int) sizeof(data7) - 1); 
-	validity_swap_messages(data8, (int) sizeof(data8) - 1); 
-	validity_swap_messages(data9, (int) sizeof(data9) - 1); 
-	validity_swap_messages(data10, (int) sizeof(data10) - 1); 
-	validity_swap_messages(data11, (int) sizeof(data11) - 1); 
-	validity_swap_messages(data12, (int) sizeof(data12) - 1); 
-	validity_swap_messages(data13, (int) sizeof(data13) - 1); 
-	validity_swap_messages(data14, (int) sizeof(data14) - 1); 
-	validity_swap_messages(data15, (int) sizeof(data15) - 1); 
-	r = validity_receive_long_data();
-	r = validity_receive_long_data();
-	validity_swap_messages(data16, (int) sizeof(data16) - 1); 
-	validity_swap_messages(data17, (int) sizeof(data17) - 1); 
-	validity_swap_messages(data18, (int) sizeof(data18) - 1); 
-	validity_swap_messages(data19, (int) sizeof(data19) - 1); 
-	validity_swap_messages(data20, (int) sizeof(data20) - 1); 
-	validity_swap_messages(data21, (int) sizeof(data21) - 1); 
-	validity_swap_messages(data22, (int) sizeof(data22) - 1); 
-	validity_swap_messages(data23, (int) sizeof(data23) - 1); 
-	validity_swap_messages(data24, (int) sizeof(data24) - 1); 
-	validity_swap_messages(data25, (int) sizeof(data25) - 1); 
-	validity_swap_messages(data26, (int) sizeof(data26) - 1); 
-	validity_swap_messages(data27, (int) sizeof(data27) - 1); 
-	validity_swap_messages(data28, (int) sizeof(data28) - 1); 
-	validity_swap_messages(data29, (int) sizeof(data29) - 1); 
-	validity_swap_messages(data30, (int) sizeof(data30) - 1); 
-	validity_swap_messages(data31, (int) sizeof(data31) - 1); 
-	validity_swap_messages(data32, (int) sizeof(data32) - 1); 
-	validity_swap_messages(data33, (int) sizeof(data33) - 1); 
-	validity_swap_messages(data34, (int) sizeof(data34) - 1); 
-	validity_swap_messages(data35, (int) sizeof(data35) - 1); 
-	validity_swap_messages(data36, (int) sizeof(data36) - 1); 
-	validity_swap_messages(data37, (int) sizeof(data37) - 1); 
-	validity_swap_messages(data38, (int) sizeof(data38) - 1); 
-	validity_swap_messages(data39, (int) sizeof(data39) - 1); 
-	validity_swap_messages(data40, (int) sizeof(data40) - 1); 
-	validity_swap_messages(data41, (int) sizeof(data41) - 1); 
-	validity_swap_messages(data42, (int) sizeof(data42) - 1); 
-	validity_swap_messages(data43, (int) sizeof(data43) - 1); 
-	validity_swap_messages(data44, (int) sizeof(data44) - 1); 
-	validity_swap_messages(data45, (int) sizeof(data45) - 1); 
-	validity_swap_messages(data46, (int) sizeof(data46) - 1); 
-	validity_swap_messages(data47, (int) sizeof(data47) - 1); 
-	validity_swap_messages(data48, (int) sizeof(data48) - 1); 
-	validity_swap_messages(data49, (int) sizeof(data49) - 1); 
-	validity_swap_messages(data50, (int) sizeof(data50) - 1); 
-	validity_swap_messages(data51, (int) sizeof(data51) - 1); 
-	validity_swap_messages(data52, (int) sizeof(data52) - 1); 
-	validity_swap_messages(data53, (int) sizeof(data53) - 1); 
-	validity_swap_messages(data54, (int) sizeof(data54) - 1); 
-	validity_swap_messages(data55, (int) sizeof(data55) - 1); 
-	validity_swap_messages(data56, (int) sizeof(data56) - 1); 
-	validity_swap_messages(data57, (int) sizeof(data57) - 1); 
-	validity_swap_messages(data58, (int) sizeof(data58) - 1); 
-	validity_swap_messages(data59, (int) sizeof(data59) - 1); 
-	validity_swap_messages(data60, (int) sizeof(data60) - 1); 
-	validity_swap_messages(data61, (int) sizeof(data61) - 1); 
-	validity_swap_messages(data62, (int) sizeof(data62) - 1); 
-	validity_swap_messages(data63, (int) sizeof(data63) - 1); 
-	validity_swap_messages(data64, (int) sizeof(data64) - 1); 
-	validity_swap_messages(data65, (int) sizeof(data65) - 1); 
-	validity_swap_messages(data66, (int) sizeof(data66) - 1); 
-	validity_swap_messages(data67, (int) sizeof(data67) - 1); 
-	validity_swap_messages(data68, (int) sizeof(data68) - 1); 
-	validity_swap_messages(data69, (int) sizeof(data69) - 1); 
-	validity_swap_messages(data70, (int) sizeof(data70) - 1); 
-	validity_swap_messages(data71, (int) sizeof(data71) - 1); 
-	validity_swap_messages(data72, (int) sizeof(data72) - 1); 
-	validity_swap_messages(data73, (int) sizeof(data73) - 1); 
-	validity_swap_messages(data74, (int) sizeof(data74) - 1); 
-	validity_swap_messages(data75, (int) sizeof(data75) - 1); 
-	validity_swap_messages(data76, (int) sizeof(data76) - 1); 
-	validity_swap_messages(data77, (int) sizeof(data77) - 1); 
-	validity_swap_messages(data78, (int) sizeof(data78) - 1); 
-	validity_swap_messages(data79, (int) sizeof(data79) - 1); 
-	validity_swap_messages(data80, (int) sizeof(data80) - 1); 
-	validity_swap_messages(data81, (int) sizeof(data81) - 1); 
-	validity_swap_messages(data82, (int) sizeof(data82) - 1); 
-	validity_swap_messages(data83, (int) sizeof(data83) - 1); 
-	validity_swap_messages(data84, (int) sizeof(data84) - 1); 
-	validity_swap_messages(data85, (int) sizeof(data85) - 1); 
-	validity_swap_messages(data86, (int) sizeof(data86) - 1); 
-	validity_swap_messages(data87, (int) sizeof(data87) - 1); 
-	validity_swap_messages(data88, (int) sizeof(data88) - 1); 
-	validity_swap_messages(data89, (int) sizeof(data89) - 1); 
-	validity_swap_messages(data90, (int) sizeof(data90) - 1); 
-	validity_swap_messages(data91, (int) sizeof(data91) - 1); 
-	validity_swap_messages(data92, (int) sizeof(data92) - 1); 
-	validity_swap_messages(data93, (int) sizeof(data93) - 1); 
-	validity_swap_messages(data94, (int) sizeof(data94) - 1); 
-	validity_swap_messages(data95, (int) sizeof(data95) - 1); 
-	validity_swap_messages(data96, (int) sizeof(data96) - 1); 
-	validity_swap_messages(data97, (int) sizeof(data97) - 1); 
-	validity_swap_messages(data98, (int) sizeof(data98) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data99, (int) sizeof(data99) - 1); 
-	validity_swap_messages(data100, (int) sizeof(data100) - 1); 
-	validity_swap_messages(data101, (int) sizeof(data101) - 1); 
-	validity_swap_messages(data102, (int) sizeof(data102) - 1); 
-	validity_swap_messages(data103, (int) sizeof(data103) - 1); 
-	validity_swap_messages(data104, (int) sizeof(data104) - 1); 
-	validity_swap_messages(data105, (int) sizeof(data105) - 1); 
-	validity_swap_messages(data106, (int) sizeof(data106) - 1); 
-	validity_swap_messages(data107, (int) sizeof(data107) - 1); 
-	validity_swap_messages(data108, (int) sizeof(data108) - 1); 
-	validity_swap_messages(data109, (int) sizeof(data109) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data110, (int) sizeof(data110) - 1); 
-	validity_swap_messages(data111, (int) sizeof(data111) - 1); 
-	validity_swap_messages(data112, (int) sizeof(data112) - 1); 
-	validity_swap_messages(data113, (int) sizeof(data113) - 1); 
-	validity_swap_messages(data114, (int) sizeof(data114) - 1); 
-	validity_swap_messages(data115, (int) sizeof(data115) - 1); 
-	validity_swap_messages(data116, (int) sizeof(data116) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data117, (int) sizeof(data117) - 1); 
-	validity_swap_messages(data118, (int) sizeof(data118) - 1); 
-	validity_swap_messages(data119, (int) sizeof(data119) - 1); 
-	validity_swap_messages(data120, (int) sizeof(data120) - 1); 
-	validity_swap_messages(data121, (int) sizeof(data121) - 1); 
-	validity_swap_messages(data122, (int) sizeof(data122) - 1); 
-	validity_swap_messages(data123, (int) sizeof(data123) - 1); 
-	validity_swap_messages(data124, (int) sizeof(data124) - 1); 
-	validity_swap_messages(data125, (int) sizeof(data125) - 1); 
-	validity_swap_messages(data126, (int) sizeof(data126) - 1); 
-	validity_swap_messages(data127, (int) sizeof(data127) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data128, (int) sizeof(data128) - 1); 
-	validity_swap_messages(data129, (int) sizeof(data129) - 1); 
-	validity_swap_messages(data130, (int) sizeof(data130) - 1); 
-	validity_swap_messages(data131, (int) sizeof(data131) - 1); 
-	validity_swap_messages(data132, (int) sizeof(data132) - 1); 
-	validity_swap_messages(data133, (int) sizeof(data133) - 1); 
-	validity_swap_messages(data134, (int) sizeof(data134) - 1); 
-	validity_swap_messages(data135, (int) sizeof(data135) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data136, (int) sizeof(data136) - 1); 
-	validity_swap_messages(data137, (int) sizeof(data137) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data138, (int) sizeof(data138) - 1); 
-	validity_swap_messages(data139, (int) sizeof(data139) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data140, (int) sizeof(data140) - 1); 
-	validity_swap_messages(data141, (int) sizeof(data141) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data142, (int) sizeof(data142) - 1); 
-	validity_swap_messages(data143, (int) sizeof(data143) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data144, (int) sizeof(data144) - 1); 
-	validity_swap_messages(data145, (int) sizeof(data145) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data146, (int) sizeof(data146) - 1); 
-	validity_swap_messages(data147, (int) sizeof(data147) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data148, (int) sizeof(data148) - 1); 
-	validity_swap_messages(data149, (int) sizeof(data149) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data150, (int) sizeof(data150) - 1); 
-	validity_swap_messages(data151, (int) sizeof(data151) - 1); 
-	validity_swap_messages(data152, (int) sizeof(data152) - 1); 
-	validity_swap_messages(data153, (int) sizeof(data153) - 1); 
-	validity_swap_messages(data154, (int) sizeof(data154) - 1); 
-	validity_swap_messages(data155, (int) sizeof(data155) - 1); 
-	validity_swap_messages(data156, (int) sizeof(data156) - 1); 
-	validity_swap_messages(data157, (int) sizeof(data157) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data158, (int) sizeof(data158) - 1); 
-	validity_swap_messages(data159, (int) sizeof(data159) - 1); 
-	validity_swap_messages(data160, (int) sizeof(data160) - 1); 
-	validity_swap_messages(data161, (int) sizeof(data161) - 1); 
-	validity_swap_messages(data162, (int) sizeof(data162) - 1); 
-	validity_swap_messages(data163, (int) sizeof(data163) - 1); 
-	validity_swap_messages(data164, (int) sizeof(data164) - 1); 
-	validity_swap_messages(data165, (int) sizeof(data165) - 1); 
-	r = validity_receive_long_data();
-	r = validity_receive_long_data();
-	validity_swap_messages(data166, (int) sizeof(data166) - 1); 
-	validity_swap_messages(data167, (int) sizeof(data167) - 1); 
-	validity_swap_messages(data168, (int) sizeof(data168) - 1); 
-	validity_swap_messages(data169, (int) sizeof(data169) - 1); 
-	validity_swap_messages(data170, (int) sizeof(data170) - 1); 
-	r = validity_receive_long_data();
-	validity_swap_messages(data171, (int) sizeof(data171) - 1); 
-	validity_swap_messages(data172, (int) sizeof(data172) - 1); 
-	validity_swap_messages(data173, (int) sizeof(data173) - 1); 
-	r = validity_receive_long_data();
-	r = validity_receive_long_data();
-	validity_swap_messages(data174, (int) sizeof(data174) - 1); 
-	validity_swap_messages(data175, (int) sizeof(data175) - 1); 
-	validity_swap_messages(data176, (int) sizeof(data176) - 1); 
+	validity_swap_messages(dev, data1, (int) sizeof(data1) - 1); 
+	validity_swap_messages(dev, data2, (int) sizeof(data2) - 1); 
+	validity_swap_messages(dev, data3, (int) sizeof(data3) - 1); 
+	validity_swap_messages(dev, data4, (int) sizeof(data4) - 1); 
+	validity_swap_messages(dev, data5, (int) sizeof(data5) - 1); 
+	validity_swap_messages(dev, data6, (int) sizeof(data6) - 1); 
+	validity_swap_messages(dev, data7, (int) sizeof(data7) - 1); 
+	validity_swap_messages(dev, data8, (int) sizeof(data8) - 1); 
+	validity_swap_messages(dev, data9, (int) sizeof(data9) - 1); 
+	validity_swap_messages(dev, data10, (int) sizeof(data10) - 1); 
+	validity_swap_messages(dev, data11, (int) sizeof(data11) - 1); 
+	validity_swap_messages(dev, data12, (int) sizeof(data12) - 1); 
+	validity_swap_messages(dev, data13, (int) sizeof(data13) - 1); 
+	validity_swap_messages(dev, data14, (int) sizeof(data14) - 1); 
+	validity_swap_messages(dev, data15, (int) sizeof(data15) - 1); 
+	r = validity_receive_long_data(dev);
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data16, (int) sizeof(data16) - 1); 
+	validity_swap_messages(dev, data17, (int) sizeof(data17) - 1); 
+	validity_swap_messages(dev, data18, (int) sizeof(data18) - 1); 
+	validity_swap_messages(dev, data19, (int) sizeof(data19) - 1); 
+	validity_swap_messages(dev, data20, (int) sizeof(data20) - 1); 
+	validity_swap_messages(dev, data21, (int) sizeof(data21) - 1); 
+	validity_swap_messages(dev, data22, (int) sizeof(data22) - 1); 
+	validity_swap_messages(dev, data23, (int) sizeof(data23) - 1); 
+	validity_swap_messages(dev, data24, (int) sizeof(data24) - 1); 
+	validity_swap_messages(dev, data25, (int) sizeof(data25) - 1); 
+	validity_swap_messages(dev, data26, (int) sizeof(data26) - 1); 
+	validity_swap_messages(dev, data27, (int) sizeof(data27) - 1); 
+	validity_swap_messages(dev, data28, (int) sizeof(data28) - 1); 
+	validity_swap_messages(dev, data29, (int) sizeof(data29) - 1); 
+	validity_swap_messages(dev, data30, (int) sizeof(data30) - 1); 
+	validity_swap_messages(dev, data31, (int) sizeof(data31) - 1); 
+	validity_swap_messages(dev, data32, (int) sizeof(data32) - 1); 
+	validity_swap_messages(dev, data33, (int) sizeof(data33) - 1); 
+	validity_swap_messages(dev, data34, (int) sizeof(data34) - 1); 
+	validity_swap_messages(dev, data35, (int) sizeof(data35) - 1); 
+	validity_swap_messages(dev, data36, (int) sizeof(data36) - 1); 
+	validity_swap_messages(dev, data37, (int) sizeof(data37) - 1); 
+	validity_swap_messages(dev, data38, (int) sizeof(data38) - 1); 
+	validity_swap_messages(dev, data39, (int) sizeof(data39) - 1); 
+	validity_swap_messages(dev, data40, (int) sizeof(data40) - 1); 
+	validity_swap_messages(dev, data41, (int) sizeof(data41) - 1); 
+	validity_swap_messages(dev, data42, (int) sizeof(data42) - 1); 
+	validity_swap_messages(dev, data43, (int) sizeof(data43) - 1); 
+	validity_swap_messages(dev, data44, (int) sizeof(data44) - 1); 
+	validity_swap_messages(dev, data45, (int) sizeof(data45) - 1); 
+	validity_swap_messages(dev, data46, (int) sizeof(data46) - 1); 
+	validity_swap_messages(dev, data47, (int) sizeof(data47) - 1); 
+	validity_swap_messages(dev, data48, (int) sizeof(data48) - 1); 
+	validity_swap_messages(dev, data49, (int) sizeof(data49) - 1); 
+	validity_swap_messages(dev, data50, (int) sizeof(data50) - 1); 
+	validity_swap_messages(dev, data51, (int) sizeof(data51) - 1); 
+	validity_swap_messages(dev, data52, (int) sizeof(data52) - 1); 
+	validity_swap_messages(dev, data53, (int) sizeof(data53) - 1); 
+	validity_swap_messages(dev, data54, (int) sizeof(data54) - 1); 
+	validity_swap_messages(dev, data55, (int) sizeof(data55) - 1); 
+	validity_swap_messages(dev, data56, (int) sizeof(data56) - 1); 
+	validity_swap_messages(dev, data57, (int) sizeof(data57) - 1); 
+	validity_swap_messages(dev, data58, (int) sizeof(data58) - 1); 
+	validity_swap_messages(dev, data59, (int) sizeof(data59) - 1); 
+	validity_swap_messages(dev, data60, (int) sizeof(data60) - 1); 
+	validity_swap_messages(dev, data61, (int) sizeof(data61) - 1); 
+	validity_swap_messages(dev, data62, (int) sizeof(data62) - 1); 
+	validity_swap_messages(dev, data63, (int) sizeof(data63) - 1); 
+	validity_swap_messages(dev, data64, (int) sizeof(data64) - 1); 
+	validity_swap_messages(dev, data65, (int) sizeof(data65) - 1); 
+	validity_swap_messages(dev, data66, (int) sizeof(data66) - 1); 
+	validity_swap_messages(dev, data67, (int) sizeof(data67) - 1); 
+	validity_swap_messages(dev, data68, (int) sizeof(data68) - 1); 
+	validity_swap_messages(dev, data69, (int) sizeof(data69) - 1); 
+	validity_swap_messages(dev, data70, (int) sizeof(data70) - 1); 
+	validity_swap_messages(dev, data71, (int) sizeof(data71) - 1); 
+	validity_swap_messages(dev, data72, (int) sizeof(data72) - 1); 
+	validity_swap_messages(dev, data73, (int) sizeof(data73) - 1); 
+	validity_swap_messages(dev, data74, (int) sizeof(data74) - 1); 
+	validity_swap_messages(dev, data75, (int) sizeof(data75) - 1); 
+	validity_swap_messages(dev, data76, (int) sizeof(data76) - 1); 
+	validity_swap_messages(dev, data77, (int) sizeof(data77) - 1); 
+	validity_swap_messages(dev, data78, (int) sizeof(data78) - 1); 
+	validity_swap_messages(dev, data79, (int) sizeof(data79) - 1); 
+	validity_swap_messages(dev, data80, (int) sizeof(data80) - 1); 
+	validity_swap_messages(dev, data81, (int) sizeof(data81) - 1); 
+	validity_swap_messages(dev, data82, (int) sizeof(data82) - 1); 
+	validity_swap_messages(dev, data83, (int) sizeof(data83) - 1); 
+	validity_swap_messages(dev, data84, (int) sizeof(data84) - 1); 
+	validity_swap_messages(dev, data85, (int) sizeof(data85) - 1); 
+	validity_swap_messages(dev, data86, (int) sizeof(data86) - 1); 
+	validity_swap_messages(dev, data87, (int) sizeof(data87) - 1); 
+	validity_swap_messages(dev, data88, (int) sizeof(data88) - 1); 
+	validity_swap_messages(dev, data89, (int) sizeof(data89) - 1); 
+	validity_swap_messages(dev, data90, (int) sizeof(data90) - 1); 
+	validity_swap_messages(dev, data91, (int) sizeof(data91) - 1); 
+	validity_swap_messages(dev, data92, (int) sizeof(data92) - 1); 
+	validity_swap_messages(dev, data93, (int) sizeof(data93) - 1); 
+	validity_swap_messages(dev, data94, (int) sizeof(data94) - 1); 
+	validity_swap_messages(dev, data95, (int) sizeof(data95) - 1); 
+	validity_swap_messages(dev, data96, (int) sizeof(data96) - 1); 
+	validity_swap_messages(dev, data97, (int) sizeof(data97) - 1); 
+	validity_swap_messages(dev, data98, (int) sizeof(data98) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data99, (int) sizeof(data99) - 1); 
+	validity_swap_messages(dev, data100, (int) sizeof(data100) - 1); 
+	validity_swap_messages(dev, data101, (int) sizeof(data101) - 1); 
+	validity_swap_messages(dev, data102, (int) sizeof(data102) - 1); 
+	validity_swap_messages(dev, data103, (int) sizeof(data103) - 1); 
+	validity_swap_messages(dev, data104, (int) sizeof(data104) - 1); 
+	validity_swap_messages(dev, data105, (int) sizeof(data105) - 1); 
+	validity_swap_messages(dev, data106, (int) sizeof(data106) - 1); 
+	validity_swap_messages(dev, data107, (int) sizeof(data107) - 1); 
+	validity_swap_messages(dev, data108, (int) sizeof(data108) - 1); 
+	validity_swap_messages(dev, data109, (int) sizeof(data109) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data110, (int) sizeof(data110) - 1); 
+	validity_swap_messages(dev, data111, (int) sizeof(data111) - 1); 
+	validity_swap_messages(dev, data112, (int) sizeof(data112) - 1); 
+	validity_swap_messages(dev, data113, (int) sizeof(data113) - 1); 
+	validity_swap_messages(dev, data114, (int) sizeof(data114) - 1); 
+	validity_swap_messages(dev, data115, (int) sizeof(data115) - 1); 
+	validity_swap_messages(dev, data116, (int) sizeof(data116) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data117, (int) sizeof(data117) - 1); 
+	validity_swap_messages(dev, data118, (int) sizeof(data118) - 1); 
+	validity_swap_messages(dev, data119, (int) sizeof(data119) - 1); 
+	validity_swap_messages(dev, data120, (int) sizeof(data120) - 1); 
+	validity_swap_messages(dev, data121, (int) sizeof(data121) - 1); 
+	validity_swap_messages(dev, data122, (int) sizeof(data122) - 1); 
+	validity_swap_messages(dev, data123, (int) sizeof(data123) - 1); 
+	validity_swap_messages(dev, data124, (int) sizeof(data124) - 1); 
+	validity_swap_messages(dev, data125, (int) sizeof(data125) - 1); 
+	validity_swap_messages(dev, data126, (int) sizeof(data126) - 1); 
+	validity_swap_messages(dev, data127, (int) sizeof(data127) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data128, (int) sizeof(data128) - 1); 
+	validity_swap_messages(dev, data129, (int) sizeof(data129) - 1); 
+	validity_swap_messages(dev, data130, (int) sizeof(data130) - 1); 
+	validity_swap_messages(dev, data131, (int) sizeof(data131) - 1); 
+	validity_swap_messages(dev, data132, (int) sizeof(data132) - 1); 
+	validity_swap_messages(dev, data133, (int) sizeof(data133) - 1); 
+	validity_swap_messages(dev, data134, (int) sizeof(data134) - 1); 
+	validity_swap_messages(dev, data135, (int) sizeof(data135) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data136, (int) sizeof(data136) - 1); 
+	validity_swap_messages(dev, data137, (int) sizeof(data137) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data138, (int) sizeof(data138) - 1); 
+	validity_swap_messages(dev, data139, (int) sizeof(data139) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data140, (int) sizeof(data140) - 1); 
+	validity_swap_messages(dev, data141, (int) sizeof(data141) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data142, (int) sizeof(data142) - 1); 
+	validity_swap_messages(dev, data143, (int) sizeof(data143) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data144, (int) sizeof(data144) - 1); 
+	validity_swap_messages(dev, data145, (int) sizeof(data145) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data146, (int) sizeof(data146) - 1); 
+	validity_swap_messages(dev, data147, (int) sizeof(data147) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data148, (int) sizeof(data148) - 1); 
+	validity_swap_messages(dev, data149, (int) sizeof(data149) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data150, (int) sizeof(data150) - 1); 
+	validity_swap_messages(dev, data151, (int) sizeof(data151) - 1); 
+	validity_swap_messages(dev, data152, (int) sizeof(data152) - 1); 
+	validity_swap_messages(dev, data153, (int) sizeof(data153) - 1); 
+	validity_swap_messages(dev, data154, (int) sizeof(data154) - 1); 
+	validity_swap_messages(dev, data155, (int) sizeof(data155) - 1); 
+	validity_swap_messages(dev, data156, (int) sizeof(data156) - 1); 
+	validity_swap_messages(dev, data157, (int) sizeof(data157) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data158, (int) sizeof(data158) - 1); 
+	validity_swap_messages(dev, data159, (int) sizeof(data159) - 1); 
+	validity_swap_messages(dev, data160, (int) sizeof(data160) - 1); 
+	validity_swap_messages(dev, data161, (int) sizeof(data161) - 1); 
+	validity_swap_messages(dev, data162, (int) sizeof(data162) - 1); 
+	validity_swap_messages(dev, data163, (int) sizeof(data163) - 1); 
+	validity_swap_messages(dev, data164, (int) sizeof(data164) - 1); 
+	validity_swap_messages(dev, data165, (int) sizeof(data165) - 1); 
+	r = validity_receive_long_data(dev);
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data166, (int) sizeof(data166) - 1); 
+	validity_swap_messages(dev, data167, (int) sizeof(data167) - 1); 
+	validity_swap_messages(dev, data168, (int) sizeof(data168) - 1); 
+	validity_swap_messages(dev, data169, (int) sizeof(data169) - 1); 
+	validity_swap_messages(dev, data170, (int) sizeof(data170) - 1); 
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data171, (int) sizeof(data171) - 1); 
+	validity_swap_messages(dev, data172, (int) sizeof(data172) - 1); 
+	validity_swap_messages(dev, data173, (int) sizeof(data173) - 1); 
+	r = validity_receive_long_data(dev);
+	r = validity_receive_long_data(dev);
+	validity_swap_messages(dev, data174, (int) sizeof(data174) - 1); 
+	validity_swap_messages(dev, data175, (int) sizeof(data175) - 1); 
+	validity_swap_messages(dev, data176, (int) sizeof(data176) - 1); 
 
 	int i = 0;
 	for (i; i < 50; i++)
-		validity_swap_messages(data177, (int) sizeof(data177) - 1); 
+		validity_swap_messages(dev, data177, (int) sizeof(data177) - 1); 
 		usleep(750000);
 	return 0;
 }
 
-static int validity_cycle2(void){
+static int validity_cycle2(struct vfs_dev *dev){
 	unsigned char data00 [] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
 	unsigned char data01 [] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
 	unsigned char data02 [] = "\x03\x00\x00\x00\x12\x00\xF0\x1F\x00\x00\x04";
@@ -857,18 +866,18 @@ static int validity_cycle2(void){
 	unsigned char data05 [] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
 	unsigned char data[] = "\xF5\x00\x00\x00\x16\x00"; 
 	
-	validity_swap_messages(data00, (int) sizeof(data00) - 1);
-	validity_swap_messages(data01, (int) sizeof(data01) - 1);
-	validity_swap_messages(data02, (int) sizeof(data02) - 1);
-	validity_swap_messages(data03, (int) sizeof(data03) - 1);
-	validity_swap_messages(data04, (int) sizeof(data04) - 1);
-	validity_swap_messages(data05, (int) sizeof(data05) - 1);
+	validity_swap_messages(dev, data00, (int) sizeof(data00) - 1);
+	validity_swap_messages(dev, data01, (int) sizeof(data01) - 1);
+	validity_swap_messages(dev, data02, (int) sizeof(data02) - 1);
+	validity_swap_messages(dev, data03, (int) sizeof(data03) - 1);
+	validity_swap_messages(dev, data04, (int) sizeof(data04) - 1);
+	validity_swap_messages(dev, data05, (int) sizeof(data05) - 1);
 
-	int r = validity_swap_messages(data, (int) sizeof(data) - 1);
+	int r = validity_swap_messages(dev, data, (int) sizeof(data) - 1);
 	return r;
 }
 
-static int validity_cycle1(void){
+static int validity_cycle1(struct vfs_dev *dev){
 	unsigned char data00 [] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
 	unsigned char data01 [] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
 	unsigned char data02 [] = "\x03\x00\x00\x00\x12\x00\xF0\x1F\x00\x00\x04";
@@ -912,168 +921,168 @@ static int validity_cycle1(void){
 
 	unsigned char data4[] = "\xF5\x00\x00\x00\x16\x00"; 
 
-	int r = validity_swap_messages(data00, (int) sizeof(data00) - 1);
+	int r = validity_swap_messages(dev, data00, (int) sizeof(data00) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data01, (int) sizeof(data01) - 1);
+	r = validity_swap_messages(dev, data01, (int) sizeof(data01) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data02, (int) sizeof(data02) - 1);
+	r = validity_swap_messages(dev, data02, (int) sizeof(data02) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data03, (int) sizeof(data03) - 1);
+	r = validity_swap_messages(dev, data03, (int) sizeof(data03) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data04, (int) sizeof(data04) - 1);
+	r = validity_swap_messages(dev, data04, (int) sizeof(data04) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data05, (int) sizeof(data05) - 1);
+	r = validity_swap_messages(dev, data05, (int) sizeof(data05) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data06, (int) sizeof(data06) - 1);
+	r = validity_swap_messages(dev, data06, (int) sizeof(data06) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data07, (int) sizeof(data07) - 1);
+	r = validity_swap_messages(dev, data07, (int) sizeof(data07) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data08, (int) sizeof(data08) - 1);
+	r = validity_swap_messages(dev, data08, (int) sizeof(data08) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data09, (int) sizeof(data09) - 1);
+	r = validity_swap_messages(dev, data09, (int) sizeof(data09) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data10, (int) sizeof(data10) - 1);
+	r = validity_swap_messages(dev, data10, (int) sizeof(data10) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data11, (int) sizeof(data11) - 1);
+	r = validity_swap_messages(dev, data11, (int) sizeof(data11) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data12, (int) sizeof(data12) - 1);
+	r = validity_swap_messages(dev, data12, (int) sizeof(data12) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data13, (int) sizeof(data13) - 1);
+	r = validity_swap_messages(dev, data13, (int) sizeof(data13) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data14, (int) sizeof(data14) - 1);
+	r = validity_swap_messages(dev, data14, (int) sizeof(data14) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data15, (int) sizeof(data15) - 1);
-	if (r != 0)                                               
-		return r;                                         
-
-	r = validity_receive_long_data();
-	r = validity_receive_long_data();
-
-	r = validity_swap_messages(data16, (int) sizeof(data16) - 1);
+	r = validity_swap_messages(dev, data15, (int) sizeof(data15) - 1);
 	if (r != 0)                                               
 		return r;                                         
 
-	r = validity_receive_long_data();
+	r = validity_receive_long_data(dev);
+	r = validity_receive_long_data(dev);
+
+	r = validity_swap_messages(dev, data16, (int) sizeof(data16) - 1);
+	if (r != 0)                                               
+		return r;                                         
+
+	r = validity_receive_long_data(dev);
 	
-	r = validity_swap_messages(data17, (int) sizeof(data17) - 1);
+	r = validity_swap_messages(dev, data17, (int) sizeof(data17) - 1);
 	if (r != 0)                                               
 		return r;                                         
 
-	r = validity_receive_long_data();
-	r = validity_receive_long_data();
+	r = validity_receive_long_data(dev);
+	r = validity_receive_long_data(dev);
 
-	r = validity_swap_messages(data18, (int) sizeof(data18) - 1);
+	r = validity_swap_messages(dev, data18, (int) sizeof(data18) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data19, (int) sizeof(data19) - 1);
+	r = validity_swap_messages(dev, data19, (int) sizeof(data19) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data20, (int) sizeof(data20) - 1);
+	r = validity_swap_messages(dev, data20, (int) sizeof(data20) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data21, (int) sizeof(data21) - 1);
+	r = validity_swap_messages(dev, data21, (int) sizeof(data21) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data22, (int) sizeof(data22) - 1);
+	r = validity_swap_messages(dev, data22, (int) sizeof(data22) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data23, (int) sizeof(data23) - 1);
+	r = validity_swap_messages(dev, data23, (int) sizeof(data23) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data24, (int) sizeof(data24) - 1);
+	r = validity_swap_messages(dev, data24, (int) sizeof(data24) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data25, (int) sizeof(data25) - 1);
+	r = validity_swap_messages(dev, data25, (int) sizeof(data25) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data26, (int) sizeof(data26) - 1);
+	r = validity_swap_messages(dev, data26, (int) sizeof(data26) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data27, (int) sizeof(data27) - 1);
+	r = validity_swap_messages(dev, data27, (int) sizeof(data27) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data28, (int) sizeof(data28) - 1);
+	r = validity_swap_messages(dev, data28, (int) sizeof(data28) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data29, (int) sizeof(data29) - 1);
+	r = validity_swap_messages(dev, data29, (int) sizeof(data29) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data30, (int) sizeof(data30) - 1);
+	r = validity_swap_messages(dev, data30, (int) sizeof(data30) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data31, (int) sizeof(data31) - 1);
+	r = validity_swap_messages(dev, data31, (int) sizeof(data31) - 1);
 	if (r != 0)                                               
 		return r;                                         
 
-	r = validity_swap_messages(data32, (int) sizeof(data32) - 1);
+	r = validity_swap_messages(dev, data32, (int) sizeof(data32) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data33, (int) sizeof(data33) - 1);
+	r = validity_swap_messages(dev, data33, (int) sizeof(data33) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data34, (int) sizeof(data34) - 1);
+	r = validity_swap_messages(dev, data34, (int) sizeof(data34) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data35, (int) sizeof(data35) - 1);
+	r = validity_swap_messages(dev, data35, (int) sizeof(data35) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data36, (int) sizeof(data36) - 1);
+	r = validity_swap_messages(dev, data36, (int) sizeof(data36) - 1);
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data37, (int) sizeof(data37) - 1);
+	r = validity_swap_messages(dev, data37, (int) sizeof(data37) - 1);
 	if (r != 0)                                               
 		return r;                                         
 
 	int i = 0;
 	for (i; i < 80; i++){
-		r = validity_swap_messages(data4, (int) sizeof(data4) - 1);
+		r = validity_swap_messages(dev, data4, (int) sizeof(data4) - 1);
 		if (r != 0)
 			return r;
 	}	
 /*	
-	r = validity_swap_messages(data32, (int) sizeof(data32- 1));
+	r = validity_swap_messages(dev, data32, (int) sizeof(data32- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data33, (int) sizeof(data33- 1));
+	r = validity_swap_messages(dev, data33, (int) sizeof(data33- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data34, (int) sizeof(data34- 1));
+	r = validity_swap_messages(dev, data34, (int) sizeof(data34- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data35, (int) sizeof(data35- 1));
+	r = validity_swap_messages(dev, data35, (int) sizeof(data35- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data36, (int) sizeof(data36- 1));
+	r = validity_swap_messages(dev, data36, (int) sizeof(data36- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data37, (int) sizeof(data37- 1));
+	r = validity_swap_messages(dev, data37, (int) sizeof(data37- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data38, (int) sizeof(data38- 1));
+	r = validity_swap_messages(dev, data38, (int) sizeof(data38- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data39, (int) sizeof(data39- 1));
+	r = validity_swap_messages(dev, data39, (int) sizeof(data39- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data40, (int) sizeof(data40- 1));
+	r = validity_swap_messages(dev, data40, (int) sizeof(data40- 1));
 	if (r != 0)                                               
 		return r;                                         
-	r = validity_swap_messages(data41, (int) sizeof(data41- 1));
+	r = validity_swap_messages(dev, data41, (int) sizeof(data41- 1));
 	if (r != 0)
 		return r;
 */
@@ -1081,7 +1090,7 @@ static int validity_cycle1(void){
 	return 0;
 }
 
-static int validity_cycle0(void){
+static int validity_cycle0(struct vfs_dev *dev){
 	unsigned char data1[] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
 	unsigned char data2[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
 	unsigned char data3[] = "\x03\x00\x00\x00\x12\x00\xF0\x1F\x00\x00\x04";
@@ -1090,32 +1099,32 @@ static int validity_cycle0(void){
 	unsigned char data6[] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
 
 
-	validity_swap_messages(data1, (int) sizeof(data1) - 1); 
-	validity_swap_messages(data2, (int) sizeof(data2) - 1); 
-	validity_swap_messages(data3, (int) sizeof(data3) - 1); 
-	validity_swap_messages(data4, (int) sizeof(data4) - 1); 
-	validity_swap_messages(data5, (int) sizeof(data5) - 1); 
-	validity_swap_messages(data6, (int) sizeof(data6) - 1); 
+	validity_swap_messages(dev, data1, (int) sizeof(data1) - 1); 
+	validity_swap_messages(dev, data2, (int) sizeof(data2) - 1); 
+	validity_swap_messages(dev, data3, (int) sizeof(data3) - 1); 
+	validity_swap_messages(dev, data4, (int) sizeof(data4) - 1); 
+	validity_swap_messages(dev, data5, (int) sizeof(data5) - 1); 
+	validity_swap_messages(dev, data6, (int) sizeof(data6) - 1); 
 
 
 	unsigned char data36 [] = "\x04\x65\x00\x00\x05\x00\x62\x00\x32\x00";
 	unsigned char data171[] = "\xAB\x00\x00\x00\x03\x00\x14\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data44[] = "\xF5\x00\x00\x00\x16\x00"; 
 
-	validity_swap_messages(data36, (int) sizeof(data36) - 1);
-//	validity_swap_messages(data171, (int) sizeof(data171) - 1);
-//	validity_receive_long_data();	
+	validity_swap_messages(dev, data36, (int) sizeof(data36) - 1);
+//	validity_swap_messages(dev, data171, (int) sizeof(data171) - 1);
+//	validity_receive_long_data(dev)	;
 
 	int i = 0;
 
 	for (i; i < 10; i++){
-		validity_swap_messages(data44, (int) sizeof(data44) - 1);
+		validity_swap_messages(dev, data44, (int) sizeof(data44) - 1);
 	}
 
 	return 0; 
 }
 	
-static int validity_cycle(void){
+static int validity_cycle(struct vfs_dev *dev){
 	unsigned char data[] = "\x00\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";//{packet_num_l, packet_num_h, 0x00, 0x00, 0x12, 0x00, 0xE8, 0x1F, 0x00, 0x00, 0x04};
 	unsigned char data1[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
 	unsigned char data2[] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
@@ -1125,36 +1134,36 @@ static int validity_cycle(void){
 	unsigned char data6[] = "\xB2\x00\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01"; 
 	unsigned char data7[] = "\xB0\x00\x00\x00\x04\x00\x11\x00";
 
-	int r = validity_swap_messages(data, (int) sizeof(data) - 1);
+	int r = validity_swap_messages(dev, data, (int) sizeof(data) - 1);
 	if (r != 0)
 		return r;
-	r = validity_swap_messages(data1, (int) sizeof(data1) - 1);
+	r = validity_swap_messages(dev, data1, (int) sizeof(data1) - 1);
 	if (r != 0)
 		return r;
-	r = validity_swap_messages(data2, (int) sizeof(data2) - 1);
+	r = validity_swap_messages(dev, data2, (int) sizeof(data2) - 1);
 	if (r != 0)
 		return r;
-	r = validity_receive_long_data();
+	r = validity_receive_long_data(dev);
 
-	r = validity_swap_messages(data3, (int) sizeof(data3) - 1);
-	if (r != 0)
-		return r;
-
-	r = validity_swap_messages(data7, (int) sizeof(data7) - 1);
+	r = validity_swap_messages(dev, data3, (int) sizeof(data3) - 1);
 	if (r != 0)
 		return r;
 
-	r = validity_swap_messages(data5, (int) sizeof(data5) - 1);
+	r = validity_swap_messages(dev, data7, (int) sizeof(data7) - 1);
 	if (r != 0)
 		return r;
 
-	r = validity_swap_messages(data6, (int) sizeof(data6) - 1);
+	r = validity_swap_messages(dev, data5, (int) sizeof(data5) - 1);
+	if (r != 0)
+		return r;
+
+	r = validity_swap_messages(dev, data6, (int) sizeof(data6) - 1);
 	if (r != 0)
 		return r;
 
 	int i = 0;
 	for (i; i < 20; i++){
-		r = validity_swap_messages(data4, (int) sizeof(data4) - 1);
+		r = validity_swap_messages(dev, data4, (int) sizeof(data4) - 1);
 		if (r != 0)
 			return r;
 	}	
@@ -1165,10 +1174,13 @@ static int validity_cycle(void){
 /** Main function */
 int main(void)
 {
+	struct vfs_dev _dev, *dev = &_dev;
 	struct sigaction sigact;
 	int r = 1;
 
-	r = libusb_init(&ctx);
+	dev->seq = 0;
+
+	r = libusb_init(&dev->ctx);
 	if (r < 0) {
 		fprintf(stderr, "failed to initialise libusb\n");
 		exit(1);
@@ -1177,7 +1189,7 @@ int main(void)
 
 
 	fprintf(stdout, "Searching for device...\n");
-	r = validity_find_device();
+	r = validity_find_device(dev);
 	if (r != 0){
 		fprintf(stderr, "Can't find validity device!\n");
 		goto out;
@@ -1188,10 +1200,10 @@ int main(void)
 
 	int i = 0;
 	for (i; i < 1000000; i++){
-		r = libusb_kernel_driver_active(devh, i);
+		r = libusb_kernel_driver_active(dev->devh, i);
 		if ( r == 1 ){
 			fprintf(stdout, "Detaching kernel driver... \n");
-			r = libusb_detach_kernel_driver(devh, 4);
+			r = libusb_detach_kernel_driver(dev->devh, 4);
 			if (r < 0)
 				fprintf(stderr, "Error detaching kernel driver!\n");
 			else
@@ -1201,19 +1213,19 @@ int main(void)
 
 
 	fprintf(stdout, "Claiming interface...\n");
-	r = libusb_claim_interface(devh, 0);
+	r = libusb_claim_interface(dev->devh, 0);
 	if (r < 0) {
 		fprintf(stderr, "usb_claim_interface error %d\n", r);
 		goto out;
 	}
 	fprintf(stdout, "claimed interface\n");
 
-	r = libusb_reset_device(devh);
+	r = libusb_reset_device(dev->devh);
 	if (r != 0)
 		fprintf(stdout, "Error resetting device");
 /*
 	fprintf(stdout, "Resetting device\n");
-	r = validity_reset_device();
+	r = validity_reset_device(dev);
 	if (r < 0) {
 		fprintf(stderr, "Error resetting device %d\n", r);
 		goto out;
@@ -1222,9 +1234,9 @@ int main(void)
 
 	usleep(2000000);
 	
-	libusb_release_interface(devh, 0);
-	libusb_reset_device(devh); 
-	libusb_close(devh);
+	libusb_release_interface(dev->devh, 0);
+	libusb_reset_device(dev->devh); 
+	libusb_close(dev->devh);
 
 	fprintf(stdout, "Searching for device...\n");
 	r = validity_find_device();
@@ -1236,7 +1248,7 @@ int main(void)
 
 
 	fprintf(stdout, "Claiming interface...\n");
-	r = libusb_claim_interface(devh, 0);
+	r = libusb_claim_interface(dev->devh, 0);
 	if (r < 0) {
 		fprintf(stderr, "usb_claim_interface error %d\n", r);
 		goto out;
@@ -1254,7 +1266,7 @@ int main(void)
 */
     
 	fprintf(stdout, "Configuring device...\n");
-	r = validity_configure_device();
+	r = validity_configure_device(dev);
         if (r < 0) {
 		fprintf(stderr, "device configuring error %d\n", r);
 		goto out_release;
@@ -1270,10 +1282,10 @@ int main(void)
 	fprintf(stdout, "Main cycle complete success!\n");
 
 out_release:
-	libusb_release_interface(devh, 0);
-	libusb_reset_device(devh); 
-	libusb_close(devh);
+	libusb_release_interface(dev->devh, 0);
+	libusb_reset_device(dev->devh); 
+	libusb_close(dev->devh);
 out:
-	libusb_exit(ctx);
+	libusb_exit(dev->ctx);
 	return r;
 }
