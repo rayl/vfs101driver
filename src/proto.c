@@ -212,9 +212,13 @@ static void dump (struct vfs_dev *dev)
 
 static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
 {
-	send(dev, data, len);
+	int r;
+	if ((r = send(dev, data, len)) < 0)
+		return r;
 	usleep(2000);
-	recv(dev);
+	if ((r = recv(dev)) < 0)
+		return r;
+	return 0;
 }
 
 
@@ -384,14 +388,7 @@ static int validity_receive_long_data(struct vfs_dev *dev){
 }
 
 static int validity_swap_messages(struct vfs_dev *dev, unsigned char *data, int length){
-	int r = send(dev, data, length);
-	if (r != 0)
-		return r;
-	usleep(2000);
-	r = recv(dev);
-	if (r != 0)
-		return r;           
-	return 0;
+	return swap(dev, data, length);
 }
 
 static int validity_cycle4(struct vfs_dev *dev){
