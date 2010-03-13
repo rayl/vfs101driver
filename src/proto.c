@@ -44,6 +44,10 @@ struct vfs_dev {
 	/* The last response from the device, valid immediately after a recv() */
 	unsigned char buf[0x40];
 	int len;
+
+	/* buffer to hold raw image data packets */
+	unsigned char ibuf[1024*1024];
+	int ilen;
 };
 
 
@@ -356,15 +360,11 @@ static int GetFingerState (struct vfs_dev *dev)
 	return dev->buf[0x0a];
 }
 
-/* buffer to hold raw image data packets */
-static unsigned char vfs_ibuf[1024*1024];
-static int vfs_ilen;
-
 static void LoadImage (struct vfs_dev *dev)
 {
-	load(dev, vfs_ibuf, &vfs_ilen);
-	//fp_dbg("  Got %d bytes", vfs_ilen);
-	if (vfs_ilen % PKTSIZE) {
+	load(dev, dev->ibuf, &dev->ilen);
+	//fp_dbg("  Got %d bytes", dev->ilen);
+	if (dev->ilen % PKTSIZE) {
 		//fp_err("  incomplete packet?");
 	}
 }
