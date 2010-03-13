@@ -81,7 +81,7 @@ static void validity_print_packet_long(unsigned char *data, int length){
 		if (c == 16){
 			fprintf(stdout, "                       ");
 			for (z = i - 16; z < i; z++)
-				fprintf(stdout, "%c", data[i]);
+				fprintf(stdout, "%c", data[z]);
 			fprintf(stdout, "\n");
 			c = 0;
 		}
