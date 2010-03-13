@@ -25,9 +25,6 @@
 #include <libusb-1.0/libusb.h>
 
 /** Constants */
-const int VALIDITY_DEFAULT_WAIT_TIMEOUT = 100;
-const unsigned char VALIDITY_SEND_ENDPOINT = 0x01;
-const unsigned char VALIDITY_RECEIVE_ENDPOINT = 0x81;
 const unsigned char VALIDITY_RECEIVE_ENDPOINT_LONG = 0x82; 
 
 
@@ -70,6 +67,39 @@ static inline unsigned short xx (int h, int l)
 
 
 /******************************************************************************************************
+ * Debug printing routines
+ */
+
+static void dump_packet (unsigned char *data, int length, unsigned char *prefix)
+{
+	int i = 0;
+	printf("%s ", prefix);
+	for (i; i < length; i++)
+		fprintf(stdout, "0x%02X ", data[i]);
+	putchar('\n');
+}
+
+static void dump_image (unsigned char *data, int length)
+{
+	int i;
+
+	fprintf(stdout, "Image data, %d bytes\n", length);
+	for (i = 0; i < length; i++){
+		fprintf(stdout, "%02X ", data[i]);
+		if (i & 15 == 15){
+			int z;
+			fprintf(stdout, "                       ");
+			for (z = i - 16; z < i; z++)
+				fprintf(stdout, "%c", data[z]);
+			fprintf(stdout, "\n");
+		}
+	}
+	if (i & 15)
+		fprintf(stdout, "\n");
+}
+
+
+/******************************************************************************************************
  * Low level send/receive functions
  */
 
@@ -84,19 +114,18 @@ static int send(struct vfs_dev *dev, unsigned char *data, size_t len)
 	int transferred;
 	int r;
 
-	//fp_dbg("seq:%04x len:%zd", dev->seq, len);
-
 	data[0] = lo(dev->seq);
 	data[1] = hi(dev->seq);
 
+	dump_packet(data, len, "--->");
 	r = libusb_bulk_transfer(dev->devh, EP_OUT(1), data, len, &transferred, BULK_TIMEOUT);
 
 	if (r < 0) {
-		//fp_err("bulk write error %d", r);
+		fprintf(stderr, "bulk write error %d", r);
 		return r;
 
 	} else if (transferred < len) {
-		//fp_err("unexpected short write %d/%zd", transferred, len);
+		fprintf(stderr, "unexpected short write %d/%zd", transferred, len);
 		return -EIO;
 
 	} else {
@@ -112,14 +141,15 @@ static int recv(struct vfs_dev *dev)
 	r = libusb_bulk_transfer(dev->devh, EP_IN(1), dev->buf, 0x40, &dev->len, BULK_TIMEOUT);
 
 	if (r < 0 && r != -7) {
-		//fp_err("bulk read error %d", r);
+		fprintf(stderr, "bulk read error %d", r);
 		return r;
 	}
 
-	//fp_dbg("seq:%04x len:%zd", dev->seq, dev->len);
+	dump_packet(dev->buf, dev->len, "<---");
+	printf("\n");
 
 	if ((lo(dev->seq) != dev->buf[0]) || (hi(dev->seq) != dev->buf[1])) {
-		//fp_err("Seqnum mismatch, got %04x, expected %04x", xx(dev->buf[1],dev->buf[0]), dev->seq);
+		fprintf(stderr, "Seqnum mismatch, got %04x, expected %04x", xx(dev->buf[1],dev->buf[0]), dev->seq);
 	}
 
 	dev->seq++;
@@ -337,61 +367,14 @@ static void LoadImage (struct vfs_dev *dev)
 
 
 /******************************************************************************************************
- * Debug printing routines
- */
-
-static void dump_packet (unsigned char *data, int length)
-{
-	int i = 0;
-	for (i; i < length; i++)
-		fprintf(stdout, "0x%02X ", data[i]);
-}
-
-static void dump_image (unsigned char *data, int length)
-{
-	int i;
-
-	fprintf(stdout, "Image data, %d bytes\n", length);
-	for (i = 0; i < length; i++){
-		fprintf(stdout, "%02X ", data[i]);
-		if (i & 15 == 15){
-			int z;
-			fprintf(stdout, "                       ");
-			for (z = i - 16; z < i; z++)
-				fprintf(stdout, "%c", data[z]);
-			fprintf(stdout, "\n");
-		}
-	}
-	if (i & 15)
-		fprintf(stdout, "\n");
-}
-
-/******************************************************************************************************
  * Stuff
  */
 
 
-/** Sends data to device 
- * if transfered < length - error
- */
-static int validity_send_data(struct vfs_dev *dev, unsigned char *data, int length){
-	fprintf(stdout, ">>> : ");
-	dump_packet(data, length);
-	fprintf(stdout, "\n");
-
-	int transferred = 0;
-	int r = libusb_bulk_transfer(dev->devh, VALIDITY_SEND_ENDPOINT, data, length, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);	
-	if (r < 0)
-		return r;
-	if (transferred < length)
-		return r;
-	return 0;
-}
-
 static int validity_receive_long_data(struct vfs_dev *dev){
 	int transferred = 0;
 	unsigned char data[50000];
-	int r = libusb_bulk_transfer(dev->devh, VALIDITY_RECEIVE_ENDPOINT_LONG, data, 50000, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);
+	int r = libusb_bulk_transfer(dev->devh, VALIDITY_RECEIVE_ENDPOINT_LONG, data, 50000, &transferred, BULK_TIMEOUT);
 	if (r < 0)
 		return r;
 	fprintf(stdout, "    : \n");
@@ -400,24 +383,12 @@ static int validity_receive_long_data(struct vfs_dev *dev){
 	return 0;
 }
 
-static int validity_receive_data(struct vfs_dev *dev){
-	int transferred = 0;
-	unsigned char data[64];
-	int r = libusb_bulk_transfer(dev->devh, VALIDITY_RECEIVE_ENDPOINT, data, 64, &transferred, VALIDITY_DEFAULT_WAIT_TIMEOUT);
-	if (r < 0)
-		return r;
-	fprintf(stdout, "    : ");
-	dump_packet(data, transferred);
-	fprintf(stdout, "\n");
-	return 0;
-}
-
 static int validity_swap_messages(struct vfs_dev *dev, unsigned char *data, int length){
-	int r = validity_send_data(dev, data, length);
+	int r = send(dev, data, length);
 	if (r != 0)
 		return r;
 	usleep(2000);
-	r = validity_receive_data(dev);
+	r = recv(dev);
 	if (r != 0)
 		return r;           
 	return 0;
@@ -1212,7 +1183,7 @@ int main(void)
 		fprintf(stdout, "Error resetting device");
 
 	fprintf(stdout, "Configuring device...\n");
-	r = libusb_control_transfer(dev->devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 1, NULL, 0, VALIDITY_DEFAULT_WAIT_TIMEOUT); 
+	r = libusb_control_transfer(dev->devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 1, NULL, 0, BULK_TIMEOUT); 
         if (r < 0) {
 		fprintf(stderr, "device configuring error %d\n", r);
 		goto out_release;
