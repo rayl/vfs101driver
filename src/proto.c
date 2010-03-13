@@ -184,6 +184,155 @@ static int swap (libusb_device_handle *dev, unsigned char *data, size_t len)
 }
 
 
+/******************************************************************************************************
+ * Protocol-level API routines
+
+     00 00 01 00    - Reset
+     00 00 02 00    - GetVersion
+     00 00 03 00    - GetPrint
+     00 00 04 00    - GetParam
+     00 00 05 00    - SetParam
+     00 00 06 00    - GetConfiguration
+     00 00 07 00      DownloadPatch
+     00 00 08 00      GetRateData
+     00 00 09 00      IspRequest
+     00 00 0A 00      ProgramFlash
+     00 00 0B 00      EraseFlash
+     00 00 0C 00      LedStates
+     00 00 0D 00      LedEvent
+     00 00 0E 00    - AbortPrint
+     00 00 0F 00      Spare2
+     00 00 10 00      Spare3
+     00 00 11 00      Spare4
+     00 00 12 00      Peek
+     00 00 13 00      Poke
+     00 00 14 00      SensorSpiTrans
+     00 00 15 00      SensorGPIO
+     00 00 16 00    - GetFingerState 
+*/
+
+/* Reset (00 00 01 00)
+ *
+ *  Cause the device to reenumerate on the USB bus.
+ */
+static void Reset (libusb_device_handle *dev)
+{
+	unsigned char q1[0x07] = { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00 };
+	//fp_dbg("");
+	swap (dev, q1, 0x07);
+	dump ();
+}
+
+/* GetVersion (00 00 01 00)
+ *
+ *  Retrieve version string from the device.
+ */
+static void GetVersion (libusb_device_handle *dev)
+{
+	unsigned char q1[0x07] = { 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00 };
+	//fp_dbg("");
+	swap (dev, q1, 0x07);
+	dump ();
+}
+
+/* GetPrint (00 00 03 00)
+ *
+ *  Retrieve fingerprint image information.
+ */
+static void GetPrint (libusb_device_handle *dev, int count, unsigned char args[6])
+{
+	unsigned char q1[0x0e] = { 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	int i;
+	q1[6] = lo(count);
+	q1[7] = hi(count);
+	for (i=0; i<6; i++) q1[8+i] = args[i];
+	//fp_dbg("");
+	swap (dev, q1, 0x0e);
+	dump ();
+}
+
+/* GetParam (00 00 04 00)
+ *
+ *  Retrieve a parameter value from the device.
+ */
+static void GetParam (libusb_device_handle *dev, int param)
+{
+	unsigned char q1[0x08] = { 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00 };
+	q1[6] = lo(param);
+	q1[7] = hi(param);
+	//fp_dbg("%04x", param);
+	swap (dev, q1, 0x08);
+	dump();
+}
+
+/* SetParam (00 00 05 00)
+ *
+ *  Set a parameter value on the device.
+ */
+static void SetParam (libusb_device_handle *dev, int param, int value)
+{
+	unsigned char q1[0x0a] = { 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	q1[6] = lo(param);
+	q1[7] = hi(param);
+	q1[8] = lo(value);
+	q1[9] = hi(value);
+	//fp_dbg("%04x = %04x", param, value);
+	swap (dev, q1, 0x0a);
+	dump();
+}
+
+/* GetConfiguration (00 00 06 00)
+ *
+ *  Retrieve config info from the device.
+ */
+static void GetConfiguration (libusb_device_handle *dev)
+{
+	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x06, 0x00 };
+	//fp_dbg("");
+	swap (dev, q1, 0x06);
+	dump();
+}
+
+/* AbortPrint (00 00 0e 00)
+ *
+ *  Abort the current scan operation.
+ */
+static void AbortPrint (libusb_device_handle *dev)
+{
+	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x0E, 0x00 };
+	//fp_dbg("");
+	swap (dev, q1, 0x06);
+	dump();
+}
+
+/* GetFingerState (00 00 16 00)
+ *
+ *  Poll device for current finger state.
+ */
+static int GetFingerState (libusb_device_handle *dev)
+{
+	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x16, 0x00 };
+	//fp_dbg("");
+	swap (dev, q1, 0x06);
+	dump();
+	return vfs_buf[0x0a];
+}
+
+/* buffer to hold raw image data packets */
+static unsigned char vfs_ibuf[1024*1024];
+static int vfs_ilen;
+
+static void LoadImage (libusb_device_handle *dev)
+{
+	load(dev, vfs_ibuf, &vfs_ilen);
+	//fp_dbg("  Got %d bytes", vfs_ilen);
+	if (vfs_ilen % PKTSIZE) {
+		//fp_err("  incomplete packet?");
+	}
+}
+
+
+
 
 /** Searching our device */
 static int validity_find_device(void)
