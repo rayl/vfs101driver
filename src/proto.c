@@ -1072,8 +1072,21 @@ static int validity_cycle(struct vfs_dev *dev){
 	return 0;	
 }
 
+typedef int (*cycle_func)(struct vfs_dev *);
+
+static cycle_func func (const char *id)
+{
+	if (id == NULL)           return validity_cycle;
+	if (strcmp(id, "0") == 0) return validity_cycle0;
+	if (strcmp(id, "1") == 0) return validity_cycle1;
+	if (strcmp(id, "2") == 0) return validity_cycle2;
+	if (strcmp(id, "3") == 0) return validity_cycle3;
+	if (strcmp(id, "4") == 0) return validity_cycle4;
+	                          return validity_cycle;
+}
+
 /** Main function */
-int main(void)
+int main (int argc, char **argv)
 {
 	struct vfs_dev _dev, *dev = &_dev;
 	struct sigaction sigact;
@@ -1135,7 +1148,7 @@ int main(void)
 	fprintf(stdout, "Device configured!\n");
      
 	fprintf(stdout, "Entering main cycle...\n");
-	r = validity_cycle4(dev);
+	r = func(argv[1])(dev);
 	if (r != 0) {
 		fprintf(stderr, "got error in main cycle %d\n", r);
 		goto out_release;
