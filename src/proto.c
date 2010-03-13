@@ -24,13 +24,10 @@
 #include <stdlib.h>
 #include <libusb-1.0/libusb.h>
 
-/** Constants */
-const unsigned char VALIDITY_RECEIVE_ENDPOINT_LONG = 0x82; 
 
 /* The device seems to send back 16 frames of 292 bytes at a time */
 const unsigned int PKTSIZE = 292;
 const unsigned int N_PKTS = 16;
-
 
 
 /******************************************************************************************************
