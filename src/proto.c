@@ -1228,7 +1228,7 @@ int main(void)
 	fprintf(stdout, "Device configured!\n");
      
 	fprintf(stdout, "Entering main cycle...\n");
-	r = validity_cycle4();
+	r = validity_cycle4(dev);
 	if (r != 0) {
 		fprintf(stderr, "got error in main cycle %d\n", r);
 		goto out_release;
