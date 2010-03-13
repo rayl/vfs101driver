@@ -253,6 +253,8 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
      00 00 16 00    - GetFingerState 
 */
 
+#define _() fprintf(stderr, "%s\n", __FUNCTION__)
+
 /* Reset (00 00 01 00)
  *
  *  Cause the device to reenumerate on the USB bus.
@@ -260,7 +262,7 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
 static void Reset (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 };
-	//fp_dbg("");
+	_();
 	swap (dev, q1, 0x06);
 	dump (dev);
 }
@@ -272,7 +274,7 @@ static void Reset (struct vfs_dev *dev)
 static void GetVersion (struct vfs_dev *dev)
 {
 	unsigned char q1[0x07] = { 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00 };
-	//fp_dbg("");
+	_();
 	swap (dev, q1, 0x07);
 	dump (dev);
 }
@@ -288,7 +290,7 @@ static void GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
 	q1[6] = lo(count);
 	q1[7] = hi(count);
 	for (i=0; i<6; i++) q1[8+i] = args[i];
-	//fp_dbg("");
+	_();
 	swap (dev, q1, 0x0e);
 	dump (dev);
 }
@@ -302,7 +304,7 @@ static void GetParam (struct vfs_dev *dev, int param)
 	unsigned char q1[0x08] = { 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00 };
 	q1[6] = lo(param);
 	q1[7] = hi(param);
-	//fp_dbg("%04x", param);
+	_();
 	swap (dev, q1, 0x08);
 	dump(dev);
 }
@@ -318,7 +320,7 @@ static void SetParam (struct vfs_dev *dev, int param, int value)
 	q1[7] = hi(param);
 	q1[8] = lo(value);
 	q1[9] = hi(value);
-	//fp_dbg("%04x = %04x", param, value);
+	_();
 	swap (dev, q1, 0x0a);
 	dump(dev);
 }
@@ -330,7 +332,7 @@ static void SetParam (struct vfs_dev *dev, int param, int value)
 static void GetConfiguration (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x06, 0x00 };
-	//fp_dbg("");
+	_();
 	swap (dev, q1, 0x06);
 	dump(dev);
 }
@@ -342,7 +344,7 @@ static void GetConfiguration (struct vfs_dev *dev)
 static void AbortPrint (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x0E, 0x00 };
-	//fp_dbg("");
+	_();
 	swap (dev, q1, 0x06);
 	dump(dev);
 }
@@ -354,7 +356,7 @@ static void AbortPrint (struct vfs_dev *dev)
 static int GetFingerState (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x16, 0x00 };
-	//fp_dbg("");
+	_();
 	swap (dev, q1, 0x06);
 	dump(dev);
 	return dev->buf[0x0a];
