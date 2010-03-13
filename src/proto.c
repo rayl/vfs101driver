@@ -152,11 +152,10 @@ static int recv(struct vfs_dev *dev)
 	}
 
 	dump_packet(dev->buf, dev->len, "<---");
-	printf("\n");
-
 	if ((lo(dev->seq) != dev->buf[0]) || (hi(dev->seq) != dev->buf[1])) {
-		fprintf(stderr, "Seqnum mismatch, got %04x, expected %04x", xx(dev->buf[1],dev->buf[0]), dev->seq);
+		fprintf(stderr, "*********** Seqnum mismatch, got %04x, expected %04x\n", xx(dev->buf[1],dev->buf[0]), dev->seq);
 	}
+	printf("\n");
 
 	dev->seq++;
 
