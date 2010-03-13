@@ -188,33 +188,6 @@ static int load (struct vfs_dev *dev, unsigned char *buf, int *len)
 	return 0;
 }
 
-static void dump (struct vfs_dev *dev)
-{
-	int x = 6;
-
-	//fp_dbg("Seq: %04x", xx(dev->buf[1], dev->buf[0]));
-	if ((dev->buf[2] != 0) || (dev->buf[3] != 0)) {
-		//fp_dbg("!!!: %02x %02x", dev->buf[2], dev->buf[3]);
-	}
-	//fp_dbg("Cmd: %02x %02x", dev->buf[4], dev->buf[5]);
-
-	while (dev->len - x > 3) {
-		//fp_dbg("     %02x %02x %02x %02x", dev->buf[x], dev->buf[x+1], dev->buf[x+2], dev->buf[x+3]);
-		x += 4;
-	}
-	switch (dev->len-x) {
-	case 3:
-		//fp_dbg("     %02x %02x %02x", dev->buf[x], dev->buf[x+1], dev->buf[x+2]);
-		break;
-	case 2:
-		//fp_dbg("     %02x %02x", dev->buf[x], dev->buf[x+1]);
-		break;
-	case 1:
-		//fp_dbg("     %02x", dev->buf[x]);
-		break;
-	}
-}
-
 static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
 {
 	int r;
@@ -265,7 +238,6 @@ static void Reset (struct vfs_dev *dev)
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 };
 	_();
 	swap (dev, q1, 0x06);
-	dump (dev);
 }
 
 /* GetVersion (00 00 01 00)
@@ -277,7 +249,6 @@ static void GetVersion (struct vfs_dev *dev)
 	unsigned char q1[0x07] = { 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00 };
 	_();
 	swap (dev, q1, 0x07);
-	dump (dev);
 }
 
 /* GetPrint (00 00 03 00)
@@ -293,7 +264,6 @@ static void GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
 	for (i=0; i<6; i++) q1[8+i] = args[i];
 	_();
 	swap (dev, q1, 0x0e);
-	dump (dev);
 }
 
 /* GetParam (00 00 04 00)
@@ -307,7 +277,6 @@ static void GetParam (struct vfs_dev *dev, int param)
 	q1[7] = hi(param);
 	_();
 	swap (dev, q1, 0x08);
-	dump(dev);
 }
 
 /* SetParam (00 00 05 00)
@@ -323,7 +292,6 @@ static void SetParam (struct vfs_dev *dev, int param, int value)
 	q1[9] = hi(value);
 	_();
 	swap (dev, q1, 0x0a);
-	dump(dev);
 }
 
 /* GetConfiguration (00 00 06 00)
@@ -335,7 +303,6 @@ static void GetConfiguration (struct vfs_dev *dev)
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x06, 0x00 };
 	_();
 	swap (dev, q1, 0x06);
-	dump(dev);
 }
 
 /* AbortPrint (00 00 0e 00)
@@ -347,7 +314,6 @@ static void AbortPrint (struct vfs_dev *dev)
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x0E, 0x00 };
 	_();
 	swap (dev, q1, 0x06);
-	dump(dev);
 }
 
 /* GetFingerState (00 00 16 00)
@@ -359,7 +325,6 @@ static int GetFingerState (struct vfs_dev *dev)
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x16, 0x00 };
 	_();
 	swap (dev, q1, 0x06);
-	dump(dev);
 	return dev->buf[0x0a];
 }
 
