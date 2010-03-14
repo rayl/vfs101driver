@@ -532,6 +532,13 @@ static int get_b (struct vfs_dev *dev)
 	return 0;
 }
 
+static int try (struct vfs_dev *dev, unsigned int val)
+{
+	_(  Poke(dev, 0x00FF5038, val, 0x01));
+	_(  img_0(dev, 10));
+	return 0;
+}
+
 #define REG 0x00009806
 
 static int validity_cycle5 (struct vfs_dev *dev)
@@ -683,22 +690,14 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  Peek(dev, 0x00FF9802, 0x01));
 	_(  Peek(dev, 0x00FF9800, 0x01));
 	_(  Peek(dev, 0x00FF9806, 0x01));
-	_(  Poke(dev, 0x00FF5038, 0x0000000E, 0x01));
-	_(  img_0(dev, 10));
-	_(  Poke(dev, 0x00FF5038, 0x0000000D, 0x01));
-	_(  img_0(dev, 10));
-	_(  Poke(dev, 0x00FF5038, 0x0000000C, 0x01));
-	_(  img_0(dev, 10));
-	_(  Poke(dev, 0x00FF5038, 0x0000000B, 0x01));
-	_(  img_0(dev, 10));
-	_(  Poke(dev, 0x00FF5038, 0x0000000A, 0x01));
-	_(  img_0(dev, 10));
-	_(  Poke(dev, 0x00FF5038, 0x00000009, 0x01));
-	_(  img_0(dev, 10));
-	_(  Poke(dev, 0x00FF5038, 0x00000008, 0x01));
-	_(  img_0(dev, 10));
-	_(  Poke(dev, 0x00FF5038, 0x00000007, 0x01));
-	_(  img_0(dev, 10));
+	_(  try(dev, 0x0000000E));
+	_(  try(dev, 0x0000000D));
+	_(  try(dev, 0x0000000C));
+	_(  try(dev, 0x0000000B));
+	_(  try(dev, 0x0000000A));
+	_(  try(dev, 0x00000009));
+	_(  try(dev, 0x00000008));
+	_(  try(dev, 0x00000007));
 	_(  Poke(dev, 0x000005F6, 0x00000000, 0x01));
 	_(  Peek(dev, 0x00FF503E, 0x01));
 	_(  Poke(dev, 0x00FF503E, 0x00000010, 0x01));
