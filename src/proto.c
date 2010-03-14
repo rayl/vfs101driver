@@ -444,6 +444,16 @@ static int LoadImage (struct vfs_dev *dev)
 static int r;
 #define _(x) if ((r = x) != 0) return r
 
+static int check_finger (struct vfs_dev *dev, int n)
+{
+	while (n--) {
+		if ((r = GetFingerState(dev)) < 0)
+			return r;
+		usleep(50000);
+	}
+	return 0;
+}
+
 #define REG 0x00009806
 
 static int validity_cycle5 (struct vfs_dev *dev)
@@ -494,11 +504,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	unsigned char data157[6] = "\x00\x01\x00\x00\x00\x01";
 	unsigned char data170[6] = "\x00\x01\x00\x00\x00\x01";
 	unsigned char data176[6] = "\x01\x00\x00\x00\x01\x01";
-
 	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
-
-	int i = 0;
-
 	_(  Peek(dev, 0x00001FE8, 0x04));
 	_(  Peek(dev, 0x00001FEC, 0x04));
 	_(  Peek(dev, 0x00001FF0, 0x04));
@@ -692,11 +698,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  GetParam(dev, 0x11));
 	_(  SetParam(dev, 0x0062, 0x0032));
 	_(  GetPrint(dev, 5000, data176));
-	for (i; i < 50; i++)
-		if ((r = GetFingerState(dev)) < 0)
-			return r;
-
-		usleep(750000);
+	_(  check_finger(dev, 50));
 	return 0;
 }
 
@@ -708,8 +710,7 @@ static int validity_cycle2 (struct vfs_dev *dev)
 	_(  Peek(dev, 0x00001FF4, 0x04));
 	_(  Peek(dev, 0x00001FF8, 0x04));
 	_(  Peek(dev, 0x00001FFC, 0x04));
-	if ((r = GetFingerState(dev)) < 0)
-		return r;
+	_(  check_finger(dev, 1));
 	return 0;
 }
 
@@ -717,8 +718,6 @@ static int validity_cycle1 (struct vfs_dev *dev)
 {
 	unsigned char data15[6] = "\x00\x01\x00\x00\x00\x01";
 	unsigned char data37[6] = "\x01\x00\x00\x00\x01\x01";
-	int i;
-
 	_(  Peek(dev, 0x00001FE8, 0x04));
 	_(  Peek(dev, 0x00001FEC, 0x04));
 	_(  Peek(dev, 0x00001FF0, 0x04));
@@ -760,34 +759,23 @@ static int validity_cycle1 (struct vfs_dev *dev)
 	_(  GetParam(dev, 0x11));
 	_(  SetParam(dev, 0x0062, 0x0032));
 	_(  GetPrint(dev, 5000, data37));
-
-	for (i = 0; i < 80; i++)
-		if ((r = GetFingerState(dev)) < 0)
-			return r;
-
+	_(  check_finger(dev, 80));
 	return 0;
 }
 
 static int validity_cycle0 (struct vfs_dev *dev)
 {
 //	unsigned char data171[6] = "\x00\x01\x00\x00\x00\x01";
-	int i;
-
 	_(  Peek(dev, 0x00001FE8, 0x04));
 	_(  Peek(dev, 0x00001FEC, 0x04));
 	_(  Peek(dev, 0x00001FF0, 0x04));
 	_(  Peek(dev, 0x00001FF4, 0x04));
 	_(  Peek(dev, 0x00001FF8, 0x04));
 	_(  Peek(dev, 0x00001FFC, 0x04));
-
 	_(  SetParam(dev, 0x0062, 0x0032));
 //	GetPrint(dev, 20, data171);
 //	LoadImage(dev)	;
-
-	for (i = 0; i < 10; i++)
-		if ((r = GetFingerState(dev)) < 0)
-			return r;
-
+	_(  check_finger(dev, 10));
 	return 0; 
 }
 	
@@ -795,8 +783,6 @@ static int validity_cycle (struct vfs_dev *dev)
 {
 	unsigned char data2[6] = "\x00\x01\x00\x00\x00\x01";
 	unsigned char data6[6] = "\x01\x00\x00\x00\x01\x01"; 
-	int i;
-
 	_(  Peek(dev, 0x00001FE8, 0x04));
 	_(  Peek(dev, 0x00001FEC, 0x04));
 	_(  GetPrint(dev, 1, data2));
@@ -805,10 +791,6 @@ static int validity_cycle (struct vfs_dev *dev)
 	_(  GetParam(dev, 0x11));
 	_(  SetParam(dev, 0x0062, 0x0032)); 
 	_(  GetPrint(dev, 5000, data2));
-	for (i = 0; i < 20; i++)
-		if ((r = GetFingerState(dev)) < 0)
-			return r;
-
 	return 0;	
 }
 
