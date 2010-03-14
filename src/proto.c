@@ -550,22 +550,6 @@ static int pat_1 (struct vfs_dev *dev, unsigned int v1, unsigned int v2)
 	return 0;
 }
 
-#define REG 0x00009806
-
-static int validity_cycle5 (struct vfs_dev *dev)
-{
-	_(  Peek(dev, REG, 0x04));
-	_(  Poke(dev, REG, 0x00000000, 0x04));
-	_(  Peek(dev, REG, 0x04));
-	_(  Poke(dev, REG, 0x01020304, 0x01));
-	_(  Peek(dev, REG, 0x04));
-	_(  Poke(dev, REG, 0x01020304, 0x02));
-	_(  Peek(dev, REG, 0x04));
-	_(  Poke(dev, REG, 0x01020304, 0x04));
-	_(  Peek(dev, REG, 0x04));
-	return 0;	
-}
-
 static int validity_cycle4 (struct vfs_dev *dev)
 {
 	usleep(100000);
@@ -788,7 +772,6 @@ static cycle_func func (const char *id)
 	if (strcmp(id, "2") == 0) return validity_cycle2;
 	if (strcmp(id, "3") == 0) return validity_cycle3;
 	if (strcmp(id, "4") == 0) return validity_cycle4;
-	if (strcmp(id, "5") == 0) return validity_cycle5;
 	                          return validity_cycle;
 }
 
