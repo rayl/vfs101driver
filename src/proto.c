@@ -433,6 +433,25 @@ static int LoadImage (struct vfs_dev *dev)
 /* A shorthand for checking return codes */
 #define _(x) if ((r = x) != 0) return r
 
+#define REG 0x06, 0x98, 0x00
+
+static int validity_cycle5 (struct vfs_dev *dev)
+{
+	int r;
+
+	_(  Peek(dev, REG, 0x00, 0x04));
+	_(  Poke(dev, REG, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04));
+	_(  Peek(dev, REG, 0x00, 0x04));
+	_(  Poke(dev, REG, 0x00, 0x01, 0x02, 0x03, 0x04, 0x01));
+	_(  Peek(dev, REG, 0x00, 0x04));
+	_(  Poke(dev, REG, 0x00, 0x01, 0x02, 0x03, 0x04, 0x02));
+	_(  Peek(dev, REG, 0x00, 0x04));
+	_(  Poke(dev, REG, 0x00, 0x01, 0x02, 0x03, 0x04, 0x04));
+	_(  Peek(dev, REG, 0x00, 0x04));
+
+	return 0;	
+}
+
 static int validity_cycle4 (struct vfs_dev *dev)
 {
 	int r;
@@ -806,6 +825,7 @@ static cycle_func func (const char *id)
 	if (strcmp(id, "2") == 0) return validity_cycle2;
 	if (strcmp(id, "3") == 0) return validity_cycle3;
 	if (strcmp(id, "4") == 0) return validity_cycle4;
+	if (strcmp(id, "5") == 0) return validity_cycle5;
 	                          return validity_cycle;
 }
 
