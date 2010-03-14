@@ -310,6 +310,8 @@ static int GetVersion (struct vfs_dev *dev)
  *
  *  Retrieve fingerprint image information.
  */
+static unsigned char type_0[6] = "\x00\x01\x00\x00\x00\x01";
+static unsigned char type_1[6] = "\x01\x00\x00\x00\x01\x01";
 static int GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
 {
 	unsigned char q1[0x0e] = { 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -494,22 +496,6 @@ static int validity_cycle4 (struct vfs_dev *dev)
 
 static int validity_cycle3 (struct vfs_dev *dev)
 {
-	unsigned char data16[6]  = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data98[6]  = "\x00\x00\x00\x00\x00\x01";
-	unsigned char data109[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data116[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data127[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data135[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data137[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data139[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data141[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data143[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data145[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data147[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data149[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data157[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data170[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data176[6] = "\x01\x00\x00\x00\x01\x01";
 	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
 	_(  check_six(dev));
 	_(  GetParam(dev, 0x2e));
@@ -522,7 +508,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  GetParam(dev, 0x14));
 	_(  AbortPrint(dev));
 	_(  LoadImage(dev));
-	_(  GetPrint(dev, 1, data16));
+	_(  GetPrint(dev, 1, type_0));
 	_(  AbortPrint(dev));
 	_(  SetParam(dev, 0x0004, 0x0000));
 	_(  SetParam(dev, 0x0005, 0x0000));
@@ -604,7 +590,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  SetParam(dev, 0x006E, 0x0003));
 	_(  GetParam(dev, 0x52));
 	_(  SetParam(dev, 0x0052, 0x0320));
-	_(  GetPrint(dev, 1, data98));
+	_(  GetPrint(dev, 1, type_0));
 	_(  LoadImage(dev));
 	_(  SetParam(dev, 0x0052, 0x1EB4));
 	_(  Peek(dev, 0x00FF502C, 0x02));
@@ -616,7 +602,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  Peek(dev, 0x00FF9800, 0x01));
 	_(  Peek(dev, 0x00FF9806, 0x01));
 	_(  Poke(dev, 0x00FF9806, 0x00000000, 0x01));
-	_(  GetPrint(dev, 100, data109));
+	_(  GetPrint(dev, 100, type_0));
 	_(  LoadImage(dev));
 	_(  Poke(dev, 0x000005F6, 0x00000000, 0x01));
 	_(  Peek(dev, 0x00FF503E, 0x01));
@@ -624,7 +610,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  Peek(dev, 0x00FF9802, 0x01));
 	_(  Peek(dev, 0x00FF9800, 0x01));
 	_(  Peek(dev, 0x00FF9806, 0x01));
-	_(  GetPrint(dev, 100, data116));
+	_(  GetPrint(dev, 100, type_0));
 	_(  LoadImage(dev));
 	_(  Peek(dev, 0x00FF5038, 0x01));
 	_(  Peek(dev, 0x00FF500E, 0x02));
@@ -636,7 +622,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  SetParam(dev, 0x0077, 0x0000));
 	_(  SetParam(dev, 0x0076, 0x0000));
 	_(  SetParam(dev, 0x0078, 0x0000));
-	_(  GetPrint(dev, 2, data127));
+	_(  GetPrint(dev, 2, type_0));
 	_(  LoadImage(dev));
 	_(  Poke(dev, 0x000005F6, 0x00000001, 0x01));
 	_(  Peek(dev, 0x00FF503E, 0x01));
@@ -645,28 +631,28 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  Peek(dev, 0x00FF9800, 0x01));
 	_(  Peek(dev, 0x00FF9806, 0x01));
 	_(  Poke(dev, 0x00FF5038, 0x0000000E, 0x01));
-	_(  GetPrint(dev, 10, data135));
+	_(  GetPrint(dev, 10, type_0));
 	_(  LoadImage(dev));
 	_(  Poke(dev, 0x00FF5038, 0x0000000D, 0x01));
-	_(  GetPrint(dev, 10, data137));
+	_(  GetPrint(dev, 10, type_0));
 	_(  LoadImage(dev));
 	_(  Poke(dev, 0x00FF5038, 0x0000000C, 0x01));
-	_(  GetPrint(dev, 10, data139));
+	_(  GetPrint(dev, 10, type_0));
 	_(  LoadImage(dev));
 	_(  Poke(dev, 0x00FF5038, 0x0000000B, 0x01));
-	_(  GetPrint(dev, 10, data141));
+	_(  GetPrint(dev, 10, type_0));
 	_(  LoadImage(dev));
 	_(  Poke(dev, 0x00FF5038, 0x0000000A, 0x01));
-	_(  GetPrint(dev, 10, data143));
+	_(  GetPrint(dev, 10, type_0));
 	_(  LoadImage(dev));
 	_(  Poke(dev, 0x00FF5038, 0x00000009, 0x01));
-	_(  GetPrint(dev, 10, data145));
+	_(  GetPrint(dev, 10, type_0));
 	_(  LoadImage(dev));
 	_(  Poke(dev, 0x00FF5038, 0x00000008, 0x01));
-	_(  GetPrint(dev, 10, data147));
+	_(  GetPrint(dev, 10, type_0));
 	_(  LoadImage(dev));
 	_(  Poke(dev, 0x00FF5038, 0x00000007, 0x01));
-	_(  GetPrint(dev, 10, data149));
+	_(  GetPrint(dev, 10, type_0));
 	_(  LoadImage(dev));
 	_(  Poke(dev, 0x000005F6, 0x00000000, 0x01));
 	_(  Peek(dev, 0x00FF503E, 0x01));
@@ -675,7 +661,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  Peek(dev, 0x00FF9800, 0x01));
 	_(  Peek(dev, 0x00FF9806, 0x01));
 	_(  Poke(dev, 0x00FF9806, 0x00000000, 0x01));
-	_(  GetPrint(dev, 10, data157));
+	_(  GetPrint(dev, 10, type_0));
 	_(  LoadImage(dev));
 	_(  SetParam(dev, 0x0077, 0x0007));
 	_(  SetParam(dev, 0x0076, 0x0012));
@@ -690,7 +676,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  GetParam(dev, 0x14));
 	_(  GetParam(dev, 0x11));
 	_(  SetParam(dev, 0x0062, 0x0032));
-	_(  GetPrint(dev, 20, data170));
+	_(  GetPrint(dev, 20, type_0));
 	_(  LoadImage(dev));
 	_(  GetParam(dev, 0x14));
 	_(  GetParam(dev, 0x14));
@@ -698,7 +684,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  LoadImage(dev));
 	_(  GetParam(dev, 0x11));
 	_(  SetParam(dev, 0x0062, 0x0032));
-	_(  GetPrint(dev, 5000, data176));
+	_(  GetPrint(dev, 5000, type_1));
 	_(  check_finger(dev, 50));
 	return 0;
 }
@@ -712,8 +698,6 @@ static int validity_cycle2 (struct vfs_dev *dev)
 
 static int validity_cycle1 (struct vfs_dev *dev)
 {
-	unsigned char data15[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data37[6] = "\x01\x00\x00\x00\x01\x01";
 	_(  check_six(dev));
 	_(  GetParam(dev, 0x2e));
 	_(  GetVersion(dev));
@@ -724,7 +708,7 @@ static int validity_cycle1 (struct vfs_dev *dev)
 	_(  GetParam(dev, 0x01));
 	_(  GetParam(dev, 0x14));
 	_(  AbortPrint(dev));
-	_(  GetPrint(dev, 1, data15));
+	_(  GetPrint(dev, 1, type_0));
 	_(  LoadImage(dev));
 	_(  AbortPrint(dev));
 	_(  LoadImage(dev));
@@ -749,34 +733,31 @@ static int validity_cycle1 (struct vfs_dev *dev)
 	_(  AbortPrint(dev));
 	_(  GetParam(dev, 0x11));
 	_(  SetParam(dev, 0x0062, 0x0032));
-	_(  GetPrint(dev, 5000, data37));
+	_(  GetPrint(dev, 5000, type_1));
 	_(  check_finger(dev, 80));
 	return 0;
 }
 
 static int validity_cycle0 (struct vfs_dev *dev)
 {
-//	unsigned char data171[6] = "\x00\x01\x00\x00\x00\x01";
 	_(  check_six(dev));
 	_(  SetParam(dev, 0x0062, 0x0032));
-//	GetPrint(dev, 20, data171);
-//	LoadImage(dev)	;
+//	_(  GetPrint(dev, 20, type_0));
+//	_(  LoadImage(dev));
 	_(  check_finger(dev, 10));
 	return 0; 
 }
 	
 static int validity_cycle (struct vfs_dev *dev)
 {
-	unsigned char data2[6] = "\x00\x01\x00\x00\x00\x01";
-	unsigned char data6[6] = "\x01\x00\x00\x00\x01\x01"; 
 	_(  Peek(dev, 0x00001FE8, 0x04));
 	_(  Peek(dev, 0x00001FEC, 0x04));
-	_(  GetPrint(dev, 1, data2));
+	_(  GetPrint(dev, 1, type_0));
 	_(  LoadImage(dev));
 	_(  AbortPrint(dev));
 	_(  GetParam(dev, 0x11));
 	_(  SetParam(dev, 0x0062, 0x0032)); 
-	_(  GetPrint(dev, 5000, data2));
+	_(  GetPrint(dev, 5000, type_1));
 	return 0;	
 }
 
