@@ -76,32 +76,73 @@ static inline unsigned short xx (int h, int l)
  * Debug printing routines
  */
 
-static void dump_packet (unsigned char *data, int length, unsigned char *prefix)
+static int dump_packet (unsigned char *data, int length, unsigned char *prefix)
 {
 	int i = 0;
 	fprintf(stdout, "%s ", prefix);
 	for (i; i < length; i++)
-		fprintf(stdout, "0x%02X ", data[i]);
+		fprintf(stdout, "%02X ", data[i]);
 	fprintf(stdout, "\n");
+	return length;
+}
+
+static int dump_frame (unsigned char *data, int length, int n)
+{
+	int skip = 0;
+	int i;
+
+	// skip bytes as required until a frame header is found
+	while ((length > 1) && ((data[0] != 0x01) || ((data[1] != 0xfe) && (data[1] != 0x01)))) {
+		length--;
+		data++;
+		skip++;
+	}
+
+	// warn if we skipped any data
+	if (skip > 0)
+		fprintf(stdout, "*** Frame misalignment, skipped %d bytes!!\n", skip);
+
+	// dump short frames as raw data
+	if (length < PKTSIZE) {
+		fprintf(stdout, "*** Short frame, dumping as %d raw bytes!!\n", length);
+		dump_packet(data, length, "");
+		return skip + length;
+	}
+
+	// dump various subfields
+	fprintf(stdout, "\n---- Packet %05d --------------------------------------------\n", n);
+	data += dump_packet(data,  2, "  HDR: ");
+	data += dump_packet(data,  2, "  SEQ: ");
+	data += dump_packet(data,  2, "  ???: ");
+	data += dump_packet(data, 20, "  IMG:       ");
+	for (i=1; i<10; i++)
+		data += dump_packet(data, 20, "             ");
+	fprintf(stdout, "\n");
+	data += dump_packet(data,  2, "  ???: ");
+	data += dump_packet(data, 20, "  ???:       ");
+	data += dump_packet(data, 20, "             ");
+	data += dump_packet(data, 20, "             ");
+	data += dump_packet(data,  4, "             ");
+	fprintf(stdout, "\n");
+	data += dump_packet(data,  4, "  ???: ");
+	data += dump_packet(data, 16, "  ???:       ");
+
+	// return number of bytes consumed
+	return skip + PKTSIZE;
 }
 
 static void dump_image (unsigned char *data, int length)
 {
-	int i;
+	int f = 0;
 
 	fprintf(stdout, "Image data, %d bytes%s\n", length, (length%PKTSIZE) ? " (incomplete packet(s)?)" : "");
-	for (i = 0; i < length; i++){
-		fprintf(stdout, "%02X ", data[i]);
-		if ((i & 15) == 15){
-			int z;
-			fprintf(stdout, "                       ");
-			for (z = i - 16; z < i; z++)
-				fprintf(stdout, "%c", data[z]);
-			fprintf(stdout, "\n");
-		}
+
+	while (length > 0) {
+		int n = dump_frame(data, length, f++);
+		data += n;
+		length -= n;
 	}
-	if (i & 15)
-		fprintf(stdout, "\n");
+
 	fprintf(stdout, "\n");
 }
 
