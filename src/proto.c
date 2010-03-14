@@ -29,6 +29,8 @@
 const unsigned int PKTSIZE = 292;
 const unsigned int N_PKTS = 16;
 
+#define nitems(x) (sizeof(x)/sizeof(x[0]))
+
 
 /******************************************************************************************************
  * Context structure for this driver.
@@ -327,7 +329,7 @@ static int GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
  *
  *  Retrieve a parameter value from the device.
  */
-static int GetParam (struct vfs_dev *dev, int param)
+static int GetParam (struct vfs_dev *dev, unsigned short param)
 {
 	unsigned char q1[0x08] = { 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00 };
 	q1[6] = b0(param);
@@ -340,7 +342,7 @@ static int GetParam (struct vfs_dev *dev, int param)
  *
  *  Set a parameter value on the device.
  */
-static int SetParam (struct vfs_dev *dev, int param, int value)
+static int SetParam (struct vfs_dev *dev, unsigned short param, unsigned short value)
 {
 	unsigned char q1[0x0a] = { 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	q1[6] = b0(param);
@@ -349,6 +351,20 @@ static int SetParam (struct vfs_dev *dev, int param, int value)
 	q1[9] = b1(value);
 	_();
 	return swap (dev, q1, 0x0a);
+}
+
+struct set_param {
+	unsigned short param;
+	unsigned short value;
+};
+
+static int SetParamList (struct vfs_dev *dev, struct set_param *params, int nparams)
+{
+	int r, i;
+	for (i = 0; i < nparams; i++)
+		if ((r = SetParam(dev, params[i].param, params[i].value)) < 0)
+			return r;
+	return 0;
 }
 
 /* GetConfiguration (00 00 06 00)
@@ -542,76 +558,79 @@ static int validity_cycle4 (struct vfs_dev *dev)
 
 static int validity_cycle3 (struct vfs_dev *dev)
 {
+	struct set_param p1[] = {
+		{ 0x0004, 0x0000 },
+		{ 0x0005, 0x0000 },
+		{ 0x0006, 0x0000 },
+		{ 0x0007, 0x0000 },
+		{ 0x000A, 0x0002 },
+		{ 0x000B, 0x010B },
+		{ 0x000C, 0x010C },
+		{ 0x000D, 0x010D },
+		{ 0x000E, 0x0001 },
+		{ 0x0010, 0x0000 },
+		{ 0x0012, 0x0040 },
+		{ 0x0015, 0x04B0 },
+		{ 0x0016, 0x001B },
+		{ 0x0017, 0x0001 },
+		{ 0x0018, 0x0003 },
+		{ 0x0019, 0x0001 },
+		{ 0x001A, 0x0000 },
+		{ 0x001B, 0x0004 },
+		{ 0x001D, 0x010C },
+		{ 0x001E, 0x010D },
+		{ 0x001F, 0x0000 },
+		{ 0x0020, 0x0000 },
+		{ 0x0021, 0x0001 },
+		{ 0x0022, 0x0001 },
+		{ 0x0023, 0x0001 },
+		{ 0x0024, 0x0000 },
+		{ 0x002C, 0x0046 },
+		{ 0x002D, 0x002A },
+		{ 0x002F, 0x010E },
+		{ 0x0030, 0x010F },
+		{ 0x0032, 0x0004 },
+		{ 0x0033, 0x0003 },
+		{ 0x0034, 0x0005 },
+		{ 0x0035, 0x0010 },
+		{ 0x0036, 0x000A },
+		{ 0x0037, 0x0018 },
+		{ 0x0038, 0x001E },
+		{ 0x0039, 0x00B2 },
+		{ 0x003A, 0x0080 },
+		{ 0x003B, 0x0000 },
+		{ 0x003E, 0x01F4 },
+		{ 0x003F, 0x001A },
+		{ 0x0040, 0x00F8 },
+		{ 0x0042, 0x0001 },
+		{ 0x0043, 0x0004 },
+		{ 0x0044, 0x0010 },
+		{ 0x0045, 0x0005 },
+		{ 0x0046, 0x00F5 },
+		{ 0x0047, 0x000C },
+		{ 0x0048, 0x0000 },
+		{ 0x0049, 0x0000 },
+		{ 0x0053, 0x0000 },
+		{ 0x0056, 0x00B4 },
+		{ 0x0057, 0x0096 },
+		{ 0x0058, 0x008C },
+		{ 0x0059, 0x0064 },
+		{ 0x005B, 0x0001 },
+		{ 0x005C, 0x0001 },
+		{ 0x005D, 0x0020 },
+		{ 0x005E, 0x0064 },
+		{ 0x005F, 0x00C8 },
+		{ 0x0060, 0x00C8 },
+		{ 0x0062, 0x0000 },
+		{ 0x0064, 0x011A },
+		{ 0x0069, 0x0014 },
+	};
 	_(  check_six(dev));
 	_(  get_a(dev));
 	_(  get_b(dev));
 	_(  img_0(dev, 1));
 	_(  img_abort(dev));
-	_(  SetParam(dev, 0x0004, 0x0000));
-	_(  SetParam(dev, 0x0005, 0x0000));
-	_(  SetParam(dev, 0x0006, 0x0000));
-	_(  SetParam(dev, 0x0007, 0x0000));
-	_(  SetParam(dev, 0x000A, 0x0002));
-	_(  SetParam(dev, 0x000B, 0x010B));
-	_(  SetParam(dev, 0x000C, 0x010C));
-	_(  SetParam(dev, 0x000D, 0x010D));
-	_(  SetParam(dev, 0x000E, 0x0001));
-	_(  SetParam(dev, 0x0010, 0x0000));
-	_(  SetParam(dev, 0x0012, 0x0040));
-	_(  SetParam(dev, 0x0015, 0x04B0));
-	_(  SetParam(dev, 0x0016, 0x001B));
-	_(  SetParam(dev, 0x0017, 0x0001));
-	_(  SetParam(dev, 0x0018, 0x0003));
-	_(  SetParam(dev, 0x0019, 0x0001));
-	_(  SetParam(dev, 0x001A, 0x0000));
-	_(  SetParam(dev, 0x001B, 0x0004));
-	_(  SetParam(dev, 0x001D, 0x010C));
-	_(  SetParam(dev, 0x001E, 0x010D));
-	_(  SetParam(dev, 0x001F, 0x0000));
-	_(  SetParam(dev, 0x0020, 0x0000));
-	_(  SetParam(dev, 0x0021, 0x0001));
-	_(  SetParam(dev, 0x0022, 0x0001));
-	_(  SetParam(dev, 0x0023, 0x0001));
-	_(  SetParam(dev, 0x0024, 0x0000));
-	_(  SetParam(dev, 0x002C, 0x0046));
-	_(  SetParam(dev, 0x002D, 0x002A));
-	_(  SetParam(dev, 0x002F, 0x010E));
-	_(  SetParam(dev, 0x0030, 0x010F));
-	_(  SetParam(dev, 0x0032, 0x0004));
-	_(  SetParam(dev, 0x0033, 0x0003));
-	_(  SetParam(dev, 0x0034, 0x0005));
-	_(  SetParam(dev, 0x0035, 0x0010));
-	_(  SetParam(dev, 0x0036, 0x000A));
-	_(  SetParam(dev, 0x0037, 0x0018));
-	_(  SetParam(dev, 0x0038, 0x001E));
-	_(  SetParam(dev, 0x0039, 0x00B2));
-	_(  SetParam(dev, 0x003A, 0x0080));
-	_(  SetParam(dev, 0x003B, 0x0000));
-	_(  SetParam(dev, 0x003E, 0x01F4));
-	_(  SetParam(dev, 0x003F, 0x001A));
-	_(  SetParam(dev, 0x0040, 0x00F8));
-	_(  SetParam(dev, 0x0042, 0x0001));
-	_(  SetParam(dev, 0x0043, 0x0004));
-	_(  SetParam(dev, 0x0044, 0x0010));
-	_(  SetParam(dev, 0x0045, 0x0005));
-	_(  SetParam(dev, 0x0046, 0x00F5));
-	_(  SetParam(dev, 0x0047, 0x000C));
-	_(  SetParam(dev, 0x0048, 0x0000));
-	_(  SetParam(dev, 0x0049, 0x0000));
-	_(  SetParam(dev, 0x0053, 0x0000));
-	_(  SetParam(dev, 0x0056, 0x00B4));
-	_(  SetParam(dev, 0x0057, 0x0096));
-	_(  SetParam(dev, 0x0058, 0x008C));
-	_(  SetParam(dev, 0x0059, 0x0064));
-	_(  SetParam(dev, 0x005B, 0x0001));
-	_(  SetParam(dev, 0x005C, 0x0001));
-	_(  SetParam(dev, 0x005D, 0x0020));
-	_(  SetParam(dev, 0x005E, 0x0064));
-	_(  SetParam(dev, 0x005F, 0x00C8));
-	_(  SetParam(dev, 0x0060, 0x00C8));
-	_(  SetParam(dev, 0x0062, 0x0000));
-	_(  SetParam(dev, 0x0064, 0x011A));
-	_(  SetParam(dev, 0x0069, 0x0014));
+	_(  SetParamList(dev, p1, nitems(p1)));
 	_(  GetParam(dev, 0x2a));
 	_(  GetParam(dev, 0x3c));
 	_(  GetParam(dev, 0x4a));
@@ -717,6 +736,22 @@ static int validity_cycle2 (struct vfs_dev *dev)
 
 static int validity_cycle1 (struct vfs_dev *dev)
 {
+	struct set_param p1[] = {
+		{ 0x0005, 0x0000 },
+		{ 0x0006, 0x0000 },
+		{ 0x0007, 0x0000 },
+		{ 0x000A, 0x0002 },
+		{ 0x000B, 0x010B },
+		{ 0x000C, 0x010C },
+		{ 0x000D, 0x010D },
+		{ 0x000E, 0x0001 },
+		{ 0x0010, 0x0000 },
+		{ 0x0012, 0x0040 },
+		{ 0x0015, 0x04B0 },
+		{ 0x0016, 0x001B },
+		{ 0x0017, 0x0001 },
+		{ 0x0018, 0x0003 },
+	};
 	_(  check_six(dev));
 	_(  get_a(dev));
 	_(  get_b(dev));
@@ -724,20 +759,7 @@ static int validity_cycle1 (struct vfs_dev *dev)
 	_(  img_abort(dev));
 	_(  SetParam(dev, 0x0004, 0x0000));
 	_(  LoadImage(dev));
-	_(  SetParam(dev, 0x0005, 0x0000));
-	_(  SetParam(dev, 0x0006, 0x0000));
-	_(  SetParam(dev, 0x0007, 0x0000));
-	_(  SetParam(dev, 0x000A, 0x0002));
-	_(  SetParam(dev, 0x000B, 0x010B));
-	_(  SetParam(dev, 0x000C, 0x010C));
-	_(  SetParam(dev, 0x000D, 0x010D));
-	_(  SetParam(dev, 0x000E, 0x0001));
-	_(  SetParam(dev, 0x0010, 0x0000));
-	_(  SetParam(dev, 0x0012, 0x0040));
-	_(  SetParam(dev, 0x0015, 0x04B0));
-	_(  SetParam(dev, 0x0016, 0x001B));
-	_(  SetParam(dev, 0x0017, 0x0001));
-	_(  SetParam(dev, 0x0018, 0x0003));
+	_(  SetParamList(dev, p1, nitems(p1)));
 	_(  GetParam(dev, 0x14));
 	_(  GetParam(dev, 0x14));
 	_(  check_type_1(dev));
