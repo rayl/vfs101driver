@@ -371,9 +371,7 @@ static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data4[] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
 	unsigned char data5[] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
 	unsigned char data6[] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
-	unsigned char data15[] = "\x0F\x00\x00\x00\x0E\x00";
 	unsigned char data16[] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data17[] = "\x11\x00\x00\x00\x0E\x00";
 	unsigned char data18[] = "\x12\x00\x00\x00\x05\x00\x04\x00\x00\x00";
 	unsigned char data19[] = "\x13\x00\x00\x00\x05\x00\x05\x00\x00\x00";
 	unsigned char data20[] = "\x14\x00\x00\x00\x05\x00\x06\x00\x00\x00";
@@ -515,11 +513,9 @@ static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data162[] = "\xA2\x00\x00\x00\x13\x00\x0E\x50\xFF\x00\xB4\x21\x00\x00\x02";
 	unsigned char data163[] = "\xA3\x00\x00\x00\x13\x00\x32\x50\xFF\x00\x31\x00\x00\x00\x01";
 	unsigned char data164[] = "\xA4\x00\x00\x00\x05\x00\x62\x00\x32\x00";
-	unsigned char data165[] = "\xA5\x00\x00\x00\x0E\x00";
 	unsigned char data166[] = "\xA6\x00\x00\x00\x05\x00\x62\x00\x32\x00";
 	unsigned char data169[] = "\xA9\x00\x00\x00\x05\x00\x62\x00\x32\x00";
 	unsigned char data170[] = "\xAA\x00\x00\x00\x03\x00\x14\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data173[] = "\xAD\x00\x00\x00\x0E\x00";
 	unsigned char data175[] = "\xAF\x00\x00\x00\x05\x00\x62\x00\x32\x00";
 	unsigned char data176[] = "\xB0\x00\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01";
 	unsigned char data177[] = "\xB1\x00\x00\x00\x16\x00";
@@ -548,11 +544,11 @@ static int validity_cycle3(struct vfs_dev *dev){
 	GetParam(dev, 0x54);
 	GetParam(dev, 0x01);
 	GetParam(dev, 0x14);
-	swap(dev, data15, (int) sizeof(data15) - 1); 
+	AbortPrint(dev);
 	LoadImage(dev);
 	LoadImage(dev);
 	swap(dev, data16, (int) sizeof(data16) - 1); 
-	swap(dev, data17, (int) sizeof(data17) - 1); 
+	AbortPrint(dev);
 	swap(dev, data18, (int) sizeof(data18) - 1); 
 	swap(dev, data19, (int) sizeof(data19) - 1); 
 	swap(dev, data20, (int) sizeof(data20) - 1); 
@@ -713,7 +709,7 @@ static int validity_cycle3(struct vfs_dev *dev){
 	swap(dev, data162, (int) sizeof(data162) - 1); 
 	swap(dev, data163, (int) sizeof(data163) - 1); 
 	swap(dev, data164, (int) sizeof(data164) - 1); 
-	swap(dev, data165, (int) sizeof(data165) - 1); 
+	AbortPrint(dev);
 	LoadImage(dev);
 	LoadImage(dev);
 	swap(dev, data166, (int) sizeof(data166) - 1); 
@@ -724,7 +720,7 @@ static int validity_cycle3(struct vfs_dev *dev){
 	LoadImage(dev);
 	GetParam(dev, 0x14);
 	GetParam(dev, 0x14);
-	swap(dev, data173, (int) sizeof(data173) - 1); 
+	AbortPrint(dev);
 	LoadImage(dev);
 	LoadImage(dev);
 	GetParam(dev, 0x11);
@@ -765,9 +761,7 @@ static int validity_cycle1(struct vfs_dev *dev){
 	unsigned char data03 [] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
 	unsigned char data04 [] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
 	unsigned char data05 [] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
-	unsigned char data14 [] = "\x0F\x00\x00\x00\x0E\x00";
 	unsigned char data15 [] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data16 [] = "\x11\x00\x00\x00\x0E\x00";
 	unsigned char data17 [] = "\x12\x00\x00\x00\x05\x00\x04\x00\x00\x00";
 	unsigned char data18 [] = "\x13\x00\x00\x00\x05\x00\x05\x00\x00\x00";
 	unsigned char data19 [] = "\x14\x00\x00\x00\x05\x00\x06\x00\x00\x00";
@@ -783,7 +777,6 @@ static int validity_cycle1(struct vfs_dev *dev){
 	unsigned char data29 [] = "\x1E\x00\x00\x00\x05\x00\x16\x00\x1B\x00";
 	unsigned char data30 [] = "\x1F\x00\x00\x00\x05\x00\x17\x00\x01\x00";
 	unsigned char data31 [] = "\x20\x00\x00\x00\x05\x00\x18\x00\x03\x00";
-	unsigned char data34 [] = "\x02\x65\x00\x00\x0E\x00";
 	unsigned char data36 [] = "\x04\x65\x00\x00\x05\x00\x62\x00\x32\x00";
 	unsigned char data37 [] = "\x05\x65\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01";
 
@@ -831,7 +824,7 @@ static int validity_cycle1(struct vfs_dev *dev){
 	r = GetParam(dev, 0x14);
 	if (r != 0)                                               
 		return r;                                         
-	r = swap(dev, data14, (int) sizeof(data14) - 1);
+	r = AbortPrint(dev);
 	if (r != 0)                                               
 		return r;                                         
 	r = swap(dev, data15, (int) sizeof(data15) - 1);
@@ -841,7 +834,7 @@ static int validity_cycle1(struct vfs_dev *dev){
 	LoadImage(dev);
 	LoadImage(dev);
 
-	r = swap(dev, data16, (int) sizeof(data16) - 1);
+	r = AbortPrint(dev);
 	if (r != 0)                                               
 		return r;                                         
 
@@ -903,7 +896,7 @@ static int validity_cycle1(struct vfs_dev *dev){
 	r = GetParam(dev, 0x14);
 	if (r != 0)                                               
 		return r;                                         
-	r = swap(dev, data34, (int) sizeof(data34) - 1);
+	r = AbortPrint(dev);
 	if (r != 0)                                               
 		return r;                                         
 	r = GetParam(dev, 0x11);
@@ -996,7 +989,6 @@ static int validity_cycle(struct vfs_dev *dev){
 	unsigned char data[] = "\x00\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";//{packet_num_l, packet_num_h, 0x00, 0x00, 0x12, 0x00, 0xE8, 0x1F, 0x00, 0x00, 0x04};
 	unsigned char data1[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
 	unsigned char data2[] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data3[] = "\xA4\x00\x00\x00\x0E\x00";
 	unsigned char data4[] = "\xF5\x00\x00\x00\x16\x00"; 
 	unsigned char data5[] = "\xB1\x00\x00\x00\x05\x00\x62\x00\x32\x00"; 
 	unsigned char data6[] = "\xB2\x00\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01"; 
@@ -1012,7 +1004,7 @@ static int validity_cycle(struct vfs_dev *dev){
 		return r;
 	LoadImage(dev);
 
-	r = swap(dev, data3, (int) sizeof(data3) - 1);
+	r = AbortPrint(dev);
 	if (r != 0)
 		return r;
 
