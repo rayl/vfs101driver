@@ -436,6 +436,7 @@ static int LoadImage (struct vfs_dev *dev)
 static int validity_cycle4 (struct vfs_dev *dev)
 {
 	int r;
+
 	usleep(100000);
 	_(  Peek(dev, 0xE8, 0x1F, 0x00, 0x00, 0x04));
 	_(  Peek(dev, 0xEC, 0x1F, 0x00, 0x00, 0x04));
@@ -447,6 +448,8 @@ static int validity_cycle4 (struct vfs_dev *dev)
 	_(  GetVersion(dev));
 	_(  GetParam(dev, 0x28));
 	_(  GetParam(dev, 0x14));
+
+	return 0;
 }
 
 static int validity_cycle3 (struct vfs_dev *dev)
