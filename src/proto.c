@@ -539,6 +539,17 @@ static int try (struct vfs_dev *dev, unsigned int val)
 	return 0;
 }
 
+static int pat_1 (struct vfs_dev *dev, unsigned int v1, unsigned int v2)
+{
+	_(  Poke(dev, 0x000005F6, v1, 0x01));
+	_(  Peek(dev, 0x00FF503E, 0x01));
+	_(  Poke(dev, 0x00FF503E, v2, 0x01));
+	_(  Peek(dev, 0x00FF9802, 0x01));
+	_(  Peek(dev, 0x00FF9800, 0x01));
+	_(  Peek(dev, 0x00FF9806, 0x01));
+	return 0;
+}
+
 #define REG 0x00009806
 
 static int validity_cycle5 (struct vfs_dev *dev)
@@ -658,20 +669,10 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  SetParam(dev, 0x0052, 0x1EB4));
 	_(  Peek(dev, 0x00FF502C, 0x02));
 	_(  Peek(dev, 0x00FF502E, 0x02));
-	_(  Poke(dev, 0x000005F6, 0x00000001, 0x01));
-	_(  Peek(dev, 0x00FF503E, 0x01));
-	_(  Poke(dev, 0x00FF503E, 0x00000000, 0x01));
-	_(  Peek(dev, 0x00FF9802, 0x01));
-	_(  Peek(dev, 0x00FF9800, 0x01));
-	_(  Peek(dev, 0x00FF9806, 0x01));
+	_(  pat_1(dev, 0x00000001, 0x00000000));
 	_(  Poke(dev, 0x00FF9806, 0x00000000, 0x01));
 	_(  img_0(dev, 100));
-	_(  Poke(dev, 0x000005F6, 0x00000000, 0x01));
-	_(  Peek(dev, 0x00FF503E, 0x01));
-	_(  Poke(dev, 0x00FF503E, 0x00000010, 0x01));
-	_(  Peek(dev, 0x00FF9802, 0x01));
-	_(  Peek(dev, 0x00FF9800, 0x01));
-	_(  Peek(dev, 0x00FF9806, 0x01));
+	_(  pat_1(dev, 0x00000000, 0x00000010));
 	_(  img_0(dev, 100));
 	_(  Peek(dev, 0x00FF5038, 0x01));
 	_(  Peek(dev, 0x00FF500E, 0x02));
@@ -684,12 +685,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  SetParam(dev, 0x0076, 0x0000));
 	_(  SetParam(dev, 0x0078, 0x0000));
 	_(  img_0(dev, 2));
-	_(  Poke(dev, 0x000005F6, 0x00000001, 0x01));
-	_(  Peek(dev, 0x00FF503E, 0x01));
-	_(  Poke(dev, 0x00FF503E, 0x00000000, 0x01));
-	_(  Peek(dev, 0x00FF9802, 0x01));
-	_(  Peek(dev, 0x00FF9800, 0x01));
-	_(  Peek(dev, 0x00FF9806, 0x01));
+	_(  pat_1(dev, 0x00000001, 0x00000000));
 	_(  try(dev, 0x0000000E));
 	_(  try(dev, 0x0000000D));
 	_(  try(dev, 0x0000000C));
@@ -698,12 +694,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  try(dev, 0x00000009));
 	_(  try(dev, 0x00000008));
 	_(  try(dev, 0x00000007));
-	_(  Poke(dev, 0x000005F6, 0x00000000, 0x01));
-	_(  Peek(dev, 0x00FF503E, 0x01));
-	_(  Poke(dev, 0x00FF503E, 0x00000010, 0x01));
-	_(  Peek(dev, 0x00FF9802, 0x01));
-	_(  Peek(dev, 0x00FF9800, 0x01));
-	_(  Peek(dev, 0x00FF9806, 0x01));
+	_(  pat_1(dev, 0x00000000, 0x00000010));
 	_(  Poke(dev, 0x00FF9806, 0x00000000, 0x01));
 	_(  img_0(dev, 10));
 	_(  SetParam(dev, 0x0077, 0x0007));
