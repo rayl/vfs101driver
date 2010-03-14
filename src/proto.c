@@ -218,7 +218,7 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
      00 00 10 00      Spare3
      00 00 11 00      Spare4
      00 00 12 00    - Peek
-     00 00 13 00      Poke
+     00 00 13 00    - Poke
      00 00 14 00      SensorSpiTrans
      00 00 15 00      SensorGPIO
      00 00 16 00    - GetFingerState 
@@ -329,6 +329,26 @@ static int Peek (struct vfs_dev *dev, int p1, int p2, int p3, int p4, int p5)
 	return swap (dev, q1, 0x0b);
 }
 
+/* Poke (00 00 13 00)
+ *
+ *  Store a value to the device.
+ */
+static int Poke (struct vfs_dev *dev, int p1, int p2, int p3, int p4, int p5, int p6, int p7, int p8, int p9)
+{
+	unsigned char q1[0x0f] = { 0x00, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	q1[6] = p1;
+	q1[7] = p2;
+	q1[8] = p3;
+	q1[9] = p4;
+	q1[10] = p5;
+	q1[11] = p6;
+	q1[12] = p7;
+	q1[13] = p8;
+	q1[14] = p9;
+	_();
+	return swap (dev, q1, 0x0f);
+}
+
 /* GetFingerState (00 00 16 00)
  *
  *  Poll device for current finger state.
@@ -392,30 +412,7 @@ static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data176[6] = "\x01\x00\x00\x00\x01\x01";
 
 	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
-	unsigned char data102[] = "\x66\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data104[] = "\x68\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x00\x00\x00\x00\x01";
-	unsigned char data108[] = "\x6C\x00\x00\x00\x13\x00\x06\x98\xFF\x00\x00\x00\x00\x00\x01";
-	unsigned char data110[] = "\x6E\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x00\x00\x00\x00\x01";
-	unsigned char data112[] = "\x70\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x10\x00\x00\x00\x01";
-	unsigned char data120[] = "\x78\x00\x00\x00\x13\x00\x32\x50\xFF\x00\x12\x00\x00\x00\x01";
-	unsigned char data121[] = "\x79\x00\x00\x00\x13\x00\x0E\x50\xFF\x00\x00\x40\x00\x00\x02";
-	unsigned char data122[] = "\x7A\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0F\x00\x00\x00\x01";
-	unsigned char data128[] = "\x80\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data130[] = "\x82\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x00\x00\x00\x00\x01";
-	unsigned char data134[] = "\x86\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0E\x00\x00\x00\x01";
-	unsigned char data136[] = "\x88\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0D\x00\x00\x00\x01";
-	unsigned char data138[] = "\x8A\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0C\x00\x00\x00\x01";
-	unsigned char data140[] = "\x8C\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0B\x00\x00\x00\x01";
-	unsigned char data142[] = "\x8E\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0A\x00\x00\x00\x01";
-	unsigned char data144[] = "\x90\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x09\x00\x00\x00\x01";
-	unsigned char data146[] = "\x92\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x08\x00\x00\x00\x01";
-	unsigned char data148[] = "\x94\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x07\x00\x00\x00\x01";
-	unsigned char data150[] = "\x96\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x00\x00\x00\x00\x01";
-	unsigned char data152[] = "\x98\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x10\x00\x00\x00\x01";
-	unsigned char data156[] = "\x9C\x00\x00\x00\x13\x00\x06\x98\xFF\x00\x00\x00\x00\x00\x01";
-	unsigned char data161[] = "\xA1\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x14\x00\x00\x00\x01";
-	unsigned char data162[] = "\xA2\x00\x00\x00\x13\x00\x0E\x50\xFF\x00\xB4\x21\x00\x00\x02";
-	unsigned char data163[] = "\xA3\x00\x00\x00\x13\x00\x32\x50\xFF\x00\x31\x00\x00\x00\x01";
+
         int r = 0;
 	Peek(dev, 0xE8, 0x1F, 0x00, 0x00, 0x04);
 	Peek(dev, 0xEC, 0x1F, 0x00, 0x00, 0x04);
@@ -521,18 +518,18 @@ static int validity_cycle3(struct vfs_dev *dev){
 	SetParam(dev, 0x0052, 0x1EB4);
 	Peek(dev, 0x2C, 0x50, 0xFF, 0x00, 0x02);
 	Peek(dev, 0x2E, 0x50, 0xFF, 0x00, 0x02);
-	swap(dev, data102, (int) sizeof(data102) - 1); 
+	Poke(dev, 0xF6, 0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01);
 	Peek(dev, 0x3E, 0x50, 0xFF, 0x00, 0x01);
-	swap(dev, data104, (int) sizeof(data104) - 1); 
+	Poke(dev, 0x3E, 0x50, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
 	Peek(dev, 0x02, 0x98, 0xFF, 0x00, 0x01);
 	Peek(dev, 0x00, 0x98, 0xFF, 0x00, 0x01);
 	Peek(dev, 0x06, 0x98, 0xFF, 0x00, 0x01);
-	swap(dev, data108, (int) sizeof(data108) - 1); 
+	Poke(dev, 0x06, 0x98, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
 	GetPrint(dev, 100, data109);
 	LoadImage(dev);
-	swap(dev, data110, (int) sizeof(data110) - 1); 
+	Poke(dev, 0xF6, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
 	Peek(dev, 0x3E, 0x50, 0xFF, 0x00, 0x01);
-	swap(dev, data112, (int) sizeof(data112) - 1); 
+	Poke(dev, 0x3E, 0x50, 0xFF, 0x00, 0x10, 0x00, 0x00, 0x00, 0x01);
 	Peek(dev, 0x02, 0x98, 0xFF, 0x00, 0x01);
 	Peek(dev, 0x00, 0x98, 0xFF, 0x00, 0x01);
 	Peek(dev, 0x06, 0x98, 0xFF, 0x00, 0x01);
@@ -541,60 +538,60 @@ static int validity_cycle3(struct vfs_dev *dev){
 	Peek(dev, 0x38, 0x50, 0xFF, 0x00, 0x01);
 	Peek(dev, 0x0E, 0x50, 0xFF, 0x00, 0x02);
 	Peek(dev, 0x32, 0x50, 0xFF, 0x00, 0x01);
-	swap(dev, data120, (int) sizeof(data120) - 1); 
-	swap(dev, data121, (int) sizeof(data121) - 1); 
-	swap(dev, data122, (int) sizeof(data122) - 1); 
+	Poke(dev, 0x32, 0x50, 0xFF, 0x00, 0x12, 0x00, 0x00, 0x00, 0x01);
+	Poke(dev, 0x0E, 0x50, 0xFF, 0x00, 0x00, 0x40, 0x00, 0x00, 0x02);
+	Poke(dev, 0x38, 0x50, 0xFF, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x01);
 	SetParam(dev, 0x0062, 0x0000);
 	SetParam(dev, 0x0077, 0x0000);
 	SetParam(dev, 0x0076, 0x0000);
 	SetParam(dev, 0x0078, 0x0000);
 	GetPrint(dev, 2, data127);
 	LoadImage(dev);
-	swap(dev, data128, (int) sizeof(data128) - 1); 
+	Poke(dev, 0xF6, 0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01);
 	Peek(dev, 0x3E, 0x50, 0xFF, 0x00, 0x01);
-	swap(dev, data130, (int) sizeof(data130) - 1); 
+	Poke(dev, 0x3E, 0x50, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
 	Peek(dev, 0x02, 0x98, 0xFF, 0x00, 0x01);
 	Peek(dev, 0x00, 0x98, 0xFF, 0x00, 0x01);
 	Peek(dev, 0x06, 0x98, 0xFF, 0x00, 0x01);
-	swap(dev, data134, (int) sizeof(data134) - 1); 
+	Poke(dev, 0x38, 0x50, 0xFF, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x01);
 	GetPrint(dev, 10, data135);
 	LoadImage(dev);
-	swap(dev, data136, (int) sizeof(data136) - 1); 
+	Poke(dev, 0x38, 0x50, 0xFF, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x01);
 	GetPrint(dev, 10, data137);
 	LoadImage(dev);
-	swap(dev, data138, (int) sizeof(data138) - 1); 
+	Poke(dev, 0x38, 0x50, 0xFF, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x01);
 	GetPrint(dev, 10, data139);
 	LoadImage(dev);
-	swap(dev, data140, (int) sizeof(data140) - 1); 
+	Poke(dev, 0x38, 0x50, 0xFF, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x01);
 	GetPrint(dev, 10, data141);
 	LoadImage(dev);
-	swap(dev, data142, (int) sizeof(data142) - 1); 
+	Poke(dev, 0x38, 0x50, 0xFF, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x01);
 	GetPrint(dev, 10, data143);
 	LoadImage(dev);
-	swap(dev, data144, (int) sizeof(data144) - 1); 
+	Poke(dev, 0x38, 0x50, 0xFF, 0x00, 0x09, 0x00, 0x00, 0x00, 0x01);
 	GetPrint(dev, 10, data145);
 	LoadImage(dev);
-	swap(dev, data146, (int) sizeof(data146) - 1); 
+	Poke(dev, 0x38, 0x50, 0xFF, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01);
 	GetPrint(dev, 10, data147);
 	LoadImage(dev);
-	swap(dev, data148, (int) sizeof(data148) - 1); 
+	Poke(dev, 0x38, 0x50, 0xFF, 0x00, 0x07, 0x00, 0x00, 0x00, 0x01);
 	GetPrint(dev, 10, data149);
 	LoadImage(dev);
-	swap(dev, data150, (int) sizeof(data150) - 1); 
+	Poke(dev, 0xF6, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
 	Peek(dev, 0x3E, 0x50, 0xFF, 0x00, 0x01);
-	swap(dev, data152, (int) sizeof(data152) - 1); 
+	Poke(dev, 0x3E, 0x50, 0xFF, 0x00, 0x10, 0x00, 0x00, 0x00, 0x01);
 	Peek(dev, 0x02, 0x98, 0xFF, 0x00, 0x01);
 	Peek(dev, 0x00, 0x98, 0xFF, 0x00, 0x01);
 	Peek(dev, 0x06, 0x98, 0xFF, 0x00, 0x01);
-	swap(dev, data156, (int) sizeof(data156) - 1); 
+	Poke(dev, 0x06, 0x98, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
 	GetPrint(dev, 10, data157);
 	LoadImage(dev);
 	SetParam(dev, 0x0077, 0x0007);
 	SetParam(dev, 0x0076, 0x0012);
 	SetParam(dev, 0x0078, 0x21A0);
-	swap(dev, data161, (int) sizeof(data161) - 1); 
-	swap(dev, data162, (int) sizeof(data162) - 1); 
-	swap(dev, data163, (int) sizeof(data163) - 1); 
+	Poke(dev, 0x38, 0x50, 0xFF, 0x00, 0x14, 0x00, 0x00, 0x00, 0x01);
+	Poke(dev, 0x0E, 0x50, 0xFF, 0x00, 0xB4, 0x21, 0x00, 0x00, 0x02);
+	Poke(dev, 0x32, 0x50, 0xFF, 0x00, 0x31, 0x00, 0x00, 0x00, 0x01);
 	SetParam(dev, 0x0062, 0x0032);
 	AbortPrint(dev);
 	LoadImage(dev);
