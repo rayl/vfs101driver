@@ -217,7 +217,7 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
      00 00 0F 00      Spare2
      00 00 10 00      Spare3
      00 00 11 00      Spare4
-     00 00 12 00      Peek
+     00 00 12 00    - Peek
      00 00 13 00      Poke
      00 00 14 00      SensorSpiTrans
      00 00 15 00      SensorGPIO
@@ -313,6 +313,22 @@ static int AbortPrint (struct vfs_dev *dev)
 	return swap (dev, q1, 0x06);
 }
 
+/* Peek (00 00 12 00)
+ *
+ *  Retrieve a value from the device.
+ */
+static int Peek (struct vfs_dev *dev, int p1, int p2, int p3, int p4, int p5)
+{
+	unsigned char q1[0x0b] = { 0x00, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	q1[6] = p1;
+	q1[7] = p2;
+	q1[8] = p3;
+	q1[9] = p4;
+	q1[10] = p5;
+	_();
+	return swap (dev, q1, 0x0b);
+}
+
 /* GetFingerState (00 00 16 00)
  *
  *  Poll device for current finger state.
@@ -345,19 +361,12 @@ static int LoadImage (struct vfs_dev *dev)
 
 static int validity_cycle4(struct vfs_dev *dev){
 	usleep(100000);
-	unsigned char data1[] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
-	unsigned char data2[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
-	unsigned char data3[] = "\x03\x00\x00\x00\x12\x00\xF0\x1F\x00\x00\x04";
-	unsigned char data4[] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
-	unsigned char data5[] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
-	unsigned char data6[] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
-
-	swap(dev, data1, (int) sizeof(data1) - 1); 
-	swap(dev, data2, (int) sizeof(data2) - 1); 
-	swap(dev, data3, (int) sizeof(data3) - 1); 
-	swap(dev, data4, (int) sizeof(data4) - 1); 
-	swap(dev, data5, (int) sizeof(data5) - 1); 
-	swap(dev, data6, (int) sizeof(data6) - 1); 
+	Peek(dev, 0xE8, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xEC, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF0, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF4, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF8, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xFC, 0x1F, 0x00, 0x00, 0x04);
 	GetParam(dev, 0x2e);
 	GetVersion(dev);
 	GetParam(dev, 0x28);
@@ -365,45 +374,22 @@ static int validity_cycle4(struct vfs_dev *dev){
 }
 
 static int validity_cycle3(struct vfs_dev *dev){
-	unsigned char data1[] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
-	unsigned char data2[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
-	unsigned char data3[] = "\x03\x00\x00\x00\x12\x00\xF0\x1F\x00\x00\x04";
-	unsigned char data4[] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
-	unsigned char data5[] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
-	unsigned char data6[] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
 	unsigned char data16[] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
 	unsigned char data98[] = "\x62\x00\x00\x00\x03\x00\x01\x00\x00\x00\x00\x00\x00\x01";
-	unsigned char data100[] = "\x64\x00\x00\x00\x12\x00\x2C\x50\xFF\x00\x02";
-	unsigned char data101[] = "\x65\x00\x00\x00\x12\x00\x2E\x50\xFF\x00\x02";
 	unsigned char data102[] = "\x66\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data103[] = "\x67\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
 	unsigned char data104[] = "\x68\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x00\x00\x00\x00\x01";
-	unsigned char data105[] = "\x69\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
-	unsigned char data106[] = "\x6A\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
-	unsigned char data107[] = "\x6B\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
 	unsigned char data108[] = "\x6C\x00\x00\x00\x13\x00\x06\x98\xFF\x00\x00\x00\x00\x00\x01";
 	unsigned char data109[] = "\x6D\x00\x00\x00\x03\x00\x64\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data110[] = "\x6E\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x00\x00\x00\x00\x01";
-	unsigned char data111[] = "\x6F\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
 	unsigned char data112[] = "\x70\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x10\x00\x00\x00\x01";
-	unsigned char data113[] = "\x71\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
-	unsigned char data114[] = "\x72\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
-	unsigned char data115[] = "\x73\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
 	unsigned char data116[] = "\x74\x00\x00\x00\x03\x00\x64\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data117[] = "\x75\x00\x00\x00\x12\x00\x38\x50\xFF\x00\x01";
-	unsigned char data118[] = "\x76\x00\x00\x00\x12\x00\x0E\x50\xFF\x00\x02";
-	unsigned char data119[] = "\x77\x00\x00\x00\x12\x00\x32\x50\xFF\x00\x01";
 	unsigned char data120[] = "\x78\x00\x00\x00\x13\x00\x32\x50\xFF\x00\x12\x00\x00\x00\x01";
 	unsigned char data121[] = "\x79\x00\x00\x00\x13\x00\x0E\x50\xFF\x00\x00\x40\x00\x00\x02";
 	unsigned char data122[] = "\x7A\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0F\x00\x00\x00\x01";
 	unsigned char data127[] = "\x7F\x00\x00\x00\x03\x00\x02\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data128[] = "\x80\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data129[] = "\x81\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
 	unsigned char data130[] = "\x82\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x00\x00\x00\x00\x01";
-	unsigned char data131[] = "\x83\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
-	unsigned char data132[] = "\x84\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
-	unsigned char data133[] = "\x85\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
 	unsigned char data134[] = "\x86\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0E\x00\x00\x00\x01";
 	unsigned char data135[] = "\x87\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data136[] = "\x88\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x0D\x00\x00\x00\x01";
@@ -421,11 +407,7 @@ static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data148[] = "\x94\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x07\x00\x00\x00\x01";
 	unsigned char data149[] = "\x95\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data150[] = "\x96\x00\x00\x00\x13\x00\xF6\x05\x00\x00\x00\x00\x00\x00\x01";
-	unsigned char data151[] = "\x97\x00\x00\x00\x12\x00\x3E\x50\xFF\x00\x01";
 	unsigned char data152[] = "\x98\x00\x00\x00\x13\x00\x3E\x50\xFF\x00\x10\x00\x00\x00\x01";
-	unsigned char data153[] = "\x99\x00\x00\x00\x12\x00\x02\x98\xFF\x00\x01";
-	unsigned char data154[] = "\x9A\x00\x00\x00\x12\x00\x00\x98\xFF\x00\x01";
-	unsigned char data155[] = "\x9B\x00\x00\x00\x12\x00\x06\x98\xFF\x00\x01";
 	unsigned char data156[] = "\x9C\x00\x00\x00\x13\x00\x06\x98\xFF\x00\x00\x00\x00\x00\x01";
 	unsigned char data157[] = "\x9D\x00\x00\x00\x03\x00\x0A\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data161[] = "\xA1\x00\x00\x00\x13\x00\x38\x50\xFF\x00\x14\x00\x00\x00\x01";
@@ -434,12 +416,12 @@ static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data170[] = "\xAA\x00\x00\x00\x03\x00\x14\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data176[] = "\xB0\x00\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01";
         int r = 0;
-	swap(dev, data1, (int) sizeof(data1) - 1); 
-	swap(dev, data2, (int) sizeof(data2) - 1); 
-	swap(dev, data3, (int) sizeof(data3) - 1); 
-	swap(dev, data4, (int) sizeof(data4) - 1); 
-	swap(dev, data5, (int) sizeof(data5) - 1); 
-	swap(dev, data6, (int) sizeof(data6) - 1); 
+	Peek(dev, 0xE8, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xEC, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF0, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF4, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF8, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xFC, 0x1F, 0x00, 0x00, 0x04);
 	GetParam(dev, 0x2e);
 	GetVersion(dev);
 	GetParam(dev, 0x28);
@@ -536,28 +518,28 @@ static int validity_cycle3(struct vfs_dev *dev){
 	swap(dev, data98, (int) sizeof(data98) - 1); 
 	LoadImage(dev);
 	SetParam(dev, 0x0052, 0x1EB4);
-	swap(dev, data100, (int) sizeof(data100) - 1); 
-	swap(dev, data101, (int) sizeof(data101) - 1); 
+	Peek(dev, 0x2C, 0x50, 0xFF, 0x00, 0x02);
+	Peek(dev, 0x2E, 0x50, 0xFF, 0x00, 0x02);
 	swap(dev, data102, (int) sizeof(data102) - 1); 
-	swap(dev, data103, (int) sizeof(data103) - 1); 
+	Peek(dev, 0x3E, 0x50, 0xFF, 0x00, 0x01);
 	swap(dev, data104, (int) sizeof(data104) - 1); 
-	swap(dev, data105, (int) sizeof(data105) - 1); 
-	swap(dev, data106, (int) sizeof(data106) - 1); 
-	swap(dev, data107, (int) sizeof(data107) - 1); 
+	Peek(dev, 0x02, 0x98, 0xFF, 0x00, 0x01);
+	Peek(dev, 0x00, 0x98, 0xFF, 0x00, 0x01);
+	Peek(dev, 0x06, 0x98, 0xFF, 0x00, 0x01);
 	swap(dev, data108, (int) sizeof(data108) - 1); 
 	swap(dev, data109, (int) sizeof(data109) - 1); 
 	LoadImage(dev);
 	swap(dev, data110, (int) sizeof(data110) - 1); 
-	swap(dev, data111, (int) sizeof(data111) - 1); 
+	Peek(dev, 0x3E, 0x50, 0xFF, 0x00, 0x01);
 	swap(dev, data112, (int) sizeof(data112) - 1); 
-	swap(dev, data113, (int) sizeof(data113) - 1); 
-	swap(dev, data114, (int) sizeof(data114) - 1); 
-	swap(dev, data115, (int) sizeof(data115) - 1); 
+	Peek(dev, 0x02, 0x98, 0xFF, 0x00, 0x01);
+	Peek(dev, 0x00, 0x98, 0xFF, 0x00, 0x01);
+	Peek(dev, 0x06, 0x98, 0xFF, 0x00, 0x01);
 	swap(dev, data116, (int) sizeof(data116) - 1); 
 	LoadImage(dev);
-	swap(dev, data117, (int) sizeof(data117) - 1); 
-	swap(dev, data118, (int) sizeof(data118) - 1); 
-	swap(dev, data119, (int) sizeof(data119) - 1); 
+	Peek(dev, 0x38, 0x50, 0xFF, 0x00, 0x01);
+	Peek(dev, 0x0E, 0x50, 0xFF, 0x00, 0x02);
+	Peek(dev, 0x32, 0x50, 0xFF, 0x00, 0x01);
 	swap(dev, data120, (int) sizeof(data120) - 1); 
 	swap(dev, data121, (int) sizeof(data121) - 1); 
 	swap(dev, data122, (int) sizeof(data122) - 1); 
@@ -568,11 +550,11 @@ static int validity_cycle3(struct vfs_dev *dev){
 	swap(dev, data127, (int) sizeof(data127) - 1); 
 	LoadImage(dev);
 	swap(dev, data128, (int) sizeof(data128) - 1); 
-	swap(dev, data129, (int) sizeof(data129) - 1); 
+	Peek(dev, 0x3E, 0x50, 0xFF, 0x00, 0x01);
 	swap(dev, data130, (int) sizeof(data130) - 1); 
-	swap(dev, data131, (int) sizeof(data131) - 1); 
-	swap(dev, data132, (int) sizeof(data132) - 1); 
-	swap(dev, data133, (int) sizeof(data133) - 1); 
+	Peek(dev, 0x02, 0x98, 0xFF, 0x00, 0x01);
+	Peek(dev, 0x00, 0x98, 0xFF, 0x00, 0x01);
+	Peek(dev, 0x06, 0x98, 0xFF, 0x00, 0x01);
 	swap(dev, data134, (int) sizeof(data134) - 1); 
 	swap(dev, data135, (int) sizeof(data135) - 1); 
 	LoadImage(dev);
@@ -598,11 +580,11 @@ static int validity_cycle3(struct vfs_dev *dev){
 	swap(dev, data149, (int) sizeof(data149) - 1); 
 	LoadImage(dev);
 	swap(dev, data150, (int) sizeof(data150) - 1); 
-	swap(dev, data151, (int) sizeof(data151) - 1); 
+	Peek(dev, 0x3E, 0x50, 0xFF, 0x00, 0x01);
 	swap(dev, data152, (int) sizeof(data152) - 1); 
-	swap(dev, data153, (int) sizeof(data153) - 1); 
-	swap(dev, data154, (int) sizeof(data154) - 1); 
-	swap(dev, data155, (int) sizeof(data155) - 1); 
+	Peek(dev, 0x02, 0x98, 0xFF, 0x00, 0x01);
+	Peek(dev, 0x00, 0x98, 0xFF, 0x00, 0x01);
+	Peek(dev, 0x06, 0x98, 0xFF, 0x00, 0x01);
 	swap(dev, data156, (int) sizeof(data156) - 1); 
 	swap(dev, data157, (int) sizeof(data157) - 1); 
 	LoadImage(dev);
@@ -639,49 +621,36 @@ static int validity_cycle3(struct vfs_dev *dev){
 }
 
 static int validity_cycle2(struct vfs_dev *dev){
-	unsigned char data00 [] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
-	unsigned char data01 [] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
-	unsigned char data02 [] = "\x03\x00\x00\x00\x12\x00\xF0\x1F\x00\x00\x04";
-	unsigned char data03 [] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
-	unsigned char data04 [] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
-	unsigned char data05 [] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
-	
-	swap(dev, data00, (int) sizeof(data00) - 1);
-	swap(dev, data01, (int) sizeof(data01) - 1);
-	swap(dev, data02, (int) sizeof(data02) - 1);
-	swap(dev, data03, (int) sizeof(data03) - 1);
-	swap(dev, data04, (int) sizeof(data04) - 1);
-	swap(dev, data05, (int) sizeof(data05) - 1);
-
+	Peek(dev, 0xE8, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xEC, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF0, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF4, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF8, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xFC, 0x1F, 0x00, 0x00, 0x04);
 	return GetFingerState(dev);
 }
 
 static int validity_cycle1(struct vfs_dev *dev){
-	unsigned char data00 [] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
-	unsigned char data01 [] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
-	unsigned char data02 [] = "\x03\x00\x00\x00\x12\x00\xF0\x1F\x00\x00\x04";
-	unsigned char data03 [] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
-	unsigned char data04 [] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
-	unsigned char data05 [] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
 	unsigned char data15 [] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data37 [] = "\x05\x65\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01";
+	int r;
 
-	int r = swap(dev, data00, (int) sizeof(data00) - 1);
+	r = Peek(dev, 0xE8, 0x1F, 0x00, 0x00, 0x04);
 	if (r != 0)                                               
 		return r;                                         
-	r = swap(dev, data01, (int) sizeof(data01) - 1);
+	r = Peek(dev, 0xEC, 0x1F, 0x00, 0x00, 0x04);
 	if (r != 0)                                               
 		return r;                                         
-	r = swap(dev, data02, (int) sizeof(data02) - 1);
+	r = Peek(dev, 0xF0, 0x1F, 0x00, 0x00, 0x04);
 	if (r != 0)                                               
 		return r;                                         
-	r = swap(dev, data03, (int) sizeof(data03) - 1);
+	r = Peek(dev, 0xF4, 0x1F, 0x00, 0x00, 0x04);
 	if (r != 0)                                               
 		return r;                                         
-	r = swap(dev, data04, (int) sizeof(data04) - 1);
+	r = Peek(dev, 0xF8, 0x1F, 0x00, 0x00, 0x04);
 	if (r != 0)                                               
 		return r;                                         
-	r = swap(dev, data05, (int) sizeof(data05) - 1);
+	r = Peek(dev, 0xFC, 0x1F, 0x00, 0x00, 0x04);
 	if (r != 0)                                               
 		return r;                                         
 	r = GetParam(dev, 0x2e);
@@ -836,21 +805,12 @@ static int validity_cycle1(struct vfs_dev *dev){
 }
 
 static int validity_cycle0(struct vfs_dev *dev){
-	unsigned char data1[] = "\x01\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";
-	unsigned char data2[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
-	unsigned char data3[] = "\x03\x00\x00\x00\x12\x00\xF0\x1F\x00\x00\x04";
-	unsigned char data4[] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
-	unsigned char data5[] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
-	unsigned char data6[] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
-
-
-	swap(dev, data1, (int) sizeof(data1) - 1); 
-	swap(dev, data2, (int) sizeof(data2) - 1); 
-	swap(dev, data3, (int) sizeof(data3) - 1); 
-	swap(dev, data4, (int) sizeof(data4) - 1); 
-	swap(dev, data5, (int) sizeof(data5) - 1); 
-	swap(dev, data6, (int) sizeof(data6) - 1); 
-
+	Peek(dev, 0xE8, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xEC, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF0, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF4, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xF8, 0x1F, 0x00, 0x00, 0x04);
+	Peek(dev, 0xFC, 0x1F, 0x00, 0x00, 0x04);
 
 	unsigned char data171[] = "\xAB\x00\x00\x00\x03\x00\x14\x00\x00\x01\x00\x00\x00\x01";
 
@@ -868,15 +828,14 @@ static int validity_cycle0(struct vfs_dev *dev){
 }
 	
 static int validity_cycle(struct vfs_dev *dev){
-	unsigned char data[] = "\x00\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";//{packet_num_l, packet_num_h, 0x00, 0x00, 0x12, 0x00, 0xE8, 0x1F, 0x00, 0x00, 0x04};
-	unsigned char data1[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
 	unsigned char data2[] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data6[] = "\xB2\x00\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01"; 
+	int r;
 
-	int r = swap(dev, data, (int) sizeof(data) - 1);
+	r = Peek(dev, 0xE8, 0x1F, 0x00, 0x00, 0x04);
 	if (r != 0)
 		return r;
-	r = swap(dev, data1, (int) sizeof(data1) - 1);
+	r = Peek(dev, 0xEC, 0x1F, 0x00, 0x00, 0x04);
 	if (r != 0)
 		return r;
 	r = swap(dev, data2, (int) sizeof(data2) - 1);
