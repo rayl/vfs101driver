@@ -1,0 +1,6 @@
+
+q () 
+{ 
+    rm img/*;
+    ./bin/proto $1
+}
