@@ -441,7 +441,6 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  GetParam(dev, 0x14));
 	_(  AbortPrint(dev));
 	_(  LoadImage(dev));
-	_(  LoadImage(dev));
 	_(  GetPrint(dev, 1, data16));
 	_(  AbortPrint(dev));
 	_(  SetParam(dev, 0x0004, 0x0000));
@@ -606,7 +605,6 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  SetParam(dev, 0x0062, 0x0032));
 	_(  AbortPrint(dev));
 	_(  LoadImage(dev));
-	_(  LoadImage(dev));
 	_(  SetParam(dev, 0x0062, 0x0032));
 	_(  GetParam(dev, 0x14));
 	_(  GetParam(dev, 0x11));
@@ -616,7 +614,6 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  GetParam(dev, 0x14));
 	_(  GetParam(dev, 0x14));
 	_(  AbortPrint(dev));
-	_(  LoadImage(dev));
 	_(  LoadImage(dev));
 	_(  GetParam(dev, 0x11));
 	_(  SetParam(dev, 0x0062, 0x0032));
@@ -667,11 +664,9 @@ static int validity_cycle1 (struct vfs_dev *dev)
 	_(  AbortPrint(dev));
 	_(  GetPrint(dev, 1, data15));
 	_(  LoadImage(dev));
-	_(  LoadImage(dev));
 	_(  AbortPrint(dev));
 	_(  LoadImage(dev));
 	_(  SetParam(dev, 0x0004, 0x0000));
-	_(  LoadImage(dev));
 	_(  LoadImage(dev));
 	_(  SetParam(dev, 0x0005, 0x0000));
 	_(  SetParam(dev, 0x0006, 0x0000));
