@@ -762,18 +762,31 @@ static int validity_cycle (struct vfs_dev *dev)
 #undef _
 
 
+/******************************************************************************************************
+ * Main launcher
+ *
+ * The main routine can launch any of the cycle routines defined above. Simple add an entry
+ * to func() with a token for the command line argument and a cycle function to invoke when
+ * that argument is seen.
+ */
+
 typedef int (*cycle_func)(struct vfs_dev *);
 
 static cycle_func func (const char *id)
 {
-	if (id == NULL)           return validity_cycle;
-	if (strcmp(id, "0") == 0) return validity_cycle0;
-	if (strcmp(id, "1") == 0) return validity_cycle1;
-	if (strcmp(id, "2") == 0) return validity_cycle2;
-	if (strcmp(id, "3") == 0) return validity_cycle3;
-	if (strcmp(id, "4") == 0) return validity_cycle4;
-	                          return validity_cycle;
+#define _(x,f) if (strcmp(id, #x) == 0) return f
+	if (id != NULL) {
+		_(0, validity_cycle0);
+		_(1, validity_cycle1);
+		_(2, validity_cycle2);
+		_(3, validity_cycle3);
+		_(4, validity_cycle4);
+		_(also4, validity_cycle4);
+	}
+	return validity_cycle;
+#undef _
 }
+
 
 /** Main function */
 int main (int argc, char **argv)
