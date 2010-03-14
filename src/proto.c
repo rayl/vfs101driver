@@ -351,7 +351,6 @@ static int validity_cycle4(struct vfs_dev *dev){
 	unsigned char data4[] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
 	unsigned char data5[] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
 	unsigned char data6[] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
-	unsigned char data8[] = "\x08\x00\x00\x00\x02\x00\x00";
 
 	swap(dev, data1, (int) sizeof(data1) - 1); 
 	swap(dev, data2, (int) sizeof(data2) - 1); 
@@ -360,7 +359,7 @@ static int validity_cycle4(struct vfs_dev *dev){
 	swap(dev, data5, (int) sizeof(data5) - 1); 
 	swap(dev, data6, (int) sizeof(data6) - 1); 
 	GetParam(dev, 0x2e);
-	swap(dev, data8, (int) sizeof(data8) - 1); 
+	GetVersion(dev);
 	GetParam(dev, 0x28);
 	GetParam(dev, 0x14);
 }
@@ -372,7 +371,6 @@ static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data4[] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
 	unsigned char data5[] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
 	unsigned char data6[] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
-	unsigned char data8[] = "\x08\x00\x00\x00\x02\x00\x00";
 	unsigned char data15[] = "\x0F\x00\x00\x00\x0E\x00";
 	unsigned char data16[] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data17[] = "\x11\x00\x00\x00\x0E\x00";
@@ -441,7 +439,6 @@ static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data80[] = "\x50\x00\x00\x00\x05\x00\x62\x00\x00\x00";
 	unsigned char data81[] = "\x51\x00\x00\x00\x05\x00\x64\x00\x1A\x01";
 	unsigned char data82[] = "\x52\x00\x00\x00\x05\x00\x69\x00\x14\x00";
-	unsigned char data87[] = "\x57\x00\x00\x00\x02\x00\x00";
 	unsigned char data88[] = "\x58\x00\x00\x00\x05\x00\x63\x00\x01\x00";
 	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
 	unsigned char data90[] = "\x5A\x00\x00\x00\x05\x00\x64\x00\x18\x01";
@@ -544,7 +541,7 @@ static int validity_cycle3(struct vfs_dev *dev){
 	swap(dev, data5, (int) sizeof(data5) - 1); 
 	swap(dev, data6, (int) sizeof(data6) - 1); 
 	GetParam(dev, 0x2e);
-	swap(dev, data8, (int) sizeof(data8) - 1); 
+	GetVersion(dev);
 	GetParam(dev, 0x28);
 	GetParam(dev, 0x14);
 	GetParam(dev, 0x11);
@@ -625,7 +622,7 @@ static int validity_cycle3(struct vfs_dev *dev){
 	GetParam(dev, 0x3c);
 	GetParam(dev, 0x4a);
 	GetParam(dev, 0x41);
-	swap(dev, data87, (int) sizeof(data87) - 1); 
+	GetVersion(dev);
 	swap(dev, data88, (int) sizeof(data88) - 1); 
 	swap(dev, data89, (int) sizeof(data89) - 1); 
 	swap(dev, data90, (int) sizeof(data90) - 1); 
@@ -768,7 +765,6 @@ static int validity_cycle1(struct vfs_dev *dev){
 	unsigned char data03 [] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
 	unsigned char data04 [] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
 	unsigned char data05 [] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
-	unsigned char data07 [] = "\x08\x00\x00\x00\x02\x00\x00";
 	unsigned char data14 [] = "\x0F\x00\x00\x00\x0E\x00";
 	unsigned char data15 [] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data16 [] = "\x11\x00\x00\x00\x0E\x00";
@@ -814,7 +810,7 @@ static int validity_cycle1(struct vfs_dev *dev){
 	r = GetParam(dev, 0x2e);
 	if (r != 0)                                               
 		return r;                                         
-	r = swap(dev, data07, (int) sizeof(data07) - 1);
+	r = GetVersion(dev);
 	if (r != 0)                                               
 		return r;                                         
 	r = GetParam(dev, 0x28);
