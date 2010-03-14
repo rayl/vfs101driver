@@ -110,7 +110,7 @@ static int dump_frame (unsigned char *data, int length, int n)
 	}
 
 	// dump various subfields
-	fprintf(stdout, "\n---- Packet %05d --------------------------------------------\n", n);
+	fprintf(stdout, "\n  ---------------------------- Packet %05d -----------------------------\n", n);
 	data += dump_packet(data,  2, "  HDR: ");
 	data += dump_packet(data,  2, "  SEQ: ");
 	data += dump_packet(data,  2, "  ???: ");
@@ -135,7 +135,7 @@ static void dump_image (unsigned char *data, int length)
 {
 	int f = 0;
 
-	fprintf(stdout, "Image data, %d bytes%s\n", length, (length%PKTSIZE) ? " (incomplete packet(s)?)" : "");
+	fprintf(stdout, "  %d packets in %d bytes%s\n", length/PKTSIZE, length, (length%PKTSIZE) ? " (incomplete packet(s)?)" : "");
 
 	while (length > 0) {
 		int n = dump_frame(data, length, f++);
@@ -165,7 +165,7 @@ static int send(struct vfs_dev *dev, unsigned char *data, size_t len)
 	data[0] = lo(dev->seq);
 	data[1] = hi(dev->seq);
 
-	dump_packet(data, len, "--->");
+	dump_packet(data, len, "  --->");
 	r = libusb_bulk_transfer(dev->devh, EP_OUT(1), data, len, &transferred, BULK_TIMEOUT);
 
 	if (r < 0) {
@@ -193,7 +193,7 @@ static int recv(struct vfs_dev *dev)
 		return r;
 	}
 
-	dump_packet(dev->buf, dev->len, "<---");
+	dump_packet(dev->buf, dev->len, "  <---");
 	if ((lo(dev->seq) != dev->buf[0]) || (hi(dev->seq) != dev->buf[1])) {
 		fprintf(stderr, "*********** Seqnum mismatch, got %04x, expected %04x\n", xx(dev->buf[1],dev->buf[0]), dev->seq);
 	}
