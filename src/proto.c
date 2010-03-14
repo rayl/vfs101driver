@@ -768,38 +768,6 @@ static int validity_cycle1(struct vfs_dev *dev){
 		if (r < 0)
 			return r;
 	}	
-/*	
-	r = swap(dev, data32, (int) sizeof(data32- 1));
-	if (r != 0)                                               
-		return r;                                         
-	r = swap(dev, data33, (int) sizeof(data33- 1));
-	if (r != 0)                                               
-		return r;                                         
-	r = swap(dev, data34, (int) sizeof(data34- 1));
-	if (r != 0)                                               
-		return r;                                         
-	r = swap(dev, data35, (int) sizeof(data35- 1));
-	if (r != 0)                                               
-		return r;                                         
-	r = swap(dev, data36, (int) sizeof(data36- 1));
-	if (r != 0)                                               
-		return r;                                         
-	r = swap(dev, data37, (int) sizeof(data37- 1));
-	if (r != 0)                                               
-		return r;                                         
-	r = swap(dev, data38, (int) sizeof(data38- 1));
-	if (r != 0)                                               
-		return r;                                         
-	r = swap(dev, data39, (int) sizeof(data39- 1));
-	if (r != 0)                                               
-		return r;                                         
-	r = swap(dev, data40, (int) sizeof(data40- 1));
-	if (r != 0)                                               
-		return r;                                         
-	r = swap(dev, data41, (int) sizeof(data41- 1));
-	if (r != 0)
-		return r;
-*/
 
 	return 0;
 }
