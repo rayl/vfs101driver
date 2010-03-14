@@ -165,6 +165,22 @@ static void dump_image (unsigned char *data, int length)
 	fprintf(stdout, "\n");
 }
 
+static void dump_pnm (unsigned char *data, int length)
+{
+	FILE *pnm = fopen("out.pnm", "w");
+
+	fprintf(pnm, "P2\n292 %d\n256\n", length / PKTSIZE);
+
+	while (length > 0) {
+		int i;
+		for (i=0; i<PKTSIZE; i++)
+			fprintf(pnm, "% 3d", *data++);
+		length -= PKTSIZE;
+	}
+
+	fclose(pnm);
+}
+
 
 /******************************************************************************************************
  * Low level send/receive functions
@@ -444,8 +460,10 @@ static int LoadImage (struct vfs_dev *dev)
 	int r;
 	_();
 	r = load(dev, dev->ibuf, &dev->ilen);
-	if (r == 0)
+	if (r == 0) {
 		dump_image(dev->ibuf, dev->ilen);
+		dump_pnm(dev->ibuf, dev->ilen);
+	}
 	return r;
 }
 
