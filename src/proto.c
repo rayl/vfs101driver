@@ -441,14 +441,13 @@ static int LoadImage (struct vfs_dev *dev)
  */
 
 /* A shorthand for checking return codes */
+static int r;
 #define _(x) if ((r = x) != 0) return r
 
 #define REG 0x00009806
 
 static int validity_cycle5 (struct vfs_dev *dev)
 {
-	int r;
-
 	_(  Peek(dev, REG, 0x04));
 	_(  Poke(dev, REG, 0x00000000, 0x04));
 	_(  Peek(dev, REG, 0x04));
@@ -458,14 +457,11 @@ static int validity_cycle5 (struct vfs_dev *dev)
 	_(  Peek(dev, REG, 0x04));
 	_(  Poke(dev, REG, 0x01020304, 0x04));
 	_(  Peek(dev, REG, 0x04));
-
 	return 0;	
 }
 
 static int validity_cycle4 (struct vfs_dev *dev)
 {
-	int r;
-
 	usleep(100000);
 	_(  Peek(dev, 0x00001FE8, 0x04));
 	_(  Peek(dev, 0x00001FEC, 0x04));
@@ -477,7 +473,6 @@ static int validity_cycle4 (struct vfs_dev *dev)
 	_(  GetVersion(dev));
 	_(  GetParam(dev, 0x28));
 	_(  GetParam(dev, 0x14));
-
 	return 0;
 }
 
@@ -502,7 +497,6 @@ static int validity_cycle3 (struct vfs_dev *dev)
 
 	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
 
-        int r = 0;
 	int i = 0;
 
 	_(  Peek(dev, 0x00001FE8, 0x04));
@@ -708,7 +702,6 @@ static int validity_cycle3 (struct vfs_dev *dev)
 
 static int validity_cycle2 (struct vfs_dev *dev)
 {
-	int r;
 	_(  Peek(dev, 0x00001FE8, 0x04));
 	_(  Peek(dev, 0x00001FEC, 0x04));
 	_(  Peek(dev, 0x00001FF0, 0x04));
@@ -724,7 +717,6 @@ static int validity_cycle1 (struct vfs_dev *dev)
 {
 	unsigned char data15[6] = "\x00\x01\x00\x00\x00\x01";
 	unsigned char data37[6] = "\x01\x00\x00\x00\x01\x01";
-	int r;
 	int i;
 
 	_(  Peek(dev, 0x00001FE8, 0x04));
@@ -779,7 +771,6 @@ static int validity_cycle1 (struct vfs_dev *dev)
 static int validity_cycle0 (struct vfs_dev *dev)
 {
 //	unsigned char data171[6] = "\x00\x01\x00\x00\x00\x01";
-	int r;
 	int i;
 
 	_(  Peek(dev, 0x00001FE8, 0x04));
@@ -805,7 +796,6 @@ static int validity_cycle (struct vfs_dev *dev)
 	unsigned char data2[6] = "\x00\x01\x00\x00\x00\x01";
 	unsigned char data6[6] = "\x01\x00\x00\x00\x01\x01"; 
 	int i;
-	int r;
 
 	_(  Peek(dev, 0x00001FE8, 0x04));
 	_(  Peek(dev, 0x00001FEC, 0x04));
