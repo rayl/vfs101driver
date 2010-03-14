@@ -467,6 +467,16 @@ static int check_six (struct vfs_dev *dev)
 	return 0;
 }
 
+static int check_type_1 (struct vfs_dev *dev)
+{
+	_(  AbortPrint(dev));
+	_(  LoadImage(dev));
+	_(  GetParam(dev, 0x11));
+	_(  SetParam(dev, 0x0062, 0x0032));
+	_(  GetPrint(dev, 5000, type_1));
+	return 0;
+}
+
 #define REG 0x00009806
 
 static int validity_cycle5 (struct vfs_dev *dev)
@@ -680,11 +690,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  LoadImage(dev));
 	_(  GetParam(dev, 0x14));
 	_(  GetParam(dev, 0x14));
-	_(  AbortPrint(dev));
-	_(  LoadImage(dev));
-	_(  GetParam(dev, 0x11));
-	_(  SetParam(dev, 0x0062, 0x0032));
-	_(  GetPrint(dev, 5000, type_1));
+	_(  check_type_1(dev));
 	_(  check_finger(dev, 50));
 	return 0;
 }
@@ -730,10 +736,7 @@ static int validity_cycle1 (struct vfs_dev *dev)
 	_(  SetParam(dev, 0x0018, 0x0003));
 	_(  GetParam(dev, 0x14));
 	_(  GetParam(dev, 0x14));
-	_(  AbortPrint(dev));
-	_(  GetParam(dev, 0x11));
-	_(  SetParam(dev, 0x0062, 0x0032));
-	_(  GetPrint(dev, 5000, type_1));
+	_(  check_type_1(dev));
 	_(  check_finger(dev, 80));
 	return 0;
 }
@@ -754,10 +757,7 @@ static int validity_cycle (struct vfs_dev *dev)
 	_(  Peek(dev, 0x00001FEC, 0x04));
 	_(  GetPrint(dev, 1, type_0));
 	_(  LoadImage(dev));
-	_(  AbortPrint(dev));
-	_(  GetParam(dev, 0x11));
-	_(  SetParam(dev, 0x0062, 0x0032)); 
-	_(  GetPrint(dev, 5000, type_1));
+	_(  check_type_1(dev));
 	return 0;	
 }
 
