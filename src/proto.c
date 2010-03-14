@@ -86,10 +86,32 @@ static int dump_packet (unsigned char *data, int length, unsigned char *prefix)
 	return length;
 }
 
+
+static int dump_frame_1 (unsigned char *d, int n)
+{
+	int i;
+
+	fprintf(stdout, "\n  ---------------------------- Packet %05d -----------------------------\n", n);
+	d += dump_packet(d,  2, "  HDR: ");
+	d += dump_packet(d,  2, "  SEQ: ");
+	d += dump_packet(d,  2, "  ???: ");
+	d += dump_packet(d, 20, "  IMG:       ");
+	for (i=1; i<10; i++)
+		d += dump_packet(d, 20, "             ");
+	fprintf(stdout, "\n");
+	d += dump_packet(d,  2, "  ???: ");
+	d += dump_packet(d, 20, "  ???:       ");
+	d += dump_packet(d, 20, "             ");
+	d += dump_packet(d, 20, "             ");
+	d += dump_packet(d,  4, "             ");
+	fprintf(stdout, "\n");
+	d += dump_packet(d,  4, "  ???: ");
+	d += dump_packet(d, 16, "  ???:       ");
+}
+
 static int dump_frame (unsigned char *data, int length, int n)
 {
 	int skip = 0;
-	int i;
 
 	// skip bytes as required until a frame header is found
 	while ((length > 1) && ((data[0] != 0x01) || ((data[1] != 0xfe) && (data[1] != 0x01)))) {
@@ -109,23 +131,8 @@ static int dump_frame (unsigned char *data, int length, int n)
 		return skip + length;
 	}
 
-	// dump various subfields
-	fprintf(stdout, "\n  ---------------------------- Packet %05d -----------------------------\n", n);
-	data += dump_packet(data,  2, "  HDR: ");
-	data += dump_packet(data,  2, "  SEQ: ");
-	data += dump_packet(data,  2, "  ???: ");
-	data += dump_packet(data, 20, "  IMG:       ");
-	for (i=1; i<10; i++)
-		data += dump_packet(data, 20, "             ");
-	fprintf(stdout, "\n");
-	data += dump_packet(data,  2, "  ???: ");
-	data += dump_packet(data, 20, "  ???:       ");
-	data += dump_packet(data, 20, "             ");
-	data += dump_packet(data, 20, "             ");
-	data += dump_packet(data,  4, "             ");
-	fprintf(stdout, "\n");
-	data += dump_packet(data,  4, "  ???: ");
-	data += dump_packet(data, 16, "  ???:       ");
+	// do the actual printing
+	dump_frame_1(data, n);
 
 	// return number of bytes consumed
 	return skip + PKTSIZE;
