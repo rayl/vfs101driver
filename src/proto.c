@@ -506,7 +506,6 @@ static int validity_cycle4 (struct vfs_dev *dev)
 
 static int validity_cycle3 (struct vfs_dev *dev)
 {
-	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
 	_(  check_six(dev));
 	_(  GetParam(dev, 0x2e));
 	_(  GetVersion(dev));
@@ -591,6 +590,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  GetParam(dev, 0x41));
 	_(  GetVersion(dev));
 	_(  SetParam(dev, 0x0063, 0x0001));
+	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
 	_(  swap(dev, data89, (int) sizeof(data89) - 1)); 
 	_(  SetParam(dev, 0x0064, 0x0118));
 	_(  GetConfiguration(dev));
