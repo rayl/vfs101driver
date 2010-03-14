@@ -56,14 +56,24 @@ struct vfs_dev {
 /******************************************************************************************************
  * Functions to deal with byte swapping.
  */
-static inline unsigned char lo (int n)
+static inline unsigned char b0 (int n)
 {
 	return n & 0xff;
 }
 
-static inline unsigned char hi (int n)
+static inline unsigned char b1 (int n)
 {
 	return (n>>8) & 0xff;
+}
+
+static inline unsigned char b2 (int n)
+{
+	return (n>>16) & 0xff;
+}
+
+static inline unsigned char b3 (int n)
+{
+	return (n>>24) & 0xff;
 }
 
 static inline unsigned short xx (int h, int l)
@@ -169,8 +179,8 @@ static int send(struct vfs_dev *dev, unsigned char *data, size_t len)
 	int transferred;
 	int r;
 
-	data[0] = lo(dev->seq);
-	data[1] = hi(dev->seq);
+	data[0] = b0(dev->seq);
+	data[1] = b1(dev->seq);
 
 	dump_packet(data, len, "  --->");
 	r = libusb_bulk_transfer(dev->devh, EP_OUT(1), data, len, &transferred, BULK_TIMEOUT);
@@ -201,7 +211,7 @@ static int recv(struct vfs_dev *dev)
 	}
 
 	dump_packet(dev->buf, dev->len, "  <---");
-	if ((lo(dev->seq) != dev->buf[0]) || (hi(dev->seq) != dev->buf[1])) {
+	if ((b0(dev->seq) != dev->buf[0]) || (b1(dev->seq) != dev->buf[1])) {
 		fprintf(stderr, "*********** Seqnum mismatch, got %04x, expected %04x\n", xx(dev->buf[1],dev->buf[0]), dev->seq);
 	}
 	fprintf(stdout, "\n");
@@ -304,8 +314,8 @@ static int GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
 {
 	unsigned char q1[0x0e] = { 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	int i;
-	q1[6] = lo(count);
-	q1[7] = hi(count);
+	q1[6] = b0(count);
+	q1[7] = b1(count);
 	for (i=0; i<6; i++) q1[8+i] = args[i];
 	_();
 	return swap (dev, q1, 0x0e);
@@ -318,8 +328,8 @@ static int GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
 static int GetParam (struct vfs_dev *dev, int param)
 {
 	unsigned char q1[0x08] = { 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00 };
-	q1[6] = lo(param);
-	q1[7] = hi(param);
+	q1[6] = b0(param);
+	q1[7] = b1(param);
 	_();
 	return swap (dev, q1, 0x08);
 }
@@ -331,10 +341,10 @@ static int GetParam (struct vfs_dev *dev, int param)
 static int SetParam (struct vfs_dev *dev, int param, int value)
 {
 	unsigned char q1[0x0a] = { 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	q1[6] = lo(param);
-	q1[7] = hi(param);
-	q1[8] = lo(value);
-	q1[9] = hi(value);
+	q1[6] = b0(param);
+	q1[7] = b1(param);
+	q1[8] = b0(value);
+	q1[9] = b1(value);
 	_();
 	return swap (dev, q1, 0x0a);
 }
