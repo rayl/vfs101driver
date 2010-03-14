@@ -454,6 +454,17 @@ static int check_finger (struct vfs_dev *dev, int n)
 	return 0;
 }
 
+static int check_six (struct vfs_dev *dev)
+{
+	_(  Peek(dev, 0x00001FE8, 0x04));
+	_(  Peek(dev, 0x00001FEC, 0x04));
+	_(  Peek(dev, 0x00001FF0, 0x04));
+	_(  Peek(dev, 0x00001FF4, 0x04));
+	_(  Peek(dev, 0x00001FF8, 0x04));
+	_(  Peek(dev, 0x00001FFC, 0x04));
+	return 0;
+}
+
 #define REG 0x00009806
 
 static int validity_cycle5 (struct vfs_dev *dev)
@@ -473,12 +484,7 @@ static int validity_cycle5 (struct vfs_dev *dev)
 static int validity_cycle4 (struct vfs_dev *dev)
 {
 	usleep(100000);
-	_(  Peek(dev, 0x00001FE8, 0x04));
-	_(  Peek(dev, 0x00001FEC, 0x04));
-	_(  Peek(dev, 0x00001FF0, 0x04));
-	_(  Peek(dev, 0x00001FF4, 0x04));
-	_(  Peek(dev, 0x00001FF8, 0x04));
-	_(  Peek(dev, 0x00001FFC, 0x04));
+	_(  check_six(dev));
 	_(  GetParam(dev, 0x2e));
 	_(  GetVersion(dev));
 	_(  GetParam(dev, 0x28));
@@ -505,12 +511,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	unsigned char data170[6] = "\x00\x01\x00\x00\x00\x01";
 	unsigned char data176[6] = "\x01\x00\x00\x00\x01\x01";
 	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
-	_(  Peek(dev, 0x00001FE8, 0x04));
-	_(  Peek(dev, 0x00001FEC, 0x04));
-	_(  Peek(dev, 0x00001FF0, 0x04));
-	_(  Peek(dev, 0x00001FF4, 0x04));
-	_(  Peek(dev, 0x00001FF8, 0x04));
-	_(  Peek(dev, 0x00001FFC, 0x04));
+	_(  check_six(dev));
 	_(  GetParam(dev, 0x2e));
 	_(  GetVersion(dev));
 	_(  GetParam(dev, 0x28));
@@ -704,12 +705,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 
 static int validity_cycle2 (struct vfs_dev *dev)
 {
-	_(  Peek(dev, 0x00001FE8, 0x04));
-	_(  Peek(dev, 0x00001FEC, 0x04));
-	_(  Peek(dev, 0x00001FF0, 0x04));
-	_(  Peek(dev, 0x00001FF4, 0x04));
-	_(  Peek(dev, 0x00001FF8, 0x04));
-	_(  Peek(dev, 0x00001FFC, 0x04));
+	_(  check_six(dev));
 	_(  check_finger(dev, 1));
 	return 0;
 }
@@ -718,12 +714,7 @@ static int validity_cycle1 (struct vfs_dev *dev)
 {
 	unsigned char data15[6] = "\x00\x01\x00\x00\x00\x01";
 	unsigned char data37[6] = "\x01\x00\x00\x00\x01\x01";
-	_(  Peek(dev, 0x00001FE8, 0x04));
-	_(  Peek(dev, 0x00001FEC, 0x04));
-	_(  Peek(dev, 0x00001FF0, 0x04));
-	_(  Peek(dev, 0x00001FF4, 0x04));
-	_(  Peek(dev, 0x00001FF8, 0x04));
-	_(  Peek(dev, 0x00001FFC, 0x04));
+	_(  check_six(dev));
 	_(  GetParam(dev, 0x2e));
 	_(  GetVersion(dev));
 	_(  GetParam(dev, 0x28));
@@ -766,12 +757,7 @@ static int validity_cycle1 (struct vfs_dev *dev)
 static int validity_cycle0 (struct vfs_dev *dev)
 {
 //	unsigned char data171[6] = "\x00\x01\x00\x00\x00\x01";
-	_(  Peek(dev, 0x00001FE8, 0x04));
-	_(  Peek(dev, 0x00001FEC, 0x04));
-	_(  Peek(dev, 0x00001FF0, 0x04));
-	_(  Peek(dev, 0x00001FF4, 0x04));
-	_(  Peek(dev, 0x00001FF8, 0x04));
-	_(  Peek(dev, 0x00001FFC, 0x04));
+	_(  check_six(dev));
 	_(  SetParam(dev, 0x0062, 0x0032));
 //	GetPrint(dev, 20, data171);
 //	LoadImage(dev)	;
