@@ -440,7 +440,6 @@ static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data88[] = "\x58\x00\x00\x00\x05\x00\x63\x00\x01\x00";
 	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
 	unsigned char data90[] = "\x5A\x00\x00\x00\x05\x00\x64\x00\x18\x01";
-	unsigned char data91[] = "\x5B\x00\x00\x00\x06\x00";
 	unsigned char data92[] = "\x5C\x00\x00\x00\x05\x00\x46\x00\xF5\x00";
 	unsigned char data93[] = "\x5D\x00\x00\x00\x05\x00\x55\x00\x08\x00";
 	unsigned char data94[] = "\x5E\x00\x00\x00\x05\x00\x6D\x00\x32\x00";
@@ -611,7 +610,7 @@ static int validity_cycle3(struct vfs_dev *dev){
 	swap(dev, data88, (int) sizeof(data88) - 1); 
 	swap(dev, data89, (int) sizeof(data89) - 1); 
 	swap(dev, data90, (int) sizeof(data90) - 1); 
-	swap(dev, data91, (int) sizeof(data91) - 1); 
+	GetConfiguration(dev);
 	swap(dev, data92, (int) sizeof(data92) - 1); 
 	swap(dev, data93, (int) sizeof(data93) - 1); 
 	swap(dev, data94, (int) sizeof(data94) - 1); 
