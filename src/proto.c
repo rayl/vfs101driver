@@ -265,7 +265,7 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
      00 00 03 00    - GetPrint
      00 00 04 00    - GetParam
      00 00 05 00    - SetParam
-     00 00 06 00    - GetConfiguration
+     00 00 06 00    - GetConfig
      00 00 07 00      DownloadPatch
      00 00 08 00      GetRateData
      00 00 09 00      IspRequest
@@ -367,11 +367,11 @@ static int SetParamList (struct vfs_dev *dev, struct set_param *params, int npar
 	return 0;
 }
 
-/* GetConfiguration (00 00 06 00)
+/* GetConfig (00 00 06 00)
  *
  *  Retrieve config info from the device.
  */
-static int GetConfiguration (struct vfs_dev *dev)
+static int GetConfig (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x06, 0x00 };
 	_();
@@ -474,97 +474,97 @@ static int check_finger (struct vfs_dev *dev, int n)
 
 static int img_0 (struct vfs_dev *dev, int nframes)
 {
-	_(  GetPrint(dev, nframes, type_0));
-	_(  LoadImage(dev));
+	_(  GetPrint  (dev, nframes, type_0));
+	_(  LoadImage (dev));
 	return 0;
 }
 
 static int img_1 (struct vfs_dev *dev, int nframes)
 {
-	_(  GetPrint(dev, nframes, type_1));
-	_(  LoadImage(dev));
+	_(  GetPrint  (dev, nframes, type_1));
+	_(  LoadImage (dev));
 	return 0;
 }
 
 static int img_abort (struct vfs_dev *dev)
 {
-	_(  AbortPrint(dev));
-	_(  LoadImage(dev));
+	_(  AbortPrint (dev));
+	_(  LoadImage  (dev));
 	return 0;
 }
 
 static int check_six (struct vfs_dev *dev)
 {
-	_(  Peek(dev, 0x00001FE8, 0x04));
-	_(  Peek(dev, 0x00001FEC, 0x04));
-	_(  Peek(dev, 0x00001FF0, 0x04));
-	_(  Peek(dev, 0x00001FF4, 0x04));
-	_(  Peek(dev, 0x00001FF8, 0x04));
-	_(  Peek(dev, 0x00001FFC, 0x04));
+	_(  Peek (dev, 0x00001FE8, 0x04));
+	_(  Peek (dev, 0x00001FEC, 0x04));
+	_(  Peek (dev, 0x00001FF0, 0x04));
+	_(  Peek (dev, 0x00001FF4, 0x04));
+	_(  Peek (dev, 0x00001FF8, 0x04));
+	_(  Peek (dev, 0x00001FFC, 0x04));
 	return 0;
 }
 
-static int check_type_1 (struct vfs_dev *dev)
+static int check_1 (struct vfs_dev *dev)
 {
-	_(  img_abort(dev));
-	_(  GetParam(dev, 0x11));
-	_(  SetParam(dev, 0x0062, 0x0032));
-	_(  img_1(dev, 5000));
+	_(  img_abort (dev));
+	_(  GetParam  (dev, 0x11));
+	_(  SetParam  (dev, 0x0062, 0x0032));
+	_(  img_1     (dev, 5000));
 	return 0;
 }
 
 static int get_a (struct vfs_dev *dev)
 {
-	_(  GetParam(dev, 0x2e));
-	_(  GetVersion(dev));
-	_(  GetParam(dev, 0x28));
-	_(  GetParam(dev, 0x14));
+	_(  GetParam   (dev, 0x2e));
+	_(  GetVersion (dev));
+	_(  GetParam   (dev, 0x28));
+	_(  GetParam   (dev, 0x14));
 	return 0;
 }
 
 static int get_b (struct vfs_dev *dev)
 {
-	_(  GetParam(dev, 0x11));
-	_(  GetParam(dev, 0x54));
-	_(  GetParam(dev, 0x01));
-	_(  GetParam(dev, 0x14));
-	_(  img_abort(dev));
+	_(  GetParam  (dev, 0x11));
+	_(  GetParam  (dev, 0x54));
+	_(  GetParam  (dev, 0x01));
+	_(  GetParam  (dev, 0x14));
+	_(  img_abort (dev));
 	return 0;
 }
 
 static int try (struct vfs_dev *dev, unsigned int val)
 {
-	_(  Poke(dev, 0x00FF5038, val, 0x01));
-	_(  img_0(dev, 10));
+	_(  Poke (dev, 0x00FF5038, val, 0x01));
+	_(  img_0 (dev, 10));
 	return 0;
 }
 
 static int pat_1 (struct vfs_dev *dev, unsigned int v1, unsigned int v2)
 {
-	_(  Poke(dev, 0x000005F6, v1, 0x01));
-	_(  Peek(dev, 0x00FF503E, 0x01));
-	_(  Poke(dev, 0x00FF503E, v2, 0x01));
-	_(  Peek(dev, 0x00FF9802, 0x01));
-	_(  Peek(dev, 0x00FF9800, 0x01));
-	_(  Peek(dev, 0x00FF9806, 0x01));
+	_(  Poke (dev, 0x000005F6, v1, 0x01));
+	_(  Peek (dev, 0x00FF503E, 0x01));
+	_(  Poke (dev, 0x00FF503E, v2, 0x01));
+	_(  Peek (dev, 0x00FF9802, 0x01));
+	_(  Peek (dev, 0x00FF9800, 0x01));
+	_(  Peek (dev, 0x00FF9806, 0x01));
 	return 0;
 }
 
 static int validity_cycle4 (struct vfs_dev *dev)
 {
-	usleep(100000);
-	_(  check_six(dev));
-	_(  get_a(dev));
+	usleep (100000);
+	_(  check_six (dev));
+	_(  get_a (dev));
 	return 0;
 }
 
 static int validity_cycle3 (struct vfs_dev *dev)
 {
-	_(  check_six(dev));
-	_(  get_a(dev));
-	_(  get_b(dev));
-	_(  img_0(dev, 1));
-	_(  img_abort(dev));
+	_(  check_six  (dev));
+	_(  get_a      (dev));
+	_(  get_b      (dev));
+	_(  img_0      (dev, 1));
+	_(  img_abort  (dev));
 	struct set_param p1[] = {
 		{ 0x0004, 0x0000 },
 		{ 0x0005, 0x0000 },
@@ -632,91 +632,91 @@ static int validity_cycle3 (struct vfs_dev *dev)
 		{ 0x0064, 0x011A },
 		{ 0x0069, 0x0014 },
 	};
-	_(  SetParamList(dev, p1, nitems(p1)));
-	_(  GetParam(dev, 0x2a));
-	_(  GetParam(dev, 0x3c));
-	_(  GetParam(dev, 0x4a));
-	_(  GetParam(dev, 0x41));
-	_(  GetVersion(dev));
-	_(  SetParam(dev, 0x0063, 0x0001));
+	_(  SetParamList  (dev, p1, nitems (p1)));
+	_(  GetParam      (dev, 0x2a));
+	_(  GetParam      (dev, 0x3c));
+	_(  GetParam      (dev, 0x4a));
+	_(  GetParam      (dev, 0x41));
+	_(  GetVersion    (dev));
+	_(  SetParam      (dev, 0x0063, 0x0001));
 	unsigned char data89[] = "\x59\x00\x00\x00\x14\x00\x05\x00\xAB\x00\x00\x00\x00";
-	_(  swap(dev, data89, (int) sizeof(data89) - 1)); 
-	_(  SetParam(dev, 0x0064, 0x0118));
-	_(  GetConfiguration(dev));
-	_(  SetParam(dev, 0x0046, 0x00F5));
-	_(  SetParam(dev, 0x0055, 0x0008));
-	_(  SetParam(dev, 0x006D, 0x0032));
-	_(  SetParam(dev, 0x006E, 0x0003));
-	_(  GetParam(dev, 0x52));
-	_(  SetParam(dev, 0x0052, 0x0320));
-	_(  img_0(dev, 1));
-	_(  SetParam(dev, 0x0052, 0x1EB4));
-	_(  Peek(dev, 0x00FF502C, 0x02));
-	_(  Peek(dev, 0x00FF502E, 0x02));
-	_(  pat_1(dev, 0x00000001, 0x00000000));
-	_(  Poke(dev, 0x00FF9806, 0x00000000, 0x01));
-	_(  img_0(dev, 100));
-	_(  pat_1(dev, 0x00000000, 0x00000010));
-	_(  img_0(dev, 100));
-	_(  Peek(dev, 0x00FF5038, 0x01));
-	_(  Peek(dev, 0x00FF500E, 0x02));
-	_(  Peek(dev, 0x00FF5032, 0x01));
-	_(  Poke(dev, 0x00FF5032, 0x00000012, 0x01));
-	_(  Poke(dev, 0x00FF500E, 0x00004000, 0x02));
-	_(  Poke(dev, 0x00FF5038, 0x0000000F, 0x01));
-	_(  SetParam(dev, 0x0062, 0x0000));
-	_(  SetParam(dev, 0x0077, 0x0000));
-	_(  SetParam(dev, 0x0076, 0x0000));
-	_(  SetParam(dev, 0x0078, 0x0000));
-	_(  img_0(dev, 2));
-	_(  pat_1(dev, 0x00000001, 0x00000000));
-	_(  try(dev, 0x0000000E));
-	_(  try(dev, 0x0000000D));
-	_(  try(dev, 0x0000000C));
-	_(  try(dev, 0x0000000B));
-	_(  try(dev, 0x0000000A));
-	_(  try(dev, 0x00000009));
-	_(  try(dev, 0x00000008));
-	_(  try(dev, 0x00000007));
-	_(  pat_1(dev, 0x00000000, 0x00000010));
-	_(  Poke(dev, 0x00FF9806, 0x00000000, 0x01));
-	_(  img_0(dev, 10));
-	_(  SetParam(dev, 0x0077, 0x0007));
-	_(  SetParam(dev, 0x0076, 0x0012));
-	_(  SetParam(dev, 0x0078, 0x21A0));
-	_(  Poke(dev, 0x00FF5038, 0x00000014, 0x01));
-	_(  Poke(dev, 0x00FF500E, 0x000021B4, 0x02));
-	_(  Poke(dev, 0x00FF5032, 0x00000031, 0x01));
-	_(  SetParam(dev, 0x0062, 0x0032));
-	_(  img_abort(dev));
-	_(  SetParam(dev, 0x0062, 0x0032));
-	_(  GetParam(dev, 0x14));
-	_(  GetParam(dev, 0x11));
-	_(  SetParam(dev, 0x0062, 0x0032));
-	_(  img_0(dev, 20));
-	_(  GetParam(dev, 0x14));
-	_(  GetParam(dev, 0x14));
-	_(  check_type_1(dev));
-	_(  check_finger(dev, 50));
+	_(  swap          (dev, data89, (int) sizeof (data89) - 1)); 
+	_(  SetParam      (dev, 0x0064, 0x0118));
+	_(  GetConfig     (dev));
+	_(  SetParam      (dev, 0x0046, 0x00F5));
+	_(  SetParam      (dev, 0x0055, 0x0008));
+	_(  SetParam      (dev, 0x006D, 0x0032));
+	_(  SetParam      (dev, 0x006E, 0x0003));
+	_(  GetParam      (dev, 0x52));
+	_(  SetParam      (dev, 0x0052, 0x0320));
+	_(  img_0         (dev, 1));
+	_(  SetParam      (dev, 0x0052, 0x1EB4));
+	_(  Peek          (dev, 0x00FF502C, 0x02));
+	_(  Peek          (dev, 0x00FF502E, 0x02));
+	_(  pat_1         (dev, 0x00000001, 0x00000000));
+	_(  Poke          (dev, 0x00FF9806, 0x00000000, 0x01));
+	_(  img_0         (dev, 100));
+	_(  pat_1         (dev, 0x00000000, 0x00000010));
+	_(  img_0         (dev, 100));
+	_(  Peek          (dev, 0x00FF5038, 0x01));
+	_(  Peek          (dev, 0x00FF500E, 0x02));
+	_(  Peek          (dev, 0x00FF5032, 0x01));
+	_(  Poke          (dev, 0x00FF5032, 0x00000012, 0x01));
+	_(  Poke          (dev, 0x00FF500E, 0x00004000, 0x02));
+	_(  Poke          (dev, 0x00FF5038, 0x0000000F, 0x01));
+	_(  SetParam      (dev, 0x0062, 0x0000));
+	_(  SetParam      (dev, 0x0077, 0x0000));
+	_(  SetParam      (dev, 0x0076, 0x0000));
+	_(  SetParam      (dev, 0x0078, 0x0000));
+	_(  img_0         (dev, 2));
+	_(  pat_1         (dev, 0x00000001, 0x00000000));
+	_(  try           (dev, 0x0000000E));
+	_(  try           (dev, 0x0000000D));
+	_(  try           (dev, 0x0000000C));
+	_(  try           (dev, 0x0000000B));
+	_(  try           (dev, 0x0000000A));
+	_(  try           (dev, 0x00000009));
+	_(  try           (dev, 0x00000008));
+	_(  try           (dev, 0x00000007));
+	_(  pat_1         (dev, 0x00000000, 0x00000010));
+	_(  Poke          (dev, 0x00FF9806, 0x00000000, 0x01));
+	_(  img_0         (dev, 10));
+	_(  SetParam      (dev, 0x0077, 0x0007));
+	_(  SetParam      (dev, 0x0076, 0x0012));
+	_(  SetParam      (dev, 0x0078, 0x21A0));
+	_(  Poke          (dev, 0x00FF5038, 0x00000014, 0x01));
+	_(  Poke          (dev, 0x00FF500E, 0x000021B4, 0x02));
+	_(  Poke          (dev, 0x00FF5032, 0x00000031, 0x01));
+	_(  SetParam      (dev, 0x0062, 0x0032));
+	_(  img_abort     (dev));
+	_(  SetParam      (dev, 0x0062, 0x0032));
+	_(  GetParam      (dev, 0x14));
+	_(  GetParam      (dev, 0x11));
+	_(  SetParam      (dev, 0x0062, 0x0032));
+	_(  img_0         (dev, 20));
+	_(  GetParam      (dev, 0x14));
+	_(  GetParam      (dev, 0x14));
+	_(  check_1       (dev));
+	_(  check_finger  (dev, 50));
 	return 0;
 }
 
 static int validity_cycle2 (struct vfs_dev *dev)
 {
-	_(  check_six(dev));
-	_(  check_finger(dev, 1));
+	_(  check_six    (dev));
+	_(  check_finger (dev, 1));
 	return 0;
 }
 
 static int validity_cycle1 (struct vfs_dev *dev)
 {
-	_(  check_six(dev));
-	_(  get_a(dev));
-	_(  get_b(dev));
-	_(  img_0(dev, 1));
-	_(  img_abort(dev));
-	_(  SetParam(dev, 0x0004, 0x0000));
-	_(  LoadImage(dev));
+	_(  check_six (dev));
+	_(  get_a     (dev));
+	_(  get_b     (dev));
+	_(  img_0     (dev, 1));
+	_(  img_abort (dev));
+	_(  SetParam  (dev, 0x0004, 0x0000));
+	_(  LoadImage (dev));
 	struct set_param p1[] = {
 		{ 0x0005, 0x0000 },
 		{ 0x0006, 0x0000 },
@@ -733,29 +733,29 @@ static int validity_cycle1 (struct vfs_dev *dev)
 		{ 0x0017, 0x0001 },
 		{ 0x0018, 0x0003 },
 	};
-	_(  SetParamList(dev, p1, nitems(p1)));
-	_(  GetParam(dev, 0x14));
-	_(  GetParam(dev, 0x14));
-	_(  check_type_1(dev));
-	_(  check_finger(dev, 80));
+	_(  SetParamList (dev, p1, nitems(p1)));
+	_(  GetParam     (dev, 0x14));
+	_(  GetParam     (dev, 0x14));
+	_(  check_1      (dev));
+	_(  check_finger (dev, 80));
 	return 0;
 }
 
 static int validity_cycle0 (struct vfs_dev *dev)
 {
-	_(  check_six(dev));
-	_(  SetParam(dev, 0x0062, 0x0032));
-//	_(  img_0(dev, 20));
-	_(  check_finger(dev, 10));
+	_(  check_six    (dev));
+	_(  SetParam     (dev, 0x0062, 0x0032));
+//	_(  img_0        (dev, 20));
+	_(  check_finger (dev, 10));
 	return 0; 
 }
 	
 static int validity_cycle (struct vfs_dev *dev)
 {
-	_(  Peek(dev, 0x00001FE8, 0x04));
-	_(  Peek(dev, 0x00001FEC, 0x04));
-	_(  img_0(dev, 1));
-	_(  check_type_1(dev));
+	_(  Peek    (dev, 0x00001FE8, 0x04));
+	_(  Peek    (dev, 0x00001FEC, 0x04));
+	_(  img_0   (dev, 1));
+	_(  check_1 (dev));
 	return 0;	
 }
 
