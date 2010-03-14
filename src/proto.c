@@ -230,29 +230,29 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
  *
  *  Cause the device to reenumerate on the USB bus.
  */
-static void Reset (struct vfs_dev *dev)
+static int Reset (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 };
 	_();
-	swap (dev, q1, 0x06);
+	return swap (dev, q1, 0x06);
 }
 
 /* GetVersion (00 00 01 00)
  *
  *  Retrieve version string from the device.
  */
-static void GetVersion (struct vfs_dev *dev)
+static int GetVersion (struct vfs_dev *dev)
 {
 	unsigned char q1[0x07] = { 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00 };
 	_();
-	swap (dev, q1, 0x07);
+	return swap (dev, q1, 0x07);
 }
 
 /* GetPrint (00 00 03 00)
  *
  *  Retrieve fingerprint image information.
  */
-static void GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
+static int GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
 {
 	unsigned char q1[0x0e] = { 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	int i;
@@ -260,27 +260,27 @@ static void GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
 	q1[7] = hi(count);
 	for (i=0; i<6; i++) q1[8+i] = args[i];
 	_();
-	swap (dev, q1, 0x0e);
+	return swap (dev, q1, 0x0e);
 }
 
 /* GetParam (00 00 04 00)
  *
  *  Retrieve a parameter value from the device.
  */
-static void GetParam (struct vfs_dev *dev, int param)
+static int GetParam (struct vfs_dev *dev, int param)
 {
 	unsigned char q1[0x08] = { 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00 };
 	q1[6] = lo(param);
 	q1[7] = hi(param);
 	_();
-	swap (dev, q1, 0x08);
+	return swap (dev, q1, 0x08);
 }
 
 /* SetParam (00 00 05 00)
  *
  *  Set a parameter value on the device.
  */
-static void SetParam (struct vfs_dev *dev, int param, int value)
+static int SetParam (struct vfs_dev *dev, int param, int value)
 {
 	unsigned char q1[0x0a] = { 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	q1[6] = lo(param);
@@ -288,29 +288,29 @@ static void SetParam (struct vfs_dev *dev, int param, int value)
 	q1[8] = lo(value);
 	q1[9] = hi(value);
 	_();
-	swap (dev, q1, 0x0a);
+	return swap (dev, q1, 0x0a);
 }
 
 /* GetConfiguration (00 00 06 00)
  *
  *  Retrieve config info from the device.
  */
-static void GetConfiguration (struct vfs_dev *dev)
+static int GetConfiguration (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x06, 0x00 };
 	_();
-	swap (dev, q1, 0x06);
+	return swap (dev, q1, 0x06);
 }
 
 /* AbortPrint (00 00 0e 00)
  *
  *  Abort the current scan operation.
  */
-static void AbortPrint (struct vfs_dev *dev)
+static int AbortPrint (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x0E, 0x00 };
 	_();
-	swap (dev, q1, 0x06);
+	return swap (dev, q1, 0x06);
 }
 
 /* GetFingerState (00 00 16 00)
@@ -320,16 +320,21 @@ static void AbortPrint (struct vfs_dev *dev)
 static int GetFingerState (struct vfs_dev *dev)
 {
 	unsigned char q1[0x06] = { 0x00, 0x00, 0x00, 0x00, 0x16, 0x00 };
+	int r;
 	_();
-	swap (dev, q1, 0x06);
+	if ((r = swap (dev, q1, 0x06)) < 0)
+		return r;
 	return dev->buf[0x0a];
 }
 
-static void LoadImage (struct vfs_dev *dev)
+static int LoadImage (struct vfs_dev *dev)
 {
+	int r;
 	_();
-	load(dev, dev->ibuf, &dev->ilen);
-	dump_image(dev->ibuf, dev->ilen);
+	r = load(dev, dev->ibuf, &dev->ilen);
+	if (r == 0)
+		dump_image(dev->ibuf, dev->ilen);
+	return r;
 }
 
 
