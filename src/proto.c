@@ -477,6 +477,26 @@ static int check_type_1 (struct vfs_dev *dev)
 	return 0;
 }
 
+static int get_a (struct vfs_dev *dev)
+{
+	_(  GetParam(dev, 0x2e));
+	_(  GetVersion(dev));
+	_(  GetParam(dev, 0x28));
+	_(  GetParam(dev, 0x14));
+	return 0;
+}
+
+static int get_b (struct vfs_dev *dev)
+{
+	_(  GetParam(dev, 0x11));
+	_(  GetParam(dev, 0x54));
+	_(  GetParam(dev, 0x01));
+	_(  GetParam(dev, 0x14));
+	_(  AbortPrint(dev));
+	_(  LoadImage(dev));
+	return 0;
+}
+
 #define REG 0x00009806
 
 static int validity_cycle5 (struct vfs_dev *dev)
@@ -497,26 +517,15 @@ static int validity_cycle4 (struct vfs_dev *dev)
 {
 	usleep(100000);
 	_(  check_six(dev));
-	_(  GetParam(dev, 0x2e));
-	_(  GetVersion(dev));
-	_(  GetParam(dev, 0x28));
-	_(  GetParam(dev, 0x14));
+	_(  get_a(dev));
 	return 0;
 }
 
 static int validity_cycle3 (struct vfs_dev *dev)
 {
 	_(  check_six(dev));
-	_(  GetParam(dev, 0x2e));
-	_(  GetVersion(dev));
-	_(  GetParam(dev, 0x28));
-	_(  GetParam(dev, 0x14));
-	_(  GetParam(dev, 0x11));
-	_(  GetParam(dev, 0x54));
-	_(  GetParam(dev, 0x01));
-	_(  GetParam(dev, 0x14));
-	_(  AbortPrint(dev));
-	_(  LoadImage(dev));
+	_(  get_a(dev));
+	_(  get_b(dev));
 	_(  GetPrint(dev, 1, type_0));
 	_(  AbortPrint(dev));
 	_(  SetParam(dev, 0x0004, 0x0000));
@@ -705,15 +714,8 @@ static int validity_cycle2 (struct vfs_dev *dev)
 static int validity_cycle1 (struct vfs_dev *dev)
 {
 	_(  check_six(dev));
-	_(  GetParam(dev, 0x2e));
-	_(  GetVersion(dev));
-	_(  GetParam(dev, 0x28));
-	_(  GetParam(dev, 0x14));
-	_(  GetParam(dev, 0x11));
-	_(  GetParam(dev, 0x54));
-	_(  GetParam(dev, 0x01));
-	_(  GetParam(dev, 0x14));
-	_(  AbortPrint(dev));
+	_(  get_a(dev));
+	_(  get_b(dev));
 	_(  GetPrint(dev, 1, type_0));
 	_(  LoadImage(dev));
 	_(  AbortPrint(dev));
