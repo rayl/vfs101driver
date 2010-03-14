@@ -560,6 +560,11 @@ static int validity_cycle4 (struct vfs_dev *dev)
 
 static int validity_cycle3 (struct vfs_dev *dev)
 {
+	_(  check_six(dev));
+	_(  get_a(dev));
+	_(  get_b(dev));
+	_(  img_0(dev, 1));
+	_(  img_abort(dev));
 	struct set_param p1[] = {
 		{ 0x0004, 0x0000 },
 		{ 0x0005, 0x0000 },
@@ -627,11 +632,6 @@ static int validity_cycle3 (struct vfs_dev *dev)
 		{ 0x0064, 0x011A },
 		{ 0x0069, 0x0014 },
 	};
-	_(  check_six(dev));
-	_(  get_a(dev));
-	_(  get_b(dev));
-	_(  img_0(dev, 1));
-	_(  img_abort(dev));
 	_(  SetParamList(dev, p1, nitems(p1)));
 	_(  GetParam(dev, 0x2a));
 	_(  GetParam(dev, 0x3c));
@@ -710,6 +710,13 @@ static int validity_cycle2 (struct vfs_dev *dev)
 
 static int validity_cycle1 (struct vfs_dev *dev)
 {
+	_(  check_six(dev));
+	_(  get_a(dev));
+	_(  get_b(dev));
+	_(  img_0(dev, 1));
+	_(  img_abort(dev));
+	_(  SetParam(dev, 0x0004, 0x0000));
+	_(  LoadImage(dev));
 	struct set_param p1[] = {
 		{ 0x0005, 0x0000 },
 		{ 0x0006, 0x0000 },
@@ -726,13 +733,6 @@ static int validity_cycle1 (struct vfs_dev *dev)
 		{ 0x0017, 0x0001 },
 		{ 0x0018, 0x0003 },
 	};
-	_(  check_six(dev));
-	_(  get_a(dev));
-	_(  get_b(dev));
-	_(  img_0(dev, 1));
-	_(  img_abort(dev));
-	_(  SetParam(dev, 0x0004, 0x0000));
-	_(  LoadImage(dev));
 	_(  SetParamList(dev, p1, nitems(p1)));
 	_(  GetParam(dev, 0x14));
 	_(  GetParam(dev, 0x14));
