@@ -518,17 +518,6 @@ static int validity_cycle3(struct vfs_dev *dev){
 	unsigned char data170[] = "\xAA\x00\x00\x00\x03\x00\x14\x00\x00\x01\x00\x00\x00\x01";
 	unsigned char data175[] = "\xAF\x00\x00\x00\x05\x00\x62\x00\x32\x00";
 	unsigned char data176[] = "\xB0\x00\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01";
-	unsigned char data177[] = "\xB1\x00\x00\x00\x16\x00";
-	unsigned char data178[] = "\xB2\x00\x00\x00\x16\x00";
-	unsigned char data179[] = "\xB3\x00\x00\x00\x16\x00";
-	unsigned char data180[] = "\xB4\x00\x00\x00\x16\x00";
-	unsigned char data181[] = "\xB5\x00\x00\x00\x16\x00";
-	unsigned char data182[] = "\xB6\x00\x00\x00\x16\x00";
-	unsigned char data183[] = "\xB7\x00\x00\x00\x16\x00";
-	unsigned char data184[] = "\xB8\x00\x00\x00\x16\x00";
-	unsigned char data185[] = "\xB9\x00\x00\x00\x16\x00";
-	unsigned char data186[] = "\xBA\x00\x00\x00\x16\x00";
-	unsigned char data187[] = "\xBB\x00\x00\x00\x16\x00";
         int r = 0;
 	swap(dev, data1, (int) sizeof(data1) - 1); 
 	swap(dev, data2, (int) sizeof(data2) - 1); 
@@ -729,7 +718,7 @@ static int validity_cycle3(struct vfs_dev *dev){
 
 	int i = 0;
 	for (i; i < 50; i++)
-		swap(dev, data177, (int) sizeof(data177) - 1); 
+		GetFingerState(dev);
 		usleep(750000);
 	return 0;
 }
@@ -741,7 +730,6 @@ static int validity_cycle2(struct vfs_dev *dev){
 	unsigned char data03 [] = "\x04\x00\x00\x00\x12\x00\xF4\x1F\x00\x00\x04";
 	unsigned char data04 [] = "\x05\x00\x00\x00\x12\x00\xF8\x1F\x00\x00\x04";
 	unsigned char data05 [] = "\x06\x00\x00\x00\x12\x00\xFC\x1F\x00\x00\x04";
-	unsigned char data[] = "\xF5\x00\x00\x00\x16\x00"; 
 	
 	swap(dev, data00, (int) sizeof(data00) - 1);
 	swap(dev, data01, (int) sizeof(data01) - 1);
@@ -750,8 +738,7 @@ static int validity_cycle2(struct vfs_dev *dev){
 	swap(dev, data04, (int) sizeof(data04) - 1);
 	swap(dev, data05, (int) sizeof(data05) - 1);
 
-	int r = swap(dev, data, (int) sizeof(data) - 1);
-	return r;
+	return GetFingerState(dev);
 }
 
 static int validity_cycle1(struct vfs_dev *dev){
@@ -779,8 +766,6 @@ static int validity_cycle1(struct vfs_dev *dev){
 	unsigned char data31 [] = "\x20\x00\x00\x00\x05\x00\x18\x00\x03\x00";
 	unsigned char data36 [] = "\x04\x65\x00\x00\x05\x00\x62\x00\x32\x00";
 	unsigned char data37 [] = "\x05\x65\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01";
-
-	unsigned char data4[] = "\xF5\x00\x00\x00\x16\x00"; 
 
 	int r = swap(dev, data00, (int) sizeof(data00) - 1);
 	if (r != 0)                                               
@@ -911,8 +896,8 @@ static int validity_cycle1(struct vfs_dev *dev){
 
 	int i = 0;
 	for (i; i < 80; i++){
-		r = swap(dev, data4, (int) sizeof(data4) - 1);
-		if (r != 0)
+		r = GetFingerState(dev);
+		if (r < 0)
 			return r;
 	}	
 /*	
@@ -970,7 +955,6 @@ static int validity_cycle0(struct vfs_dev *dev){
 
 	unsigned char data36 [] = "\x04\x65\x00\x00\x05\x00\x62\x00\x32\x00";
 	unsigned char data171[] = "\xAB\x00\x00\x00\x03\x00\x14\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data44[] = "\xF5\x00\x00\x00\x16\x00"; 
 
 	swap(dev, data36, (int) sizeof(data36) - 1);
 //	swap(dev, data171, (int) sizeof(data171) - 1);
@@ -979,7 +963,7 @@ static int validity_cycle0(struct vfs_dev *dev){
 	int i = 0;
 
 	for (i; i < 10; i++){
-		swap(dev, data44, (int) sizeof(data44) - 1);
+		GetFingerState(dev);
 	}
 
 	return 0; 
@@ -989,7 +973,6 @@ static int validity_cycle(struct vfs_dev *dev){
 	unsigned char data[] = "\x00\x00\x00\x00\x12\x00\xE8\x1F\x00\x00\x04";//{packet_num_l, packet_num_h, 0x00, 0x00, 0x12, 0x00, 0xE8, 0x1F, 0x00, 0x00, 0x04};
 	unsigned char data1[] = "\x02\x00\x00\x00\x12\x00\xEC\x1F\x00\x00\x04";
 	unsigned char data2[] = "\x10\x00\x00\x00\x03\x00\x01\x00\x00\x01\x00\x00\x00\x01";
-	unsigned char data4[] = "\xF5\x00\x00\x00\x16\x00"; 
 	unsigned char data5[] = "\xB1\x00\x00\x00\x05\x00\x62\x00\x32\x00"; 
 	unsigned char data6[] = "\xB2\x00\x00\x00\x03\x00\x88\x13\x01\x00\x00\x00\x01\x01"; 
 
@@ -1022,8 +1005,8 @@ static int validity_cycle(struct vfs_dev *dev){
 
 	int i = 0;
 	for (i; i < 20; i++){
-		r = swap(dev, data4, (int) sizeof(data4) - 1);
-		if (r != 0)
+		r = GetFingerState(dev);
+		if (r <= 0)
 			return r;
 	}	
 
