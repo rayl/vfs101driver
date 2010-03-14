@@ -52,6 +52,7 @@ struct vfs_dev {
 	/* buffer to hold raw image data packets */
 	unsigned char ibuf[1024*1024];
 	int ilen;
+	int inum;
 };
 
 
@@ -165,9 +166,15 @@ static void dump_image (unsigned char *data, int length)
 	fprintf(stdout, "\n");
 }
 
-static void dump_pnm (unsigned char *data, int length)
+static void dump_pnm (struct vfs_dev *dev)
 {
-	FILE *pnm = fopen("out.pnm", "w");
+	unsigned char *data = dev->ibuf;
+	int length = dev->ilen;
+	char name[40];
+	FILE *pnm;
+
+	sprintf(name, "out-%03d.%s", dev->inum++, dev->ilen ? "pnm" : "pnmx");
+	pnm = fopen(name, "w");
 
 	fprintf(pnm, "P2\n292 %d\n256\n", length / PKTSIZE);
 
@@ -462,7 +469,7 @@ static int LoadImage (struct vfs_dev *dev)
 	r = load(dev, dev->ibuf, &dev->ilen);
 	if (r == 0) {
 		dump_image(dev->ibuf, dev->ilen);
-		dump_pnm(dev->ibuf, dev->ilen);
+		dump_pnm(dev);
 	}
 	return r;
 }
