@@ -99,27 +99,38 @@ static int dump_packet (unsigned char *data, int length, unsigned char *prefix)
 	return length;
 }
 
-
 static int dump_frame_1 (unsigned char *d, int n)
 {
 	int i;
 
 	fprintf(stdout, "\n  ---------------------------- Packet %05d -----------------------------\n", n);
-	d += dump_packet(d,  2, "  HDR: ");
-	d += dump_packet(d,  2, "  SEQ: ");
-	d += dump_packet(d,  2, "  ???: ");
-	d += dump_packet(d, 20, "  IMG:       ");
-	for (i=1; i<10; i++)
-		d += dump_packet(d, 20, "             ");
+	d += dump_packet(d,  4, "  HDR 1: ");
 	fprintf(stdout, "\n");
-	d += dump_packet(d,  2, "  ???: ");
-	d += dump_packet(d, 20, "  ???:       ");
-	d += dump_packet(d, 20, "             ");
-	d += dump_packet(d, 20, "             ");
-	d += dump_packet(d,  4, "             ");
+
+	d += dump_packet(d,  2, "  IMG A:       ");
+	d += dump_packet(d, 16, "               ");
+	for (i=1; i<12; i++)
+		d += dump_packet(d, 16, "               ");
+	d += dump_packet(d, 8, "               ");
 	fprintf(stdout, "\n");
-	d += dump_packet(d,  4, "  ???: ");
-	d += dump_packet(d, 16, "  ???:       ");
+
+	d += dump_packet(d,  2, "  HDR 2: ");
+	fprintf(stdout, "\n");
+
+	d += dump_packet(d, 16, "  IMG B:       ");
+	d += dump_packet(d, 16, "               ");
+	d += dump_packet(d,  6, "               ");
+	fprintf(stdout, "\n");
+
+	d += dump_packet(d, 16, "  IMG C:       ");
+	d += dump_packet(d, 10, "               ");
+	fprintf(stdout, "\n");
+
+	d += dump_packet(d,  4, "  HDR 3: ");
+	fprintf(stdout, "\n");
+
+	d += dump_packet(d, 16, "  IMG D:       ");
+	fprintf(stdout, "\n");
 }
 
 static int dump_frame (unsigned char *data, int length, int n)
@@ -483,6 +494,39 @@ static int LoadImage (struct vfs_dev *dev)
 /******************************************************************************************************
  * Memory map definitions
  */
+
+const unsigned int VFS_IMAGE_ABCD = 0x00FF5032;
+/*-----------------------------------------------------------------------------------------
+   VFS_IMG_ABCD - 8 bits
+
+   This register clearly demonstrates that type 0 image slices have four subimages,
+   named A, B, C and D.
+
+    Header 1: 000-003 (4 bytes)
+
+    Image A:  004-205 (202 bytes)
+      - if bit 1 is set,      image A is white, finish (128 cases)
+      - if bit 3 is set,      image A is black, finish ( 64 cases)
+      - if bit 4 XOR bit 7,   image A is black, finish ( 32 cases)
+      - else                  image A is gray          ( 32 cases)
+
+    Header 2: 206-207 (2 bytes)
+      - seems either white or black
+
+    Image B:  208-245 (38 bytes)
+      - same rules as Image A
+
+    Image C:  246-271 (26 bytes)
+      - more complex pattern
+
+    Header 3: 272-275 (4 bytes)
+      - seems fairly constant
+
+    Image D:  276-291 (16 bytes)
+      - same rules as Image C
+
+ */
+
 
 const unsigned int VFS_CONTRAST = 0x00FF5038;
 /*-----------------------------------------------------------------------------------------
