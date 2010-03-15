@@ -22,167 +22,202 @@ use 5.6.0;
 use strict;
 use warnings;
 
-# all lines from the UsbSnoop tracefile
+
+
+# All lines from the UsbSnoop tracefile. The current line being processed
+# sits on the top of the array and is popped off when processing is complete.
 my @line;
+chomp(@line = <>);
 
-# sequence number of current swap
-my $seq = 1;
-
-# process the contents of the log file
-sub process_log_file {
-
-	# deal with each line in order
-	while (my $line = shift @line) {
-
-		# make sure we are at the start of a new section
-		if ($line !~ m/^\[/) {
-			print "Alignment problem: $line\n";
-
-		# we don't care about internal UsbSnoop sections
-		} elsif ($line =~ m/UsbSnoop/) {
-			#print "Ignoring: $line\n";
-
-		# but we do care about USB requests...
-		} elsif ($line =~ m/>>>/) {
-			seq_request($line);
-			handle_bulk("SEND");
-
-		# ...and USB responses
-		} elsif ($line =~ m/<<</) {
-			seq_response($line);
-			handle_bulk("RECV");
-
-		# flag anything else for manual investigation
-		} else {
-			warn "Unrecognized block header: $line\n";
-
-		}
-	}
+# are there any lines left to process?
+sub more_lines {
+	defined $line[0]
 }
 
-sub seq_request {
-	my ($line) = @_;
-
-	# process sequence number
-	my $s = get_seq($line);
-	print "\n\n==============================================================================\n----> $s\n";
-	if ($seq != $s) {
-		warn "Sequence discontinuity, expecting $seq, jumped to $s instead";
-	}
-	$seq = $s;
+# return the current line
+sub current_line {
+	$line[0]
 }
 
-sub seq_response {
-	my ($line) = @_;
-
-	# process sequence number
-	my $s = get_seq($line);
-	print "<---- $s\n";
-	if ($seq != $s) {
-		warn "Sequence mismatch, got response $s to request $seq";
-	}
-	$seq++;
+# go to next line, returning the current one
+sub next_line {
+	shift @line
 }
 
-sub flush {
+# does the current line contain this pattern?
+sub looking_at {
+	more_lines and $line[0] =~ m/$_[0]/
+}
+
+
+
+
+
+# are we at the start of a new block?
+sub at_new_block {
+	(not more_lines) or (looking_at "^\\[");
+}
+
+# skip to the start of the next block
+sub next_block {
 	print "        ********** FLUSHING!! ***********\n";
-	while ($line[0] !~ m/^\[/) {
-		print "        Flush: " . shift(@line) . "\n";
+	while (not at_new_block) {
+		print "        Flush: " . next_line . "\n";
 	}
 }
 
-sub skip {
-	my ($word) = @_;
-	my $line = shift @line;
-	return 0 unless $line =~ m/\s$word\s/;
-	return 1;
-}
 
-sub handle_bulk {
-	my ($label) = @_;
-	my ($line);
 
-	# determine the block type
-	$line = shift @line;
-	my $type = get_type($line);
-	print "      $type\n";
-	return flush unless is_bulk($type);
 
-	# check which endpoint
-	$line = shift @line;
-	my $ep = get_endpoint($line);
-	print "      $label: $ep\n";
-	return flush unless is_valid($ep);
-
-	# skip next four lines
-	return flush unless skip "TransferFlags";		# extract dir, compare to ep
-	return flush unless skip "TransferBufferLength";	# length, save for parsing data
-	return flush unless skip "TransferBuffer";
-	return flush unless skip "TransferBufferMDL";
-
-	# handle any data transfers
-	while ($line[0] =~ m/^    0/) {
-		$line = shift @line;
-		$line =~ s/^ +[0-9a-f]{8}: //;
-		print "            $line\n";
-	}
-
-	return flush unless skip "UrbLink";
-}
 
 sub get_seq {
-	my ($line) = @_;
-	$line =~ m/.* URB (\d+) .*/;
+	current_line =~ m/.* URB (\d+) .*/;
 	return $1;
 }
 
 sub get_type {
-	my ($line) = @_;
-	$line =~ m/^-- (.*):$/;
+	current_line =~ m/^-- (.*):$/;
 	return $1;
 }
 
 sub get_endpoint {
-	my ($line) = @_;
-	$line =~ m/^  PipeHandle           = ........ \[endpoint 0x000000(..)\]$/;
+	current_line =~ m/^  PipeHandle           = ........ \[endpoint 0x000000(..)\]$/;
 	return $1;
 }
 
+
+
+
+
+# convert a list into a hash map
+sub make_set {
+	map { $_ => 1 } @_
+}
+
+# determine if a block is a bulk transfer, warning about unknown types
+sub is_bulk {
+	my ($type) = @_;
+	my %bulk = make_set (
+		"URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER"
+	);
+	my %nonbulk = make_set (
+		"URB_FUNCTION_CONTROL_TRANSFER",
+		"URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE",
+		"URB_FUNCTION_SELECT_CONFIGURATION",
+		"URB_FUNCTION_SET_FEATURE_TO_DEVICE",
+	);
+	return 1 if $bulk{$type};
+	return 0 if $nonbulk{$type};
+	warn "Unknown block: $type";
+	return 0;
+}
+
+# determine if an endpoint is valid
 sub is_valid {
 	my ($ep) = @_;
-	my %valid = (
-		"01" => 1,
-		"81" => 1,
-		"82" => 1,
+	my %valid = make_set (
+		"01",
+		"81",
+		"82",
 	);
 	return 1 if $valid{$ep};
 	warn "Endpoint $ep is not valid...\n";
 	return 0;
 }
  
-sub is_bulk {
-	my ($type) = @_;
+sub handle_bulk {
+	my ($label) = @_;
 
-	if ($type eq "URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER") {
-		return 1;
+	# determine the block type
+	next_line;
+	my $type = get_type;
+	return next_block unless is_bulk $type;
+	print "      $type\n";
 
-	} elsif ($type eq "URB_FUNCTION_CONTROL_TRANSFER") {
-		return 0;
+	# check which endpoint
+	next_line;
+	my $ep = get_endpoint;
+	return next_block unless is_valid $ep;
+	print "      $label: $ep\n";
 
-	} elsif ($type eq "URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE") {
-		return 0;
+	# ignore next four lines
+	next_line;
+	return next_block unless looking_at "TransferFlags";
+	# extract dir, compare to ep
 
-	} elsif ($type eq "URB_FUNCTION_SELECT_CONFIGURATION") {
-		return 0;
+	next_line;
+	return next_block unless looking_at "TransferBufferLength";
+	# extract length, save for parsing data
 
-	} elsif ($type eq "URB_FUNCTION_SET_FEATURE_TO_DEVICE") {
-		return 0;
+	next_line;
+	return next_block unless looking_at "TransferBuffer";
 
-	} else {
-		warn "Unknown block: $type";
-		return 0;
+	next_line;
+	return next_block unless looking_at "TransferBufferMDL";
+
+	# handle any data transfers
+	next_line;
+	while (looking_at "^    0") {
+		$line[0] =~ m/^ +[0-9a-f]{8}: (.*)/;
+		print "            $1\n";
+		next_line;
+	}
+
+	return next_block unless looking_at "UrbLink";
+}
+
+# sequence number of current swap
+my $seq = 1;
+
+sub seq_request {
+	my $s = get_seq;
+	print "\n\n==============================================================================\n----> $s\n";
+	warn "Sequence discontinuity, expecting $seq, jumped to $s instead" unless $seq == $s;
+	$seq = $s;
+}
+
+sub seq_response {
+	my $s = get_seq;
+	print "<---- $s\n";
+	warn "Sequence mismatch, got response $s to request $seq" unless $seq == $s;
+	$seq++;
+}
+
+
+
+# process the contents of the log file
+sub process_log_file {
+
+	# deal with each line in order
+	while (more_lines) {
+
+		# make sure we are at the start of a new section
+		if (not at_new_block) {
+			print "Alignment problem!\n";
+			next_block;
+
+		# we don't care about internal UsbSnoop sections
+		} elsif (looking_at "UsbSnoop") {
+			next_line;
+
+		# but we do care about USB requests...
+		} elsif (looking_at ">>>") {
+			seq_request;
+			handle_bulk "SEND";
+			next_line;
+
+		# ...and USB responses
+		} elsif (looking_at "<<<") {
+			seq_response;
+			handle_bulk "RECV";
+			next_line;
+
+		# flag anything else for manual investigation
+		} else {
+			warn "Unrecognized line: " . next_line . "\n";
+
+		}
 	}
 }
 
-chomp(@line = <>);
 process_log_file;
