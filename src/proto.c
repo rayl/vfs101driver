@@ -177,56 +177,70 @@ static void dump_image (unsigned char *data, int length)
 	fprintf(stdout, "\n");
 }
 
-static void dump_pnm (struct vfs_dev *dev)
+static void dump_pnm_2 (FILE *pnm, int offset, int len)
+{
+	while (len--) {
+		switch (offset++) {
+		case 0:
+		case 206:
+		case 246:
+		case 272:
+			fprintf(pnm, " 255");
+			break;
+		default:
+			fprintf(pnm, "   0");
+			break;
+		}
+	}
+	fprintf(pnm, "\n");
+}
+
+static void dump_pnm_1 (struct vfs_dev *dev, unsigned char dir, int offset, int len)
 {
 	unsigned char *data = dev->ibuf;
 	int length = dev->ilen;
 	char name[40];
-	FILE *pnm[4];
+	FILE *pnm;
+	int i;
 
-	sprintf(name, "img/A/out-%03d-%02x.%s", dev->inum, dev->inum, dev->ilen ? "pnm" : "pnmx");
+	sprintf(name, "img/%c/out-%03d-%02x.%s", dir, dev->inum, dev->inum, dev->ilen ? "pnm" : "pnmx");
 	dev->inum++;
 
-	name[4] = 'A';
-	pnm[0] = fopen(name, "w");
-	name[4] = 'B';
-	pnm[1] = fopen(name, "w");
-	name[4] = 'C';
-	pnm[2] = fopen(name, "w");
-	name[4] = 'D';
-	pnm[3] = fopen(name, "w");
+	pnm = fopen(name, "w");
 
-	fprintf(pnm[0], "P2\n206 %d\n256\n", length / PKTSIZE);
-	fprintf(pnm[1], "P2\n 40 %d\n256\n", length / PKTSIZE);
-	fprintf(pnm[2], "P2\n 26 %d\n256\n", length / PKTSIZE);
-	fprintf(pnm[3], "P2\n 20 %d\n256\n", length / PKTSIZE);
+	fprintf(pnm, "P2\n%d %d\n256\n", len, (length/PKTSIZE)+10);
+
+	
+	for (i=0; i<5; i++)
+		dump_pnm_2(pnm, offset, len);
 
 	while (length > 0) {
+		unsigned char *x = data;
 		int i;
 
-		for (i=0; i<206; i++)
-			fprintf(pnm[0], "% 3d", *data++);
-		fprintf(pnm[0], "\n");
-
-		for (i=0; i<40; i++)
-			fprintf(pnm[1], "% 3d", *data++);
-		fprintf(pnm[1], "\n");
-
-		for (i=0; i<26; i++)
-			fprintf(pnm[2], "% 3d", *data++);
-		fprintf(pnm[2], "\n");
-
-		for (i=0; i<20; i++)
-			fprintf(pnm[3], "% 3d", *data++);
-		fprintf(pnm[3], "\n");
+		data += offset;
+		for (i=0; i<len; i++)
+			fprintf(pnm, " % 3d", *x++);
+		fprintf(pnm, "\n");
 
 		length -= PKTSIZE;
+		data += PKTSIZE;
 	}
 
-	fclose(pnm[0]);
-	fclose(pnm[1]);
-	fclose(pnm[2]);
-	fclose(pnm[3]);
+	for (i=0; i<5; i++)
+		dump_pnm_2(pnm, offset, len);
+
+
+	fclose(pnm);
+}
+
+static void dump_pnm (struct vfs_dev *dev)
+{
+	dump_pnm_1(dev, 'X',   0, 292);
+	dump_pnm_1(dev, 'A',   0, 206);
+	dump_pnm_1(dev, 'B', 206,  40);
+	dump_pnm_1(dev, 'C', 246,  26);
+	dump_pnm_1(dev, 'D', 272,  20);
 }
 
 
