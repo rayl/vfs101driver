@@ -578,6 +578,7 @@ const unsigned int VFS_CONTRAST = 0x00FF5038;
    from 128 to 255.
  */
 
+const unsigned int VFS_TEST = 0x00FF503E;
 
 
 /******************************************************************************************************
@@ -888,11 +889,11 @@ static int validity_cycle (struct vfs_dev *dev)
 }
 
 /* Exercise the gain register */
-static int test_gain (struct vfs_dev *dev)
+static int test (struct vfs_dev *dev)
 {
 	int i;
 	for (i=0; i<0x100; i++) {
-		_(  Poke (dev, VFS_IMAGE_ABCD, i, 0x01));
+		_(  Poke (dev, VFS_TEST, i, 0x01));
 		_(  img_0 (dev, 100));
 	}
 	return 0;	
@@ -920,7 +921,7 @@ static cycle_func func (const char *id)
 		_(2, validity_cycle2);
 		_(3, validity_cycle3);
 		_(4, validity_cycle4);
-		_(gain, test_gain);
+		_(test, test);
 	}
 	return validity_cycle;
 #undef _
