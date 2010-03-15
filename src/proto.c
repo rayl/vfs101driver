@@ -173,7 +173,9 @@ static void dump_pnm (struct vfs_dev *dev)
 	char name[40];
 	FILE *pnm;
 
-	sprintf(name, "img/out-%03d.%s", dev->inum++, dev->ilen ? "pnm" : "pnmx");
+	sprintf(name, "img/out-%03d-%02x.%s", dev->inum, dev->inum, dev->ilen ? "pnm" : "pnmx");
+	dev->inum++;
+
 	pnm = fopen(name, "w");
 
 	fprintf(pnm, "P2\n292 %d\n256\n", length / PKTSIZE);
