@@ -897,6 +897,13 @@ static int validity_cycle (struct vfs_dev *dev)
 }
 
 /* Exercise the gain register */
+static int reset (struct vfs_dev *dev)
+{
+	_(  Reset (dev));
+	return 0;	
+}
+
+/* Exercise the gain register */
 static int test (struct vfs_dev *dev)
 {
 	int i;
@@ -929,6 +936,7 @@ static cycle_func func (const char *id)
 		_(2, validity_cycle2);
 		_(3, validity_cycle3);
 		_(4, validity_cycle4);
+		_(reset, reset);
 		_(test, test);
 	}
 	return validity_cycle;
