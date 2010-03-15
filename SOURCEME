@@ -1,7 +1,7 @@
 
 q () 
 { 
-    rm img/*;
+    rm img/*/*;
     ./bin/proto $1
 }
 

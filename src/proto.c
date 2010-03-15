@@ -182,24 +182,51 @@ static void dump_pnm (struct vfs_dev *dev)
 	unsigned char *data = dev->ibuf;
 	int length = dev->ilen;
 	char name[40];
-	FILE *pnm;
+	FILE *pnm[4];
 
-	sprintf(name, "img/out-%03d-%02x.%s", dev->inum, dev->inum, dev->ilen ? "pnm" : "pnmx");
+	sprintf(name, "img/A/out-%03d-%02x.%s", dev->inum, dev->inum, dev->ilen ? "pnm" : "pnmx");
 	dev->inum++;
 
-	pnm = fopen(name, "w");
+	name[4] = 'A';
+	pnm[0] = fopen(name, "w");
+	name[4] = 'B';
+	pnm[1] = fopen(name, "w");
+	name[4] = 'C';
+	pnm[2] = fopen(name, "w");
+	name[4] = 'D';
+	pnm[3] = fopen(name, "w");
 
-	fprintf(pnm, "P2\n292 %d\n256\n", length / PKTSIZE);
+	fprintf(pnm[0], "P2\n206 %d\n256\n", length / PKTSIZE);
+	fprintf(pnm[1], "P2\n 40 %d\n256\n", length / PKTSIZE);
+	fprintf(pnm[2], "P2\n 26 %d\n256\n", length / PKTSIZE);
+	fprintf(pnm[3], "P2\n 20 %d\n256\n", length / PKTSIZE);
 
 	while (length > 0) {
 		int i;
-		for (i=0; i<PKTSIZE; i++)
-			fprintf(pnm, "% 3d", *data++);
-		fprintf(pnm, "\n");
+
+		for (i=0; i<206; i++)
+			fprintf(pnm[0], "% 3d", *data++);
+		fprintf(pnm[0], "\n");
+
+		for (i=0; i<40; i++)
+			fprintf(pnm[1], "% 3d", *data++);
+		fprintf(pnm[1], "\n");
+
+		for (i=0; i<26; i++)
+			fprintf(pnm[2], "% 3d", *data++);
+		fprintf(pnm[2], "\n");
+
+		for (i=0; i<20; i++)
+			fprintf(pnm[3], "% 3d", *data++);
+		fprintf(pnm[3], "\n");
+
 		length -= PKTSIZE;
 	}
 
-	fclose(pnm);
+	fclose(pnm[0]);
+	fclose(pnm[1]);
+	fclose(pnm[2]);
+	fclose(pnm[3]);
 }
 
 
