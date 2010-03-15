@@ -484,11 +484,16 @@ static int LoadImage (struct vfs_dev *dev)
  * Memory map definitions
  */
 
-#define _(addr, name) const unsigned int name = addr
+const unsigned int VFS_CONTRAST = 0x00FF5038;
+/*-----------------------------------------------------------------------------------------
+   VFS_CONTRAST - 7 bits
 
-_(0x00FF5038, VFS_GAIN);
+   This register controls the contrast. When the lower 7 bits are zero, the image
+   has low contrast. Constrast increases as value approached 0x7f, then cycles over
+   from 128 to 255.
+ */
 
-#undef _
+
 
 /******************************************************************************************************
  * Cycle routines
@@ -572,7 +577,7 @@ static int get_b (struct vfs_dev *dev)
 
 static int try (struct vfs_dev *dev, unsigned int val)
 {
-	_(  Poke (dev, VFS_GAIN, val, 0x01));
+	_(  Poke (dev, VFS_CONTRAST, val, 0x01));
 	_(  img_0 (dev, 10));
 	return 0;
 }
@@ -696,12 +701,12 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  img_0         (dev, 100));
 	_(  pat_1         (dev, 0x00000000, 0x00000010));
 	_(  img_0         (dev, 100));
-	_(  Peek          (dev, VFS_GAIN, 0x01));
+	_(  Peek          (dev, VFS_CONTRAST, 0x01));
 	_(  Peek          (dev, 0x00FF500E, 0x02));
 	_(  Peek          (dev, 0x00FF5032, 0x01));
 	_(  Poke          (dev, 0x00FF5032, 0x00000012, 0x01));
 	_(  Poke          (dev, 0x00FF500E, 0x00004000, 0x02));
-	_(  Poke          (dev, VFS_GAIN, 0x0000000F, 0x01));
+	_(  Poke          (dev, VFS_CONTRAST, 0x0000000F, 0x01));
 	_(  SetParam      (dev, 0x0062, 0x0000));
 	_(  SetParam      (dev, 0x0077, 0x0000));
 	_(  SetParam      (dev, 0x0076, 0x0000));
@@ -722,7 +727,7 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  SetParam      (dev, 0x0077, 0x0007));
 	_(  SetParam      (dev, 0x0076, 0x0012));
 	_(  SetParam      (dev, 0x0078, 0x21A0));
-	_(  Poke          (dev, VFS_GAIN, 0x00000014, 0x01));
+	_(  Poke          (dev, VFS_CONTRAST, 0x00000014, 0x01));
 	_(  Poke          (dev, 0x00FF500E, 0x000021B4, 0x02));
 	_(  Poke          (dev, 0x00FF5032, 0x00000031, 0x01));
 	_(  SetParam      (dev, 0x0062, 0x0032));
@@ -802,7 +807,7 @@ static int test_gain (struct vfs_dev *dev)
 {
 	int i;
 	for (i=0; i<0x100; i++) {
-		_(  Poke (dev, VFS_GAIN, i, 0x01));
+		_(  Poke (dev, 0x00ff5032, i, 0x01));
 		_(  img_0 (dev, 100));
 	}
 	return 0;	
