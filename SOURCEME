@@ -4,3 +4,9 @@ q ()
     rm img/*;
     ./bin/proto $1
 }
+
+w ()
+{
+    sudo chmod 666 /dev/validity*
+}
+
