@@ -568,6 +568,11 @@ const unsigned int VFS_IMAGE_ABCD = 0x00FF5032;
  */
 
 
+const unsigned int VFS_DARKEN = 0x00FF500E;
+
+const unsigned int VFS_DARKEN_CD_1 = 0x00FF502C; // values 0-6 produce no image
+const unsigned int VFS_DARKEN_CD_2 = 0x00FF502E; // values 0-6 produce no image
+
 const unsigned int VFS_CONTRAST = 0x00FF5038;
 /*-----------------------------------------------------------------------------------------
    VFS_CONTRAST - 7 bits
@@ -586,7 +591,16 @@ const unsigned int VFS_GRATING = 0x00FF503E;
    seems to have a slightly elevated contrast if bits 1, 2, and 3 are zero.
  */
 
-const unsigned int VFS_TEST = 0x00FF9802;
+const unsigned int VFS_KILL_4 = 0x00FF9802;
+/*-----------------------------------------------------------------------------------------
+   VFS_KILL_4 - n bits
+
+   This register kills the device when writing 0x04. Not sure if higher numbers work...
+ */
+
+const unsigned int VFS_NO_EFFECT_1 = 0x00FF9806;
+
+const unsigned int VFS_TEST = 0x00FF9800;
 
 
 /******************************************************************************************************
@@ -681,9 +695,9 @@ static int pat_1 (struct vfs_dev *dev, unsigned int v1, unsigned int v2)
 	_(  Poke (dev, 0x000005F6, v1, 0x01));
 	_(  Peek (dev, VFS_GRATING, 0x01));
 	_(  Poke (dev, VFS_GRATING, v2, 0x01));
-	_(  Peek (dev, 0x00FF9802, 0x01));
+	_(  Peek (dev, VFS_KILL_4, 0x01));
 	_(  Peek (dev, 0x00FF9800, 0x01));
-	_(  Peek (dev, 0x00FF9806, 0x01));
+	_(  Peek (dev, VFS_NO_EFFECT_1, 0x01));
 	return 0;
 }
 
@@ -788,18 +802,18 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  SetParam      (dev, 0x0052, 0x0320));
 	_(  img_0         (dev, 1));
 	_(  SetParam      (dev, 0x0052, 0x1EB4));
-	_(  Peek          (dev, 0x00FF502C, 0x02));
-	_(  Peek          (dev, 0x00FF502E, 0x02));
+	_(  Peek          (dev, VFS_DARKEN_CD_1, 0x02));
+	_(  Peek          (dev, VFS_DARKEN_CD_2, 0x02));
 	_(  pat_1         (dev, 0x00000001, 0x00000000));
-	_(  Poke          (dev, 0x00FF9806, 0x00000000, 0x01));
+	_(  Poke          (dev, VFS_NO_EFFECT_1, 0x00000000, 0x01));
 	_(  img_0         (dev, 100));
 	_(  pat_1         (dev, 0x00000000, 0x00000010));
 	_(  img_0         (dev, 100));
 	_(  Peek          (dev, VFS_CONTRAST, 0x01));
-	_(  Peek          (dev, 0x00FF500E, 0x02));
+	_(  Peek          (dev, VFS_DARKEN, 0x02));
 	_(  Peek          (dev, VFS_IMAGE_ABCD, 0x01));
 	_(  Poke          (dev, VFS_IMAGE_ABCD, 0x00000012, 0x01));
-	_(  Poke          (dev, 0x00FF500E, 0x00004000, 0x02));
+	_(  Poke          (dev, VFS_DARKEN, 0x00004000, 0x02));
 	_(  Poke          (dev, VFS_CONTRAST, 0x0000000F, 0x01));
 	_(  SetParam      (dev, 0x0062, 0x0000));
 	_(  SetParam      (dev, 0x0077, 0x0000));
@@ -816,13 +830,13 @@ static int validity_cycle3 (struct vfs_dev *dev)
 	_(  try           (dev, 0x00000008));
 	_(  try           (dev, 0x00000007));
 	_(  pat_1         (dev, 0x00000000, 0x00000010));
-	_(  Poke          (dev, 0x00FF9806, 0x00000000, 0x01));
+	_(  Poke          (dev, VFS_NO_EFFECT_1, 0x00000000, 0x01));
 	_(  img_0         (dev, 10));
 	_(  SetParam      (dev, 0x0077, 0x0007));
 	_(  SetParam      (dev, 0x0076, 0x0012));
 	_(  SetParam      (dev, 0x0078, 0x21A0));
 	_(  Poke          (dev, VFS_CONTRAST, 0x00000014, 0x01));
-	_(  Poke          (dev, 0x00FF500E, 0x000021B4, 0x02));
+	_(  Poke          (dev, VFS_DARKEN, 0x000021B4, 0x02));
 	_(  Poke          (dev, VFS_IMAGE_ABCD, 0x00000031, 0x01));
 	_(  SetParam      (dev, 0x0062, 0x0032));
 	_(  img_abort     (dev));
