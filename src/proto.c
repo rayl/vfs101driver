@@ -578,7 +578,16 @@ const unsigned int VFS_CONTRAST = 0x00FF5038;
    from 128 to 255.
  */
 
-const unsigned int VFS_TEST = 0x00FF503E;
+
+const unsigned int VFS_GRATING = 0x00FF503E;
+/*-----------------------------------------------------------------------------------------
+   VFS_GRATING - n bits
+
+   This register seems to produce a "grating" effect with bit 1 set.  also, the image
+   seems to have a slightly elevated contrast if bits 1, 2, and 3 are zero.
+ */
+
+const unsigned int VFS_TEST = 0x00FF9802;
 
 
 /******************************************************************************************************
@@ -671,8 +680,8 @@ static int try (struct vfs_dev *dev, unsigned int val)
 static int pat_1 (struct vfs_dev *dev, unsigned int v1, unsigned int v2)
 {
 	_(  Poke (dev, 0x000005F6, v1, 0x01));
-	_(  Peek (dev, 0x00FF503E, 0x01));
-	_(  Poke (dev, 0x00FF503E, v2, 0x01));
+	_(  Peek (dev, VFS_GRATING, 0x01));
+	_(  Poke (dev, VFS_GRATING, v2, 0x01));
 	_(  Peek (dev, 0x00FF9802, 0x01));
 	_(  Peek (dev, 0x00FF9800, 0x01));
 	_(  Peek (dev, 0x00FF9806, 0x01));
