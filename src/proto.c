@@ -184,6 +184,7 @@ static void dump_pnm (struct vfs_dev *dev)
 		int i;
 		for (i=0; i<PKTSIZE; i++)
 			fprintf(pnm, "% 3d", *data++);
+		fprintf(pnm, "\n");
 		length -= PKTSIZE;
 	}
 
