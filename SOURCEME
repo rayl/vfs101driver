@@ -1,7 +1,6 @@
 
 q () 
 { 
-    rm img/*/*;
     ./bin/proto $1
 }
 
@@ -10,3 +9,11 @@ w ()
     sudo chmod 666 /dev/validity*
 }
 
+e ()
+{
+    rm img/*/*
+    q reset
+    sleep 1
+    w
+    q test
+}
