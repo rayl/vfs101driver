@@ -204,7 +204,6 @@ static void dump_pnm_1 (struct vfs_dev *dev, unsigned char dir, int offset, int 
 	int i;
 
 	sprintf(name, "img/%c/out-%03d-%02x.%s", dir, dev->inum, dev->inum, dev->ilen ? "pnm" : "pnmx");
-	dev->inum++;
 
 	pnm = fopen(name, "w");
 
@@ -215,10 +214,9 @@ static void dump_pnm_1 (struct vfs_dev *dev, unsigned char dir, int offset, int 
 		dump_pnm_2(pnm, offset, len);
 
 	while (length > 0) {
-		unsigned char *x = data;
+		unsigned char *x = data + offset;
 		int i;
 
-		data += offset;
 		for (i=0; i<len; i++)
 			fprintf(pnm, " % 3d", *x++);
 		fprintf(pnm, "\n");
@@ -241,6 +239,7 @@ static void dump_pnm (struct vfs_dev *dev)
 	dump_pnm_1(dev, 'B', 206,  40);
 	dump_pnm_1(dev, 'C', 246,  26);
 	dump_pnm_1(dev, 'D', 272,  20);
+	dev->inum++;
 }
 
 
