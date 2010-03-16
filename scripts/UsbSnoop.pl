@@ -61,7 +61,7 @@ sub at_new_block {
 sub next_block {
 	warn "        ********** FLUSHING!! ***********\n";
 	while (not at_new_block) {
-		warn "        Flush: " . next_line . "\n";
+		warn "               " . next_line . "\n";
 	}
 }
 

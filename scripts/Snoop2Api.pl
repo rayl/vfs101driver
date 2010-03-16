@@ -152,28 +152,28 @@ sub fmt_Poke {
 }
 
 my @fmt = (undef,
-	[ \&fmt_none,		4 ],	#  Reset
-	[ \&fmt_none,		5 ],	#  GetVersion
-	[ \&fmt_GetPrint,	3 ],	#  GetPrint
-	[ \&fmt_GetParam,	4 ],	#  GetParam
-	[ \&fmt_SetParam,	3 ],	#  SetParam
-	[ \&fmt_none,		5 ],	#  GetConfig
-	[ \&fmt_unknown,	4 ],	#  DownloadPatch
-	[ \&fmt_unknown,	4 ],	#  GetRateData
-	[ \&fmt_unknown,	4 ],	#  IspRequest
-	[ \&fmt_unknown,	4 ],	#  ProgramFlash
-	[ \&fmt_unknown,	4 ],	#  EraseFlash
-	[ \&fmt_unknown,	4 ],	#  LedStates
-	[ \&fmt_unknown,	4 ],	#  LedEvent
-	[ \&fmt_none,		5 ],	#  AbortPrint
-	[ \&fmt_unknown,	4 ],	#  Spare2
-	[ \&fmt_unknown,	4 ],	#  Spare3
-	[ \&fmt_unknown,	4 ],	#  Spare4
-	[ \&fmt_Peek,		3 ],	#  Peek
-	[ \&fmt_Poke,		2 ],	#  Poke
-	[ \&fmt_unknown,	3 ],	#  SensorSpiTrans
-	[ \&fmt_unknown,	4 ],	#  SensorGPIO
-	[ \&fmt_none,		4 ],	#  GetFingerState
+	[ \&fmt_none,		3 ],	#  Reset
+	[ \&fmt_none,		4 ],	#  GetVersion
+	[ \&fmt_GetPrint,	2 ],	#  GetPrint
+	[ \&fmt_GetParam,	3 ],	#  GetParam
+	[ \&fmt_SetParam,	2 ],	#  SetParam
+	[ \&fmt_none,		4 ],	#  GetConfig
+	[ \&fmt_unknown,	3 ],	#  DownloadPatch
+	[ \&fmt_unknown,	3 ],	#  GetRateData
+	[ \&fmt_unknown,	3 ],	#  IspRequest
+	[ \&fmt_unknown,	3 ],	#  ProgramFlash
+	[ \&fmt_unknown,	3 ],	#  EraseFlash
+	[ \&fmt_unknown,	3 ],	#  LedStates
+	[ \&fmt_unknown,	3 ],	#  LedEvent
+	[ \&fmt_none,		4 ],	#  AbortPrint
+	[ \&fmt_unknown,	3 ],	#  Spare2
+	[ \&fmt_unknown,	3 ],	#  Spare3
+	[ \&fmt_unknown,	3 ],	#  Spare4
+	[ \&fmt_Peek,		2 ],	#  Peek
+	[ \&fmt_Poke,		1 ],	#  Poke
+	[ \&fmt_unknown,	2 ],	#  SensorSpiTrans
+	[ \&fmt_unknown,	3 ],	#  SensorGPIO
+	[ \&fmt_none,		3 ],	#  GetFingerState
 );
 
 sub dump_args {
