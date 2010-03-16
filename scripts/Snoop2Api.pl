@@ -121,7 +121,7 @@ my $cmd;
 sub dump_send {
 	my $packet = strip grab "SEND";
 	$cmd = cmd_id $packet;
-	print "	_(  " . cmd_name($packet) . " (dev, ...);";
+	print "	_(  " . cmd_name($packet) . " (dev, ...));";
 }
 
 sub dump_recv {
@@ -132,7 +132,7 @@ sub dump_recv {
 
 sub dump_load {
 	drop "LOAD";
-	print "	_(  LoadImage (dev);\n"
+	print "	_(  LoadImage (dev));\n"
 }
 
 sub process_file {
