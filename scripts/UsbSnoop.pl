@@ -69,6 +69,11 @@ sub next_block {
 
 
 
+sub get_timestamp {
+	current_line =~ m/^\[(\d+) /;
+	return $1;
+}
+
 sub get_seq {
 	current_line =~ m/.* URB (\d+) .*/;
 	return $1;
@@ -127,6 +132,8 @@ sub is_valid {
 
 
 
+# time in ms of the current request
+my $timestamp;
 
 # are we on send or recv portion of the swap
 my $stage;
@@ -147,6 +154,7 @@ sub seq_request {
 	my $s = get_seq;
 	#print "\n\n==============================================================================\n----> $s\n";
 	warn "Sequence discontinuity, expecting $seq, jumped to $s instead" unless $seq == $s;
+	$timestamp = get_timestamp;
 	$seq = $s;
 	$stage = 1;
 }
@@ -207,6 +215,7 @@ sub handle_bulk {
 			print label . ": \n" if label eq "LOAD";
 		}
 		while (defined $data[0]) {
+			print "TIME: $timestamp\n" if label eq "SEND";
 			print label . ": $data[0]\n";
 			shift @data;
 		}

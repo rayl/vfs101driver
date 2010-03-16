@@ -202,6 +202,17 @@ sub dump_load {
 	print "	_(  LoadImage (dev));\n"
 }
 
+my $timestamp = 0;
+
+sub dump_time {
+	my ($t) = next_line;
+	$t =~ s/^TIME: //;
+	if ($t > $timestamp) {
+		print "	usleep(" . (($t - $timestamp) * 1000) . ");\t\t\t\t\t// $t ms\n";
+		$timestamp = $t;
+	}
+}
+
 sub process_file {
 
 	while (more_lines) {
@@ -214,6 +225,9 @@ sub process_file {
 
 		} elsif (looking_at "LOAD") {
 			dump_load;
+
+		} elsif (looking_at "TIME") {
+			dump_time;
 
 		}
 	}
