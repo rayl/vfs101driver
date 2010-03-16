@@ -168,7 +168,6 @@ sub data_expected {
 }
 
 sub handle_bulk {
-	my ($label) = @_;
 
 	# determine the block type
 	next_line;
@@ -234,13 +233,13 @@ sub process_log_file {
 		# but we do care about USB requests...
 		} elsif (looking_at ">>>") {
 			seq_request;
-			handle_bulk "SEND";
+			handle_bulk;
 			next_line;
 
 		# ...and USB responses
 		} elsif (looking_at "<<<") {
 			seq_response;
-			handle_bulk "RECV";
+			handle_bulk;
 			next_line;
 
 		# flag anything else for manual investigation
