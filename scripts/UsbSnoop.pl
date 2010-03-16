@@ -29,11 +29,6 @@ use warnings;
 my @line;
 chomp(@line = <>);
 
-# are there any lines left to process?
-sub more_lines {
-	defined $line[0]
-}
-
 # return the current line
 sub current_line {
 	$line[0]
@@ -44,11 +39,15 @@ sub next_line {
 	shift @line
 }
 
-# does the current line contain this pattern?
-sub looking_at {
-	more_lines and $line[0] =~ m/$_[0]/
+# are there any lines left to process?
+sub more_lines {
+	defined current_line
 }
 
+# does the current line contain this pattern?
+sub looking_at {
+	more_lines and current_line =~ m/$_[0]/
+}
 
 
 
@@ -206,10 +205,10 @@ sub handle_bulk {
 			next_line;
 		}
 		unless (defined $data[0]) {
-			print "      " . label . ": \n" if label eq "LOAD";
+			print label . ": \n" if label eq "LOAD";
 		}
 		while (defined $data[0]) {
-			print "      " . label . ": $data[0]\n";
+			print label . ": $data[0]\n";
 			shift @data;
 		}
 	}

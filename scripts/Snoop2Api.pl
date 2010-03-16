@@ -50,8 +50,47 @@ sub looking_at {
 
 
 
+# a table of command names, indexed by command id
+my @cmd = (undef, qw(
+     Reset
+     GetVersion
+     GetPrint
+     GetParam
+     SetParam
+     GetConfig
+     DownloadPatch
+     GetRateData
+     IspRequest
+     ProgramFlash
+     EraseFlash
+     LedStates
+     LedEvent
+     AbortPrint
+     Spare2
+     Spare3
+     Spare4
+     Peek
+     Poke
+     SensorSpiTrans
+     SensorGPIO
+     GetFingerState 
+));
 
-my $want_a_load = 0;
+sub cmd_id {
+	my ($packet) = @_;
+	$packet =~ m/^(..) 00/;
+	hex($1);
+}
+
+sub cmd_name {
+	$cmd[cmd_id $_[0]] or ""
+}
+
+sub is_cmd {
+	defined $cmd[cmd_id $_[0]]
+}
+
+
 
 sub drop {
 	next_line while looking_at $_[0];
@@ -77,24 +116,30 @@ sub strip {
 	$line;
 }
 
+my $want_a_load = 0;
+my $cmd;
+
 sub dump_send {
-	warn "Didn't get a LOAD..." if $want_a_load;
+	print "	// LoadImage();  // Why no call here?\n" if $want_a_load;
 	my $packet = strip grab "SEND";
-	print "\n	send($packet);\n";
+	$cmd = cmd_id $packet;
+	print "\n	" . cmd_name($packet) . "();\n";
 	$want_a_load = 0;
 }
 
 sub dump_recv {
-	warn "Didn't get a LOAD..." if $want_a_load;
+	print "	// LoadImage();\n" if $want_a_load;
 	my $packet = strip grab "RECV";
-	print "	// expecting \"$packet\"\n";
-	$want_a_load = 0; # 03 or 0e or 16/02
+	warn "Response type mismatch..." unless $cmd == cmd_id $packet;
+	print "	// expect: \"$packet\"\n";
+	$want_a_load = ($cmd == 0x03) || ($cmd == 0x0e) || (($cmd == 0x16) && ($packet =~ m/ 02$/));
 }
 
 sub dump_load {
-	#warn "Unexpected LOAD...." unless $want_a_load;
 	drop "LOAD";
-	print "	LoadImage();\n";
+	print $want_a_load
+		? "	LoadImage();\n"
+		: "	LoadImage();  // UNEXPECTED call, why is this here?\n";
 	$want_a_load = 0;
 }
 
