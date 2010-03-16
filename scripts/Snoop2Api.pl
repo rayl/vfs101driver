@@ -118,16 +118,83 @@ sub strip {
 
 my $cmd;
 
+sub fmt_none {
+	""
+}
+
+sub fmt_unknown {
+	", ERROR"
+}
+
+sub fmt_GetPrint {
+	my ($packet) = @_;
+	", COUNT, type_X"
+}
+
+sub fmt_GetParam {
+	$_[0] =~ m/04 00 (..) (..)$/;
+	", 0x$2$1";
+}
+
+sub fmt_SetParam {
+	$_[0] =~ m/05 00 (..) (..) (..) (..)$/;
+	", 0x$2$1, 0x$4$3";
+}
+
+sub fmt_Peek {
+	$_[0] =~ m/12 00 (..) (..) (..) (..) (..)$/;
+	", 0x$4$3$2$1, 0x$5";
+}
+
+sub fmt_Poke {
+	$_[0] =~ m/13 00 (..) (..) (..) (..) (..) (..) (..) (..) (..)$/;
+	", 0x$4$3$2$1, 0x$8$7$6$5, 0x$9";
+}
+
+my @fmt = (undef,
+	[ \&fmt_none,		4 ],	#  Reset
+	[ \&fmt_none,		5 ],	#  GetVersion
+	[ \&fmt_GetPrint,	3 ],	#  GetPrint
+	[ \&fmt_GetParam,	4 ],	#  GetParam
+	[ \&fmt_SetParam,	3 ],	#  SetParam
+	[ \&fmt_none,		5 ],	#  GetConfig
+	[ \&fmt_unknown,	4 ],	#  DownloadPatch
+	[ \&fmt_unknown,	4 ],	#  GetRateData
+	[ \&fmt_unknown,	4 ],	#  IspRequest
+	[ \&fmt_unknown,	4 ],	#  ProgramFlash
+	[ \&fmt_unknown,	4 ],	#  EraseFlash
+	[ \&fmt_unknown,	4 ],	#  LedStates
+	[ \&fmt_unknown,	4 ],	#  LedEvent
+	[ \&fmt_none,		5 ],	#  AbortPrint
+	[ \&fmt_unknown,	4 ],	#  Spare2
+	[ \&fmt_unknown,	4 ],	#  Spare3
+	[ \&fmt_unknown,	4 ],	#  Spare4
+	[ \&fmt_Peek,		3 ],	#  Peek
+	[ \&fmt_Poke,		2 ],	#  Poke
+	[ \&fmt_unknown,	3 ],	#  SensorSpiTrans
+	[ \&fmt_unknown,	4 ],	#  SensorGPIO
+	[ \&fmt_none,		4 ],	#  GetFingerState
+);
+
+sub dump_args {
+	$fmt[cmd_id $_[0]]->[0] or fmt_unknown
+}
+
+sub n_tabs {
+	$fmt[cmd_id $_[0]]->[1] or 4
+}
+
 sub dump_send {
 	my $packet = strip grab "SEND";
 	$cmd = cmd_id $packet;
-	print "	_(  " . cmd_name($packet) . " (dev, ...));";
+	print "	_(  " . cmd_name($packet) . " (dev" . dump_args($packet)->($packet) . "));";
 }
 
 sub dump_recv {
 	my $packet = strip grab "RECV";
 	warn "Response type mismatch..." unless $cmd == cmd_id $packet;
-	print "\t	// expect: \"$packet\"\n";
+	print "\t" x n_tabs($packet);
+	print "// expect: \"$packet\"\n";
 }
 
 sub dump_load {
