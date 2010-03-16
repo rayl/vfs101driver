@@ -60,9 +60,9 @@ sub at_new_block {
 
 # skip to the start of the next block
 sub next_block {
-	print "        ********** FLUSHING!! ***********\n";
+	warn "        ********** FLUSHING!! ***********\n";
 	while (not at_new_block) {
-		print "        Flush: " . next_line . "\n";
+		warn "        Flush: " . next_line . "\n";
 	}
 }
 
@@ -146,7 +146,7 @@ sub label {
 
 sub seq_request {
 	my $s = get_seq;
-	print "\n\n==============================================================================\n----> $s\n";
+	#print "\n\n==============================================================================\n----> $s\n";
 	warn "Sequence discontinuity, expecting $seq, jumped to $s instead" unless $seq == $s;
 	$seq = $s;
 	$stage = 1;
@@ -154,7 +154,7 @@ sub seq_request {
 
 sub seq_response {
 	my $s = get_seq;
-	print "<---- $s\n";
+	#print "<---- $s\n";
 	warn "Sequence mismatch, got response $s to request $seq" unless $seq == $s;
 	$seq++;
 	$stage = 0;
@@ -175,7 +175,7 @@ sub handle_bulk {
 	next_line;
 	my $type = get_type;
 	return next_block unless is_bulk $type;
-	print "      $type\n";
+	#print "      $type\n";
 
 	# check which endpoint
 	next_line;
@@ -222,7 +222,7 @@ sub process_log_file {
 
 		# make sure we are at the start of a new section
 		if (not at_new_block) {
-			print "Alignment problem!\n";
+			warn "Alignment problem!\n";
 			next_block;
 
 		# we don't care about internal UsbSnoop sections
