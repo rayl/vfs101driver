@@ -123,7 +123,7 @@ sub dump_send {
 	print "	// LoadImage();  // Why no call here?\n" if $want_a_load;
 	my $packet = strip grab "SEND";
 	$cmd = cmd_id $packet;
-	print "\n	" . cmd_name($packet) . "();\n";
+	print "	_(  " . cmd_name($packet) . " (dev, ...);";
 	$want_a_load = 0;
 }
 
@@ -131,15 +131,15 @@ sub dump_recv {
 	print "	// LoadImage();\n" if $want_a_load;
 	my $packet = strip grab "RECV";
 	warn "Response type mismatch..." unless $cmd == cmd_id $packet;
-	print "	// expect: \"$packet\"\n";
+	print "\t	// expect: \"$packet\"\n";
 	$want_a_load = ($cmd == 0x03) || ($cmd == 0x0e) || (($cmd == 0x16) && ($packet =~ m/ 02$/));
 }
 
 sub dump_load {
 	drop "LOAD";
 	print $want_a_load
-		? "	LoadImage();\n"
-		: "	LoadImage();  // UNEXPECTED call, why is this here?\n";
+		? "\n	_(  LoadImage (dev);\n"
+		: "\n	_(  LoadImage (dev);  // UNEXPECTED call, why is this here?\n";
 	$want_a_load = 0;
 }
 
