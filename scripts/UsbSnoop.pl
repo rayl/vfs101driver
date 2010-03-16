@@ -124,7 +124,50 @@ sub is_valid {
 	warn "Endpoint $ep is not valid...\n";
 	return 0;
 }
- 
+
+
+
+
+
+# are we on send or recv portion of the swap
+my $stage;
+
+# sequence number of current swap
+my $seq = 1;
+
+# endpoint of current transaction
+my $ep;
+
+
+
+sub label {
+	$stage ? "SEND" : ($ep eq "82") ? "LOAD" : "RECV"
+}
+
+sub seq_request {
+	my $s = get_seq;
+	print "\n\n==============================================================================\n----> $s\n";
+	warn "Sequence discontinuity, expecting $seq, jumped to $s instead" unless $seq == $s;
+	$seq = $s;
+	$stage = 1;
+}
+
+sub seq_response {
+	my $s = get_seq;
+	print "<---- $s\n";
+	warn "Sequence mismatch, got response $s to request $seq" unless $seq == $s;
+	$seq++;
+	$stage = 0;
+}
+
+# are we expecting to get send/receive some data at this moment?
+sub data_expected {
+	return 1 if $ep eq "01" and $stage == 1;
+	return 1 if $ep eq "81" and $stage == 0;
+	return 1 if $ep eq "82" and $stage == 0;
+	return 0;
+}
+
 sub handle_bulk {
 	my ($label) = @_;
 
@@ -136,14 +179,12 @@ sub handle_bulk {
 
 	# check which endpoint
 	next_line;
-	my $ep = get_endpoint;
+	$ep = get_endpoint;
 	return next_block unless is_valid $ep;
-	print "      $label: $ep\n";
 
 	# ignore next four lines
 	next_line;
 	return next_block unless looking_at "TransferFlags";
-	# extract dir, compare to ep
 
 	next_line;
 	return next_block unless looking_at "TransferBufferLength";
@@ -157,33 +198,21 @@ sub handle_bulk {
 
 	# handle any data transfers
 	next_line;
-	while (looking_at "^    0") {
-		$line[0] =~ m/^ +[0-9a-f]{8}: (.*)/;
-		print "            $1\n";
-		next_line;
+	if (data_expected) {
+		my @data;
+		while (looking_at "^    0") {
+			current_line =~ m/^ +[0-9a-f]{8}: (.*)/;
+			push @data, $1;
+			next_line;
+		}
+		while (defined $data[0]) {
+			print "      " . label . ": $data[0]\n";
+			shift @data;
+		}
 	}
 
 	return next_block unless looking_at "UrbLink";
 }
-
-# sequence number of current swap
-my $seq = 1;
-
-sub seq_request {
-	my $s = get_seq;
-	print "\n\n==============================================================================\n----> $s\n";
-	warn "Sequence discontinuity, expecting $seq, jumped to $s instead" unless $seq == $s;
-	$seq = $s;
-}
-
-sub seq_response {
-	my $s = get_seq;
-	print "<---- $s\n";
-	warn "Sequence mismatch, got response $s to request $seq" unless $seq == $s;
-	$seq++;
-}
-
-
 
 # process the contents of the log file
 sub process_log_file {
