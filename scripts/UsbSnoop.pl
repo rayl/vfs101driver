@@ -205,6 +205,9 @@ sub handle_bulk {
 			push @data, $1;
 			next_line;
 		}
+		unless (defined $data[0]) {
+			print "      " . label . ": \n" if label eq "LOAD";
+		}
 		while (defined $data[0]) {
 			print "      " . label . ": $data[0]\n";
 			shift @data;
