@@ -356,7 +356,7 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
      00 00 11 00      Spare4
      00 00 12 00    - Peek
      00 00 13 00    - Poke
-     00 00 14 00      SensorSpiTrans
+     00 00 14 00    - SensorSpiTrans
      00 00 15 00      SensorGPIO
      00 00 16 00    - GetFingerState 
 */
@@ -501,6 +501,24 @@ static int Poke (struct vfs_dev *dev, unsigned int addr, unsigned int value, uns
 	q1[14] = b0(size);
 	_();
 	return swap (dev, q1, 0x0f);
+}
+
+/* SensorSpiTrans (00 00 14 00)
+ *
+ *  ???
+ */
+static int SensorSpiTrans (struct vfs_dev *dev, unsigned char p1, unsigned char p2, unsigned char p3, unsigned char p4, unsigned char p5, unsigned char p6, unsigned char p7)
+{
+	unsigned char q1[0x0d] = { 0x00, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	q1[6]  = p1;
+	q1[7]  = p2;
+	q1[8]  = p3;
+	q1[9]  = p4;
+	q1[10] = p5;
+	q1[11] = p6;
+	q1[12] = p7;
+	_();
+	return swap (dev, q1, 0x0d);
 }
 
 /* GetFingerState (00 00 16 00)

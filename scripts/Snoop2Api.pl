@@ -156,6 +156,11 @@ sub fmt_Poke {
 	", 0x$4$3$2$1, 0x$8$7$6$5, 0x$9";
 }
 
+sub fmt_SensorSpiTrans {
+	$_[0] =~ m/14 00 (..) (..) (..) (..) (..) (..) (..)$/;
+	", 0x$1, 0x$2, 0x$3, 0x$4, 0x$5, 0x$6, 0x$7";
+}
+
 my @fmt = (undef,
 	[ \&fmt_none,		3 ],	#  Reset
 	[ \&fmt_none,		4 ],	#  GetVersion
@@ -176,7 +181,7 @@ my @fmt = (undef,
 	[ \&fmt_unknown,	3 ],	#  Spare4
 	[ \&fmt_Peek,		2 ],	#  Peek
 	[ \&fmt_Poke,		1 ],	#  Poke
-	[ \&fmt_unknown,	2 ],	#  SensorSpiTrans
+	[ \&fmt_SensorSpiTrans,	2 ],	#  SensorSpiTrans
 	[ \&fmt_unknown,	3 ],	#  SensorGPIO
 	[ \&fmt_none,		3 ],	#  GetFingerState
 );
