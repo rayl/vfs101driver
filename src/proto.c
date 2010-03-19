@@ -547,6 +547,12 @@ static int LoadImage (struct vfs_dev *dev)
 	return r;
 }
 
+static void check_result (struct vfs_dev *dev, int n)
+{
+	// look up result n in result table
+	// compare to dev->buf, dev->len
+}
+
 #undef _
 
 
@@ -631,6 +637,7 @@ const unsigned int VFS_TEST = 0x00FF9800;
 /* A shorthand for checking return codes */
 static int r;
 #define _(x) if ((r = x) != 0) return r
+#define __(n, x) if ((r = x) != 0) return r; check_result(dev,n)
 
 static int check_finger (struct vfs_dev *dev, int n)
 {
