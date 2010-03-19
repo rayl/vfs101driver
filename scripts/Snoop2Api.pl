@@ -179,11 +179,11 @@ my @fmt = (undef,
 	[ \&fmt_unknown,	3 ],	#  Spare2
 	[ \&fmt_unknown,	3 ],	#  Spare3
 	[ \&fmt_unknown,	3 ],	#  Spare4
-	[ \&fmt_Peek,		2 ],	#  Peek
+	[ \&fmt_Peek,		3 ],	#  Peek
 	[ \&fmt_Poke,		1 ],	#  Poke
 	[ \&fmt_SensorSpiTrans,	2 ],	#  SensorSpiTrans
 	[ \&fmt_unknown,	3 ],	#  SensorGPIO
-	[ \&fmt_none,		3 ],	#  GetFingerState
+	[ \&fmt_none,		4 ],	#  GetFingerState
 );
 
 sub dump_args {
@@ -197,7 +197,7 @@ sub n_tabs {
 sub dump_send {
 	my $packet = strip grab "SEND";
 	$cmd = cmd_id $packet;
-	print "	_(  " . cmd_name($packet) . " (dev" . dump_args($packet)->($packet) . "));";
+	print "_(    " . cmd_name($packet) . " (dev" . dump_args($packet)->($packet) . "));";
 }
 
 sub dump_recv {
@@ -209,17 +209,18 @@ sub dump_recv {
 
 sub dump_load {
 	drop "LOAD";
-	print "	_(  LoadImage (dev));\n"
+	print "           _(    LoadImage (dev));\n"
 }
 
 my $timestamp = 0;
 
 sub dump_time {
 	my ($t) = next_line;
+	$t =~ m/^TIME: (\d+) (\d+)/;
+	printf "/* %05d */", $2;
 	return;
-	$t =~ s/^TIME: //;
-	if ($t > $timestamp) {
-		print "	usleep(" . (($t - $timestamp) * 1000) . ");\t\t\t\t\t// $t ms\n";
+	if ($1 > $timestamp) {
+		print "usleep(" . (($t - $timestamp) * 1000) . ");\t\t\t\t\t// $t ms\n";
 		$timestamp = $t;
 	}
 }

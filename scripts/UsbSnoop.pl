@@ -212,7 +212,7 @@ sub handle_bulk {
 			next_line;
 		}
 		if (defined $data[0]) {
-			print "TIME: $timestamp\n" if label eq "SEND";
+			print "TIME: $timestamp $seq\n" if label eq "SEND";
 		} else {
 			print label . ": \n" if label eq "LOAD";
 		}
