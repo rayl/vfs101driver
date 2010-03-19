@@ -391,6 +391,7 @@ static int GetVersion (struct vfs_dev *dev)
  */
 static unsigned char type_0[6] = "\x00\x01\x00\x00\x00\x01";
 static unsigned char type_1[6] = "\x01\x00\x00\x00\x01\x01";
+static unsigned char type_2[6] = "\x00\x00\x00\x00\x00\x01";
 static int GetPrint (struct vfs_dev *dev, int count, unsigned char args[6])
 {
 	unsigned char q1[0x0e] = { 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
