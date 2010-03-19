@@ -206,6 +206,7 @@ my $timestamp = 0;
 
 sub dump_time {
 	my ($t) = next_line;
+	return;
 	$t =~ s/^TIME: //;
 	if ($t > $timestamp) {
 		print "	usleep(" . (($t - $timestamp) * 1000) . ");\t\t\t\t\t// $t ms\n";
