@@ -127,8 +127,13 @@ sub fmt_unknown {
 }
 
 sub fmt_GetPrint {
-	my ($packet) = @_;
-	", COUNT, type_X"
+	my %type = (
+		"00 01 00 00 00 01" => "type_0",
+		"01 00 00 00 01 01" => "type_1",
+		"00 00 00 00 00 01" => "type_2",
+	);
+	$_[0] =~ m/03 00 (..) (..) (.. .. .. .. .. ..)$/;
+	", 0x$2$1, " . ($type{$3} or "type_X");
 }
 
 sub fmt_GetParam {
