@@ -29,17 +29,23 @@ use warnings;
 
 # All lines from the preprocessed tracefile. The current line being processed
 # sits on the top of the array and is popped off when processing is complete.
+my $curr = 0;
 my @line;
 chomp(@line = <>);
 
 # return the current line
 sub current_line {
-	$line[0]
+	$line[$curr]
 }
 
 # go to next line, returning the current one
 sub next_line {
-	shift @line
+	$line[$curr++]
+}
+
+# go back to the start of the input file
+sub first_line {
+	$curr = 0
 }
 
 # are there any lines left to process?
