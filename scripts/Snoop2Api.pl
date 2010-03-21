@@ -220,40 +220,50 @@ sub fmt_args {
 #-----------------------------------------------------------------------------------
 
 my $seq;
+my $max_seq = -1;
 my $last_cmd;
 
 
 sub dump_send_1 {
 	my $packet = strip grab "SEND";
 	$last_cmd = cmd_id $packet;
-	print "_(  " . cmd_name($packet) . " (dev" . fmt_args($packet)->($packet) . "));\n";
+	print "\t_(  " . cmd_name($packet) . " (dev" . fmt_args($packet)->($packet) . "));\n";
 }
 
 sub dump_send_2 {
 	my $packet = strip grab "SEND";
 	$last_cmd = cmd_id $packet;
-	printf "__(%5d,    " . cmd_name($packet) . " (dev" . fmt_args($packet)->($packet) . "));\n", $seq;
+	printf "\t__(%5d,    " . cmd_name($packet) . " (dev" . fmt_args($packet)->($packet) . "));\n", $seq;
 }
 
-sub dump_recv {
+sub dump_send_3 {
+	my $packet = strip grab "SEND";
+	$last_cmd = cmd_id $packet;
+}
+
+sub dump_recv_3 {
 	my $packet = strip grab "RECV";
 	warn "Response type mismatch..." unless $last_cmd == cmd_id $packet;
+	my @p2 = split /\s+/, $packet;
+	my $p2 = join "\\x", @p2;
+	printf "\t[ %5d ] = { %3d, \"\\x$p2\" },\n", $seq, $#p2+1;
 }
 
 sub dump_load_1 {
 	drop "LOAD";
-	print "_(  LoadImage (dev));\n";
+	print "\t_(  LoadImage (dev));\n";
 }
 
 sub dump_load_2 {
 	drop "LOAD";
-	printf "__(%5d,    LoadImage (dev));\n", $seq;
+	printf "\t__(%5d,    LoadImage (dev));\n", $seq;
 }
 
-sub dump_time_2 {
+sub dump_time {
 	my ($t) = next_line;
 	$t =~ m/^TIME: (\d+) (\d+)/;
 	$seq = $2;
+	$max_seq = $seq if $seq > $max_seq;
 }
 
 sub output_unchecked {
@@ -285,7 +295,7 @@ sub output_checked {
 		dump_load_2;
 
 	} elsif (looking_at "TIME") {
-		dump_time_2;
+		dump_time;
 
 	} else {
 		warn next_line;
@@ -293,6 +303,21 @@ sub output_checked {
 }
 
 sub output_results {
+	if (looking_at "SEND") {
+		dump_send_3;
+
+	} elsif (looking_at "RECV") {
+		dump_recv_3;
+
+	} elsif (looking_at "LOAD") {
+		next_line;
+
+	} elsif (looking_at "TIME") {
+		dump_time;
+
+	} else {
+		warn next_line;
+	}
 }
 
 sub process_1 {
@@ -301,9 +326,26 @@ sub process_1 {
 }
 
 sub process_file {
+
+	print "int PREFIX_unchecked (struct vfs_dev *dev)\n";
+	print "{\n";
 	process_1 \&output_unchecked;
+	print "\treturn 0;\n";
+	print "}\n";
+
+	print "int PREFIX_checked (struct vfs_dev *dev)\n";
+	print "{\n";
 	process_1 \&output_checked;
-	#process_1 \&output_results;
+	print "\treturn 0;\n";
+	print "}\n";
+
+	print "struct result_table PREFIX_results =\n";
+	print "{\n";
+	print "\t$max_seq,\n";
+	print "\t{\n";
+	process_1 \&output_results;
+	print "\t}\n";
+	print "};\n";
 }
 
 process_file;
