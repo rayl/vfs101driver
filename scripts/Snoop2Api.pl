@@ -23,6 +23,10 @@ use strict;
 use warnings;
 
 
+#-----------------------------------------------------------------------------------
+# Input file handling
+#-----------------------------------------------------------------------------------
+
 # All lines from the preprocessed tracefile. The current line being processed
 # sits on the top of the array and is popped off when processing is complete.
 my @line;
@@ -48,7 +52,16 @@ sub looking_at {
 	more_lines and current_line =~ m/$_[0]/
 }
 
+# skip over all lines matching a pattern
+sub drop {
+	next_line while looking_at $_[0];
+}
 
+
+
+#-----------------------------------------------------------------------------------
+# Input file handling
+#-----------------------------------------------------------------------------------
 
 # a table of command names, indexed by command id
 my @cmd = (undef, qw(
@@ -92,9 +105,9 @@ sub is_cmd {
 
 
 
-sub drop {
-	next_line while looking_at $_[0];
-}
+#-----------------------------------------------------------------------------------
+# Input file handling
+#-----------------------------------------------------------------------------------
 
 sub grab {
 	my ($type) = @_;
@@ -116,7 +129,11 @@ sub strip {
 	$line;
 }
 
-my $cmd;
+
+
+#-----------------------------------------------------------------------------------
+# Argument list formatters for SEND output routine
+#-----------------------------------------------------------------------------------
 
 sub fmt_none {
 	""
@@ -133,7 +150,7 @@ sub fmt_GetPrint {
 		"00 00 00 00 00 01" => "type_2",
 	);
 	$_[0] =~ m/03 00 (..) (..) (.. .. .. .. .. ..)$/;
-	", 0x$2$1, " . ($type{$3} or "type_X");
+	", 0x$2$1, " . ($type{$3} or "type_UNKNOWN($3)");
 }
 
 sub fmt_GetParam {
@@ -186,29 +203,36 @@ my @fmt = (undef,
 	\&fmt_none,	#  GetFingerState
 );
 
-sub dump_args {
+sub fmt_args {
 	$fmt[cmd_id $_[0]] or fmt_unknown
 }
 
+
+
+#-----------------------------------------------------------------------------------
+# Produce output file from input array
+#-----------------------------------------------------------------------------------
+
 my $seq;
+my $last_cmd;
+my $timestamp = 0;
+
 
 sub dump_send {
 	my $packet = strip grab "SEND";
-	$cmd = cmd_id $packet;
-	printf "__(%5d,    " . cmd_name($packet) . " (dev" . dump_args($packet)->($packet) . "));\n", $seq;
+	$last_cmd = cmd_id $packet;
+	printf "__(%5d,    " . cmd_name($packet) . " (dev" . fmt_args($packet)->($packet) . "));\n", $seq;
 }
 
 sub dump_recv {
 	my $packet = strip grab "RECV";
-	warn "Response type mismatch..." unless $cmd == cmd_id $packet;
+	warn "Response type mismatch..." unless $last_cmd == cmd_id $packet;
 }
 
 sub dump_load {
 	drop "LOAD";
 	printf "__(%5d,    LoadImage (dev));\n", $seq;
 }
-
-my $timestamp = 0;
 
 sub dump_time {
 	my ($t) = next_line;
@@ -221,7 +245,7 @@ sub dump_time {
 	}
 }
 
-sub process_file {
+sub output_unchecked {
 
 	while (more_lines) {
 
@@ -239,6 +263,19 @@ sub process_file {
 
 		}
 	}
+}
+
+sub output_checked {
+}
+
+sub output_results {
+}
+
+
+sub process_file {
+	output_unchecked;
+	output_checked;
+	output_results;
 }
 
 process_file;
