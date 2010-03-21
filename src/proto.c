@@ -35,6 +35,8 @@ const unsigned int N_PKTS = 16;
 /******************************************************************************************************
  * Context structure for this driver.
  */
+struct result_table;
+
 struct vfs_dev {
 	/* context object for libusb library */
 	struct libusb_context *ctx;
@@ -53,6 +55,9 @@ struct vfs_dev {
 	unsigned char ibuf[1024*1024];
 	int ilen;
 	int inum;
+
+	/* current UsbSnoop results to check against */
+	struct result_table *results;
 };
 
 
@@ -629,6 +634,38 @@ const unsigned int VFS_TEST = 0x00FF9800;
 
 
 /******************************************************************************************************
+ * Result checking framework.
+ */
+
+/* Result from a single API command when executed on Windows */
+struct result {
+	int len;
+	unsigned char *data;
+};
+
+/* All results from a single UsbSnoop.log file */
+struct result_table {
+	int n;
+	struct result r[];
+};
+
+/* Look up a result in the result table by URB number */
+struct result * res_get (struct result_table *r, int n)
+{
+	if (n < 0) return NULL;
+	if (n > r->n) return NULL;
+	if (r->r[n].data == NULL) return NULL;
+	return &r->r[n];
+}
+
+static void res_check (struct vfs_dev *dev, int n)
+{
+	struct result *r = res_get(dev->results,n);
+	printf("Check %d -> %d\n", n, r ? r->len : -1);
+}
+
+
+/******************************************************************************************************
  * Cycle routines
  *
  * Each routine is a particular testcase, selectable from the command line.
@@ -637,7 +674,7 @@ const unsigned int VFS_TEST = 0x00FF9800;
 /* A shorthand for checking return codes */
 static int r;
 #define _(x) if ((r = x) != 0) return r
-#define __(n, x) if ((r = x) != 0) return r; check_result(dev,n)
+#define __(n, x) if ((r = x) != 0) return r; res_check(dev,n)
 
 static int check_finger (struct vfs_dev *dev, int n)
 {
