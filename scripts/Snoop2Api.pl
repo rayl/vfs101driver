@@ -249,14 +249,31 @@ sub dump_recv_3 {
 	printf "\t[ %5d ] = { %3d, \"\\x$p2\" },\n", $seq, $#p2+1;
 }
 
+sub dump_pnm {
+	my $img = grab "LOAD";
+	return unless length $img;
+	my @img = map { hex $_ } split " ", $img;
+	my $n = $#img + 1;
+	warn "bad img len $n" if $n % 292;
+	my $y = $n / 292;
+	open PNM, sprintf ">img2/%05d.pnm", $seq;
+	print PNM "P2\n292 $y\n256\n";
+	while ($#img >= 291) {
+		my (@i) = splice(@img, 0, 292);
+		print PNM join " ", map {sprintf "%3d", $_ } @i;
+		print PNM "\n";
+	}
+	close PNM;
+}
+
 sub dump_load_1 {
-	drop "LOAD";
 	print "\t_(  LoadImage (dev));\n";
+	drop "LOAD";
 }
 
 sub dump_load_2 {
-	drop "LOAD";
 	print "\t _(          LoadImage (dev));\n";
+	dump_pnm;
 }
 
 sub dump_time {
