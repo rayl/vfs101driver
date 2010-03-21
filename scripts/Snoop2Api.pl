@@ -162,36 +162,32 @@ sub fmt_SensorSpiTrans {
 }
 
 my @fmt = (undef,
-	[ \&fmt_none,		3 ],	#  Reset
-	[ \&fmt_none,		4 ],	#  GetVersion
-	[ \&fmt_GetPrint,	2 ],	#  GetPrint
-	[ \&fmt_GetParam,	3 ],	#  GetParam
-	[ \&fmt_SetParam,	2 ],	#  SetParam
-	[ \&fmt_none,		4 ],	#  GetConfig
-	[ \&fmt_unknown,	3 ],	#  DownloadPatch
-	[ \&fmt_unknown,	3 ],	#  GetRateData
-	[ \&fmt_unknown,	3 ],	#  IspRequest
-	[ \&fmt_unknown,	3 ],	#  ProgramFlash
-	[ \&fmt_unknown,	3 ],	#  EraseFlash
-	[ \&fmt_unknown,	3 ],	#  LedStates
-	[ \&fmt_unknown,	3 ],	#  LedEvent
-	[ \&fmt_none,		4 ],	#  AbortPrint
-	[ \&fmt_unknown,	3 ],	#  Spare2
-	[ \&fmt_unknown,	3 ],	#  Spare3
-	[ \&fmt_unknown,	3 ],	#  Spare4
-	[ \&fmt_Peek,		3 ],	#  Peek
-	[ \&fmt_Poke,		1 ],	#  Poke
-	[ \&fmt_SensorSpiTrans,	2 ],	#  SensorSpiTrans
-	[ \&fmt_unknown,	3 ],	#  SensorGPIO
-	[ \&fmt_none,		4 ],	#  GetFingerState
+	\&fmt_none,	#  Reset
+	\&fmt_none,	#  GetVersion
+	\&fmt_GetPrint,	#  GetPrint
+	\&fmt_GetParam,	#  GetParam
+	\&fmt_SetParam,	#  SetParam
+	\&fmt_none,	#  GetConfig
+	\&fmt_unknown,	#  DownloadPatch
+	\&fmt_unknown,	#  GetRateData
+	\&fmt_unknown,	#  IspRequest
+	\&fmt_unknown,	#  ProgramFlash
+	\&fmt_unknown,	#  EraseFlash
+	\&fmt_unknown,	#  LedStates
+	\&fmt_unknown,	#  LedEvent
+	\&fmt_none,	#  AbortPrint
+	\&fmt_unknown,	#  Spare2
+	\&fmt_unknown,	#  Spare3
+	\&fmt_unknown,	#  Spare4
+	\&fmt_Peek,	#  Peek
+	\&fmt_Poke,	#  Poke
+	\&fmt_SensorSpiTrans,	#  SensorSpiTrans
+	\&fmt_unknown,	#  SensorGPIO
+	\&fmt_none,	#  GetFingerState
 );
 
 sub dump_args {
-	$fmt[cmd_id $_[0]]->[0] or fmt_unknown
-}
-
-sub n_tabs {
-	$fmt[cmd_id $_[0]]->[1] or 4
+	$fmt[cmd_id $_[0]] or fmt_unknown
 }
 
 my $seq;
@@ -199,14 +195,12 @@ my $seq;
 sub dump_send {
 	my $packet = strip grab "SEND";
 	$cmd = cmd_id $packet;
-	printf "__(%5d,    " . cmd_name($packet) . " (dev" . dump_args($packet)->($packet) . "));", $seq;
+	printf "__(%5d,    " . cmd_name($packet) . " (dev" . dump_args($packet)->($packet) . "));\n", $seq;
 }
 
 sub dump_recv {
 	my $packet = strip grab "RECV";
 	warn "Response type mismatch..." unless $cmd == cmd_id $packet;
-	print "\t" x n_tabs($packet);
-	print "// expect: \"$packet\"\n";
 }
 
 sub dump_load {
