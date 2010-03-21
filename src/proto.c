@@ -990,6 +990,14 @@ static int test (struct vfs_dev *dev)
 	return 0;	
 }
 
+/* Try out the result checking code */
+#include "all.h"
+static int all (struct vfs_dev *dev)
+{
+	dev->results = &PREFIX_results;
+	return PREFIX_checked(dev);
+}
+
 #undef _
 
 
@@ -1014,6 +1022,7 @@ static cycle_func func (const char *id)
 		_(4, validity_cycle4);
 		_(reset, reset);
 		_(test, test);
+		_(all, all);
 	}
 	return validity_cycle;
 #undef _
