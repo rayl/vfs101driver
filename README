@@ -1,0 +1,32 @@
+
+Some tools to examine Validity VFS101 sensors.
+
+To use this, you need:
+ - Machine with a VFS101 fingerprint reader
+ - Windows
+ - UsbSnoop
+
+Boot up under windows, install UsbSnoop, and monitor the biometric
+device. Go to Services, stop the DigitalPersona and Validity services,
+then restart them.  Swipe a few fingerprints, then save the UsbSnoop
+log as UsbSnoop.log.
+
+Boot up under Linux, copy UsbSnoop.log into this folder, and do this:
+
+ $ cat UsbSnoop.log | ./scripts/UsbSnoop.pl > UsbSnoop.txt
+ $ mkdir img2
+ $ cat UsbSnoop.txt | ./scripts/Snoop2Api.pl > src/mine.h
+ $ gwenview img2
+
+ $ vi src/proto.c
+    ... hook up mine.h, see commit a2fa7c94ee26d233a259fd84538338c7f6b114b1
+    ... you will need to rename PREFIX_ to something else
+ $ make
+ $ mkdir img img/A img/B img/C img/D img/X
+ $ ./bin/proto mine > mine.out
+
+This should produce:
+  - a logfile of Linux vs Windows USB transactions in mine.out
+  - PNM images of Linux scans under img
+  - PNM images of Windows scans under img2
+
