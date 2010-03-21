@@ -298,7 +298,6 @@ static int recv(struct vfs_dev *dev)
 	if ((b0(dev->seq) != dev->buf[0]) || (b1(dev->seq) != dev->buf[1])) {
 		fprintf(stderr, "*********** Seqnum mismatch, got %04x, expected %04x\n", xx(dev->buf[1],dev->buf[0]), dev->seq);
 	}
-	fprintf(stdout, "\n");
 
 	dev->seq++;
 
@@ -366,7 +365,7 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
      00 00 16 00    - GetFingerState 
 */
 
-#define _() fprintf(stdout, "%s\n", __FUNCTION__)
+#define _() fprintf(stdout, "\n> %s\n", __FUNCTION__)
 
 /* Reset (00 00 01 00)
  *
@@ -552,12 +551,6 @@ static int LoadImage (struct vfs_dev *dev)
 	return r;
 }
 
-static void check_result (struct vfs_dev *dev, int n)
-{
-	// look up result n in result table
-	// compare to dev->buf, dev->len
-}
-
 #undef _
 
 
@@ -661,7 +654,13 @@ struct result * res_get (struct result_table *r, int n)
 static void res_check (struct vfs_dev *dev, int n)
 {
 	struct result *r = res_get(dev->results,n);
-	printf("Check %d -> %d\n", n, r ? r->len : -1);
+
+	if (r == NULL) {
+		printf("  !!!! no result to check against! !!!!\n");
+
+	} else if ((r->len != dev->len - 4) || (memcmp(r->data, dev->buf+4, dev->len-4) != 0)) {
+		dump_packet(r->data, r->len, "  XXXX            ");
+	}
 }
 
 
