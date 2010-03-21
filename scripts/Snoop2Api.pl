@@ -256,7 +256,7 @@ sub dump_load_1 {
 
 sub dump_load_2 {
 	drop "LOAD";
-	printf "\t__(%5d,    LoadImage (dev));\n", $seq;
+	print "\t _(          LoadImage (dev));\n";
 }
 
 sub dump_time {
