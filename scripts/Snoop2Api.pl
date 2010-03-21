@@ -221,10 +221,15 @@ sub fmt_args {
 
 my $seq;
 my $last_cmd;
-my $timestamp = 0;
 
 
-sub dump_send {
+sub dump_send_1 {
+	my $packet = strip grab "SEND";
+	$last_cmd = cmd_id $packet;
+	print "_(  " . cmd_name($packet) . " (dev" . fmt_args($packet)->($packet) . "));\n";
+}
+
+sub dump_send_2 {
 	my $packet = strip grab "SEND";
 	$last_cmd = cmd_id $packet;
 	printf "__(%5d,    " . cmd_name($packet) . " (dev" . fmt_args($packet)->($packet) . "));\n", $seq;
@@ -235,53 +240,70 @@ sub dump_recv {
 	warn "Response type mismatch..." unless $last_cmd == cmd_id $packet;
 }
 
-sub dump_load {
+sub dump_load_1 {
+	drop "LOAD";
+	print "_(  LoadImage (dev));\n";
+}
+
+sub dump_load_2 {
 	drop "LOAD";
 	printf "__(%5d,    LoadImage (dev));\n", $seq;
 }
 
-sub dump_time {
+sub dump_time_2 {
 	my ($t) = next_line;
 	$t =~ m/^TIME: (\d+) (\d+)/;
 	$seq = $2;
-	return;
-	if ($1 > $timestamp) {
-		print "usleep(" . (($t - $timestamp) * 1000) . ");\t\t\t\t\t// $t ms\n";
-		$timestamp = $t;
-	}
 }
 
 sub output_unchecked {
+	if (looking_at "SEND") {
+		dump_send_1;
 
-	while (more_lines) {
+	} elsif (looking_at "RECV") {
+		next_line;
 
-		if (looking_at "SEND") {
-			dump_send;
+	} elsif (looking_at "LOAD") {
+		dump_load_1;
 
-		} elsif (looking_at "RECV") {
-			dump_recv;
+	} elsif (looking_at "TIME") {
+		next_line;
 
-		} elsif (looking_at "LOAD") {
-			dump_load;
-
-		} elsif (looking_at "TIME") {
-			dump_time;
-
-		}
+	} else {
+		warn next_line;
 	}
 }
 
 sub output_checked {
+	if (looking_at "SEND") {
+		dump_send_2;
+
+	} elsif (looking_at "RECV") {
+		next_line;
+
+	} elsif (looking_at "LOAD") {
+		dump_load_2;
+
+	} elsif (looking_at "TIME") {
+		dump_time_2;
+
+	} else {
+		warn next_line;
+	}
 }
 
 sub output_results {
 }
 
+sub process_1 {
+	first_line;
+	&{$_[0]} while more_lines;
+}
 
 sub process_file {
-	output_unchecked;
-	output_checked;
-	output_results;
+	process_1 \&output_unchecked;
+	process_1 \&output_checked;
+	#process_1 \&output_results;
 }
 
 process_file;
