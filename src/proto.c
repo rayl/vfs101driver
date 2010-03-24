@@ -1005,6 +1005,24 @@ static int all (struct vfs_dev *dev)
 	return PREFIX_checked(dev);
 }
 
+/* first working version */
+#include "state0.h"
+#include "state1.h"
+#include "state2.h"
+static int woot (struct vfs_dev *dev)
+{
+	S0_unchecked(dev);
+	dev->results = &S1_results;
+	S1_checked(dev);
+	while (1) {
+		int i;
+		while ((i = GetFingerState(dev)) != 2)
+			usleep(50000);
+		dev->results = &S2_results;
+		S2_checked(dev);
+	}
+}
+
 #undef _
 
 
@@ -1030,6 +1048,7 @@ static cycle_func func (const char *id)
 		_(reset, reset);
 		_(test, test);
 		_(all, all);
+		_(woot, woot);
 	}
 	return validity_cycle;
 #undef _
