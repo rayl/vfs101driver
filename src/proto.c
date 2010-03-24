@@ -998,7 +998,7 @@ static int test (struct vfs_dev *dev)
 }
 
 /* Try out the result checking code */
-#include "all.h"
+#include "logs/20100315-0835-rayl.h"
 static int all (struct vfs_dev *dev)
 {
 	dev->results = &PREFIX_results;
