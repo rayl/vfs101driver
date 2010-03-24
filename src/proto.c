@@ -1050,7 +1050,7 @@ static cycle_func func (const char *id)
 		_(all, all);
 		_(woot, woot);
 	}
-	return validity_cycle;
+	return woot;
 #undef _
 }
 
