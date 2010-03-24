@@ -208,7 +208,7 @@ static void dump_pnm_1 (struct vfs_dev *dev, unsigned char dir, int offset, int 
 	FILE *pnm;
 	int i;
 
-	sprintf(name, "img/%c/out-%03d-%02x.%s", dir, dev->inum, dev->inum, dev->ilen ? "pnm" : "pnmx");
+	sprintf(name, "img/%c/out-%03d-%02x.%s", dir, dev->inum, dev->inum, dev->ilen ? "pnm" : "pnm");
 
 	pnm = fopen(name, "w");
 
