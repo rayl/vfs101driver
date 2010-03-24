@@ -652,6 +652,7 @@ struct result_table {
 struct result * res_get (struct result_table *r, int n)
 {
 	if (n < 0) return NULL;
+	if (r == NULL) return NULL;
 	if (n > r->n) return NULL;
 	if (r->r[n].data == NULL) return NULL;
 	return &r->r[n];
