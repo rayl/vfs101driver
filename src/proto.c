@@ -58,6 +58,9 @@ struct vfs_dev {
 
 	/* current UsbSnoop results to check against */
 	struct result_table *results;
+
+	/* should we mask personal information? */
+	int anonymous;
 };
 
 
@@ -167,16 +170,20 @@ static int dump_frame (unsigned char *data, int length, int n)
 	return skip + PKTSIZE;
 }
 
-static void dump_image (unsigned char *data, int length)
+static void dump_image (struct vfs_dev *dev)
 {
 	int f = 0;
+	unsigned char *data = dev->ibuf;
+	int length = dev->ilen;
 
 	fprintf(stdout, "  %d packets in %d bytes%s\n", length/PKTSIZE, length, (length%PKTSIZE) ? " (incomplete packet(s)?)" : "");
 
-	while (length > 0) {
-		int n = dump_frame(data, length, f++);
-		data += n;
-		length -= n;
+	if (!dev->anonymous) {
+		while (length > 0) {
+			int n = dump_frame(data, length, f++);
+			data += n;
+			length -= n;
+		}
 	}
 
 	fprintf(stdout, "\n");
@@ -244,6 +251,7 @@ static void dump_pnm_1 (struct vfs_dev *dev, unsigned char dir, int offset, int 
 
 static void dump_pnm (struct vfs_dev *dev)
 {
+	if (dev->anonymous) return;
 	dump_pnm_1(dev, 'X',   0, 292);
 	dump_pnm_1(dev, 'A',   0, 206);
 	dump_pnm_1(dev, 'B', 206,  40);
@@ -551,7 +559,7 @@ static int LoadImage (struct vfs_dev *dev)
 	_();
 	r = load(dev, dev->ibuf, &dev->ilen);
 	if (r == 0) {
-		dump_image(dev->ibuf, dev->ilen);
+		dump_image(dev);
 		dump_pnm(dev);
 	}
 	return r;
@@ -1063,6 +1071,10 @@ int main (int argc, char **argv)
 	int r = 1;
 
 	dev->seq = 0;
+	dev->anonymous = 1;
+
+	if ((argc > 2) && (strcmp(argv[2], "personal") == 0))
+		dev->anonymous = 0;
 
 	r = libusb_init(&dev->ctx);
 	if (r < 0) {
