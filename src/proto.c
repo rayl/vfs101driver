@@ -365,7 +365,8 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
      00 00 16 00    - GetFingerState 
 */
 
-#define _() fprintf(stdout, "\n> %s\n", __FUNCTION__)
+static int _cmd_no = -1;
+#define _() fprintf(stdout, "\n> %s (%d)\n", __FUNCTION__,_cmd_no); _cmd_no=-1
 
 /* Reset (00 00 01 00)
  *
@@ -673,7 +674,7 @@ static void res_check (struct vfs_dev *dev, int n)
 /* A shorthand for checking return codes */
 static int r;
 #define _(x) if ((r = x) != 0) return r
-#define __(n, x) if ((r = x) != 0) return r; res_check(dev,n)
+#define __(n, x) _cmd_no=n; if ((r = x) != 0) return r; res_check(dev,n)
 
 static int check_finger (struct vfs_dev *dev, int n)
 {
