@@ -212,6 +212,11 @@ static void dump_pnm_1 (struct vfs_dev *dev, unsigned char dir, int offset, int 
 
 	pnm = fopen(name, "w");
 
+	if (pnm == NULL) {
+		printf("Can't create image file: %s\n", name);
+		return;
+	}
+
 	fprintf(pnm, "P2\n%d %d\n256\n", len, (length/PKTSIZE)+10);
 
 	
