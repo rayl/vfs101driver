@@ -748,11 +748,11 @@ typedef int (*cycle_func)(struct vfs_dev *);
 
 static cycle_func func (const char *id)
 {
-#define _(x,f) if (strcmp(id, #x) == 0) return f
+#define _(x) if (strcmp(id, #x) == 0) return x
 	if (id != NULL) {
-		_(reset, reset);
-		_(test, test);
-		_(woot, woot);
+		_(reset);
+		_(test);
+		_(woot);
 	}
 	return woot;
 #undef _
