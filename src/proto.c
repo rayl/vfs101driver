@@ -112,32 +112,36 @@ static int dump_frame_1 (unsigned char *d, int n)
 	int i;
 
 	fprintf(stdout, "\n  ---------------------------- Packet %05d -----------------------------\n", n);
-	d += dump_packet(d,  4, "  HDR 1: ");
+	d += dump_packet(d,  2, "  Line type       ");
+	d += dump_packet(d,  2, "  Sequence        ");
+	d += dump_packet(d,  2, "  ???             ");
 	fprintf(stdout, "\n");
 
-	d += dump_packet(d,  2, "  IMG A:       ");
-	d += dump_packet(d, 16, "               ");
+	d += dump_packet(d, 16, "  Fingerprint A   ");
 	for (i=1; i<12; i++)
-		d += dump_packet(d, 16, "               ");
-	d += dump_packet(d, 8, "               ");
+		d += dump_packet(d, 16, "                  ");
+	d += dump_packet(d,  8, "                  ");
 	fprintf(stdout, "\n");
 
-	d += dump_packet(d,  2, "  HDR 2: ");
+	d += dump_packet(d,  2, "  ???             ");
 	fprintf(stdout, "\n");
 
-	d += dump_packet(d, 16, "  IMG B:       ");
-	d += dump_packet(d, 16, "               ");
-	d += dump_packet(d,  6, "               ");
+	d += dump_packet(d, 16, "  IMG B           ");
+	d += dump_packet(d, 16, "                  ");
+	d += dump_packet(d,  6, "                  ");
+	d += dump_packet(d, 16, "  IMG C           ");
+	d += dump_packet(d, 10, "                  ");
 	fprintf(stdout, "\n");
 
-	d += dump_packet(d, 16, "  IMG C:       ");
-	d += dump_packet(d, 10, "               ");
+	d += dump_packet(d,  4, "  Constant        ");
+	d += dump_packet(d,  2, "  Sequence'       ");
 	fprintf(stdout, "\n");
 
-	d += dump_packet(d,  4, "  HDR 3: ");
-	fprintf(stdout, "\n");
-
-	d += dump_packet(d, 16, "  IMG D:       ");
+	d += dump_packet(d,  1, "  S_curr_state    ");
+	d += dump_packet(d,  1, "  S_next_state    ");
+	d += dump_packet(d,  2, "  S_count         ");
+	d += dump_packet(d,  2, "  S_level         ");
+	d += dump_packet(d,  8, "  ???             ");
 	fprintf(stdout, "\n");
 }
 

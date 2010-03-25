@@ -1,0 +1,359 @@
+
+Command List
+------------
+
+     01 - Reset
+     02 - GetVersion
+     03 - GetPrint
+     04 - GetParam
+     05 - SetParam
+     06 - GetConfig
+     07   DownloadPatch
+     08   GetRateData
+     09   IspRequest
+     0A   ProgramFlash
+     0B   EraseFlash
+     0C   LedStates
+     0D   LedEvent
+     0E - AbortPrint
+     0F   Spare2
+     10   Spare3
+     11   Spare4
+     12 - Peek
+     13 - Poke
+     14 - SensorSpiTrans
+     15   SensorGPIO
+     16 - GetFingerState 
+
+
+
+Param List
+----------
+
+These are all the params that i've seen being set or read. set is one indent, read is
+two indent levels:
+
+		0x01
+	0x04
+	0x05
+	0x06
+	0x07
+	0x0a
+	0x0b
+	0x0c
+	0x0d
+	0x0e
+	0x10
+		0x11
+	0x12
+		0x14
+	0x15
+	0x16
+	0x17
+	0x18
+	0x19
+	0x1a
+	0x1b
+	0x1d
+	0x1e
+	0x1f
+	0x20
+	0x21
+	0x22
+	0x23
+	0x24
+		0x28
+		0x2a
+	0x2c
+	0x2d
+		0x2e
+	0x2f
+	0x30
+	0x32
+	0x33
+	0x34
+	0x35
+	0x36
+	0x37
+	0x38
+	0x39
+	0x3a
+	0x3b
+		0x3c
+	0x3e
+	0x3f
+	0x40
+		0x41
+	0x42
+	0x43
+	0x44
+	0x45
+	0x46
+	0x47
+	0x48
+	0x49
+		0x4a
+	0x52	0x52
+	0x53
+		0x54
+	0x55
+	0x56
+	0x57
+	0x58
+	0x59
+	0x5b
+	0x5c
+	0x5d
+	0x5e
+	0x5f
+	0x60
+	0x62
+	0x63
+	0x64
+	0x64
+	0x69
+	0x6d
+	0x6e
+	0x76
+	0x77
+	0x78
+
+
+
+Register List
+-------------
+
+Peek:
+	0x00001fe8
+	0x00001fec
+	0x00001ff0
+	0x00001ff4
+	0x00001ff8
+	0x00001ffc
+	0x00ff500e
+	0x00ff502c
+	0x00ff502e
+	0x00ff5032 - VFS_IMAGE_ABCD
+	0x00ff5038 - VFS_CONTRAST
+	0x00ff503e
+	0x00ff9800
+	0x00ff9802
+	0x00ff9806
+
+Poke:
+	0x000005f6
+	0x00ff500e
+	0x00ff5032
+	0x00ff5038
+	0x00ff503e
+	0x00ff9806
+
+
+
+Protocol Description
+--------------------
+  Command-Response Pairs
+  Init-Await-Scan loop
+  Scan Types
+
+
+Internal Finger Detection State Machine
+---------------------------------------
+
+There appears to be a state machine inside the scanner which handles finger detection.
+When a scan starts due to GetFingerState() returning 0x02, the state variables are reflected
+in bytes 276 - 281 of each scan line.
+
+It starts in state 2 for 32 lines, moves to state 3 for 100 lines, moves into state 5
+until the finger is no longer detected. After the finger is not detected, we remain in
+state 5 for 200 more lines and transition to state 6 for a single line and the scan ends.
+
+
+
+==========================================================================================
+===  Scan Structure                                                                    ===
+==========================================================================================
+
+A scan is a series of 292 byte lines. Each line is a snapshot from the scan strip, sent
+in time order. Unknown if the sampling rate is constant or variable.  Scans may be
+initiated by GetPrint() calls, or by GetFingerState() returning 0x02.
+
+
+=====================================
+*** Structure of GetPrint() scans ***
+=====================================
+
+Have not analysed these yet.
+
+
+
+
+
+===========================================
+*** Structure of GetFingerState() scans ***
+===========================================
+
+After GetFingerState() returns 0x02, we do a LoadImage(), asking for 5000 lines, and
+generally get back several hundred to a thousand lines. Each line is 292 bytes long.
+
+
+
+
+[Byte 00 - 01]   Line Type
+--------------------------
+  This field determines how to decode the rest of the line.  There are two types of line.
+
+    01 FE - Image
+    01 01 - Info
+
+  Image lines are the primary type.  All observed patterns appear to operate as if the
+  scan was composed entirely of Image lines. However, these Image lines are periodically
+  obscured by Info lines.  These Info lines do not disrupt the underlying pattern, but
+  instead overlay patterns of their own.  The first Info line appears after 28 scan lines,
+  then every 50 scan lines after that.
+
+
+
+
+
+
+
+
+
+
+For Image lines, the rest of the line decodes as follows:
+
+[Byte 02 - 03]   Sequence Number
+--------------------------------
+  This value increments on each line by 0x1f, except every fourth line increments by 0x20
+  instead. The value is little-endian.
+
+  There is a discontinuity after the 13th scan line. Many lines are skipped, then the sequence
+  picks up again with no breaks until the print is fully scanned.
+
+
+[Byte 04 - 05]   ???
+--------------------
+  Unknown
+
+
+[Byte 06 -205]   Fingerprint A
+------------------------------
+  Next 200 bytes are fingerprint data.  This contains a grayscale scanline of the portion
+  of the finger in contact with the swipe sensor.
+
+
+[Byte 206 - 207]   Header 2
+---------------------------
+  This is a fairly low value, big-endian number.
+
+
+[Byte 206 - 269]   Image BC
+---------------------------
+  This looks like a horizontally swapped, lower resolution version of the data in Fingerprint A,
+  but not exactly aligned....
+
+
+[Byte 270 - 273]   Constant
+---------------------------
+  This appears to be a constant 14 03 6F 00.
+
+
+[Byte 274 - 275]   Sequence Number'
+-----------------------------------
+  This is a big-endian version of the sequence number in the bytes 02-03.
+
+
+[Byte 276]   Scan Curr State
+----------------------------
+  This appears to be the current state of the internal finger detection state machine.
+
+
+[Byte 277]   Scan Next State
+----------------------------
+  This appears to be the next state of the internal finger detection state machine.
+
+
+[Byte 278 - 279]   Scan Counter
+-------------------------------
+  For timed states, this appears to be the number of scan lines remaining until we transition to
+  a different state.  This different state is loaded into Byte 277 when this counter drops to 0.
+  The counter is little-endian.
+
+
+[Byte 280 - 281]   Scan Level
+-----------------------------
+  This appears to be some physical quantity which correlates to the presence of a finger on the
+  swipe strip.
+
+  While the scan machine is in state 2 (first 32 lines of a scan) this value is jammed to 0xFFFF.
+  After we enter state 3, the value tracks the presence of finger on the swipe strip. As long as
+  this value stays above 0x80 (?) the counter value for state 5 will not decrement, holding us
+  in state 5 for the duration of the finger swipe.  When this value falls below 0x80, the counter
+  begins counting down, exiting state 5 and ending the swipe after 200 more lines.
+
+
+[Byte 282]   Two
+----------------
+  This appears to be a constant 0x02 value.
+
+
+[Byte 283 - 291]   ???
+----------------------
+  The rest of the line has some structure, but it is not immediately apparent what it means.
+  This section is noticably darker on the line immediately preceding an Info line. It is also
+  somewhat different in sections where the scan "smears out" into vertical lines, although
+  the Info lines keep coming every 50 lines.
+
+
+
+
+
+
+
+
+For Info lines, the rest of the line decodes as follows: (except for the last line of the
+entire scan, which is generally somewhat different than the rest of the Info lines...)
+
+[Byte 02 - 03]   Sequence Number
+--------------------------------
+  This value increments by 0x06 on each line. The value is big-endian.
+
+
+[Byte 04 - 05]   ???
+---------------------
+  Unknown.
+
+
+[Byte 06 -205]   Presence
+-------------------------
+  Next 200 bytes are fingerprint data.  This appears to contain an "alpha mask" describing
+  which portions of the swipe sensor are actually in contact with the finger at this instant.
+
+
+[Byte 206]   Zero
+-----------------
+  This appears to be a constant 0x00 value.
+
+
+[Byte 207 - 208]   Presence
+---------------------------
+  These are a pair of single-byte values, fairly close in value, which appear to correlate
+  strongly with the finger presence information in bytes 6-205.
+
+
+[Byte 209 - 269]   ???
+----------------------
+  This stretch of bytes starts out around 0x40, settles to near 0x90 within 3-4 bytes, and is
+  very weakly correlated with the finger presence information in Fingerprint A.
+
+
+[Byte 270 - 273]   Constant
+---------------------------
+  This appears to be a constant 09 03 8C 00.
+
+
+[Byte 274 - 291]   ???
+----------------------
+  The rest of the line has some structure, but it is not immediately apparent what it means.
+
