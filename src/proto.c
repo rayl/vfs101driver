@@ -724,13 +724,13 @@ static int woot (struct vfs_dev *dev)
 	S0_unchecked(dev);
 	dev->results = &S1_results;
 	S1_checked(dev);
-	while (1) {
+	do {
 		int i;
 		while ((i = GetFingerState(dev)) != 2)
 			usleep(50000);
 		dev->results = &S2_results;
 		S2_checked(dev);
-	}
+	} while (0);
 }
 
 #undef _
