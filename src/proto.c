@@ -180,6 +180,7 @@ static void dump_image (struct vfs_dev *dev)
 	unsigned char *data = dev->ibuf;
 	int length = dev->ilen;
 
+	if (dev->ilen < 101*PKTSIZE) return;
 	fprintf(stdout, "  %d packets in %d bytes%s\n", length/PKTSIZE, length, (length%PKTSIZE) ? " (incomplete packet(s)?)" : "");
 
 	if (!dev->anonymous) {
