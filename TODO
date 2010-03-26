@@ -1,0 +1,15 @@
+Functionality
+ - why does USB device reset itself after finishing a woot cycle?
+ - find out why print sometimes smears into vertical lines
+
+Output
+ - write code to extract clean fingerprint from the current raw PNM dump
+ - put curly braces around packet printout for vi navigation
+
+Protocol
+ - why does period of Info lines vary between machines?
+
+Cycle routines
+ - contrast detection
+ - poll GetParam(0x14) until it returns 0x08?
+ - poll GetFingerState() until it returns 0x02
