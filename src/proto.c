@@ -814,61 +814,46 @@ int main (int argc, char **argv)
 		fprintf(stderr, "failed to initialise libusb\n");
 		exit(1);
 	}
-	fprintf(stdout, "Libusb inititalized!\n");
 
-
-	fprintf(stdout, "Searching for device...\n");
 	dev->devh = libusb_open_device_with_vid_pid(NULL, 0x138a, 0x0001);
 	if (dev->devh == NULL) {
 		fprintf(stderr, "Can't find validity device!\n");
 		goto out;
 	}
-	fprintf(stdout, "Device found!\n");
-
-	fprintf(stdout, "Checking active kernel driver...\n");
 
 	int i = 0;
 	for (i; i < 1000000; i++){
 		r = libusb_kernel_driver_active(dev->devh, i);
 		if ( r == 1 ){
-			fprintf(stdout, "Detaching kernel driver... \n");
 			r = libusb_detach_kernel_driver(dev->devh, 4);
 			if (r < 0)
 				fprintf(stderr, "Error detaching kernel driver!\n");
-			else
-				fprintf(stdout, "Kernel driver detached!\n");
 		}
 	}
 
-
-	fprintf(stdout, "Claiming interface...\n");
 	r = libusb_claim_interface(dev->devh, 0);
 	if (r < 0) {
 		fprintf(stderr, "usb_claim_interface error %d\n", r);
 		goto out;
 	}
-	fprintf(stdout, "claimed interface\n");
 
-	fprintf(stdout, "Resetting device...\n");
 	r = libusb_reset_device(dev->devh);
-	if (r != 0)
-		fprintf(stdout, "Error resetting device");
+	if (r != 0) {
+		fprintf(stderr, "Error resetting device");
+		goto out_release;
+	}
 
-	fprintf(stdout, "Configuring device...\n");
 	r = libusb_control_transfer(dev->devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 1, NULL, 0, BULK_TIMEOUT); 
         if (r < 0) {
 		fprintf(stderr, "device configuring error %d\n", r);
 		goto out_release;
 	}
-	fprintf(stdout, "Device configured!\n");
      
-	fprintf(stdout, "Entering main cycle...\n");
 	r = func(argv[1])(dev);
 	if (r != 0) {
 		fprintf(stderr, "got error in main cycle %d\n", r);
 		goto out_release;
 	}
-	fprintf(stdout, "Main cycle complete success!\n");
 
 out_release:
 	libusb_release_interface(dev->devh, 0);
