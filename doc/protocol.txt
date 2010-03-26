@@ -204,6 +204,12 @@ Protocol Description
   Init-Await-Scan loop
   Scan Types
 
+GetParam/SetParam responses echo the command, then append the data. the
+register/param number is replaced with a status number.
+
+  0x0000 - Success
+  0x0003 - Failed
+
 
 Internal Finger Detection State Machine
 ---------------------------------------
@@ -215,6 +221,13 @@ in bytes 276 - 281 of each scan line.
 It starts in state 2 for 32 lines, moves to state 3 for 100 lines, moves into state 5
 until the finger is no longer detected. After the finger is not detected, we remain in
 state 5 for 200 more lines and transition to state 6 for a single line and the scan ends.
+
+While the scan machine is in state 2, the Scan Level value is jammed to 0xFFFF.
+After we enter state 3, the value tracks the presence of finger on the swipe strip. As long as
+this value stays above 0x96 the counter value for state 5 will not decrement, holding us
+in state 5 for the duration of the finger swipe.  When this value falls below 0x96, the counter
+begins counting down, exiting state 5 and ending the swipe after 200 more lines.  If the
+Scan Level value rises above 0x96 for 24 lines, the Scan Count is reset to its initial value.
 
 
 
@@ -326,19 +339,15 @@ For Image lines, the rest of the line decodes as follows:
 -------------------------------
   For timed states, this appears to be the number of scan lines remaining until we transition to
   a different state.  This different state is loaded into Byte 277 when this counter drops to 0.
-  The counter is little-endian.
+  The counter is little-endian.  it is 16 bits, although only the lower 8 bits appear to be
+  visible. The upper 8 bits lways read back 0x00, even though they appear to have a value in
+  them.
 
 
 [Byte 280 - 281]   Scan Level
 -----------------------------
   This appears to be some physical quantity which correlates to the presence of a finger on the
   swipe strip.
-
-  While the scan machine is in state 2 (first 32 lines of a scan) this value is jammed to 0xFFFF.
-  After we enter state 3, the value tracks the presence of finger on the swipe strip. As long as
-  this value stays above 0x80 (?) the counter value for state 5 will not decrement, holding us
-  in state 5 for the duration of the finger swipe.  When this value falls below 0x80, the counter
-  begins counting down, exiting state 5 and ending the swipe after 200 more lines.
 
 
 [Byte 282]   Two
