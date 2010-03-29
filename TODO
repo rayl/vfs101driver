@@ -11,4 +11,3 @@ Protocol
 Cycle routines
  - contrast detection
  - poll GetParam(0x14) until it returns 0x08?
- - poll GetFingerState() until it returns 0x02

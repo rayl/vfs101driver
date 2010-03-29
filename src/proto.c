@@ -754,6 +754,14 @@ static int test (struct vfs_dev *dev)
 	return 0;	
 }
 
+/* Wait for a finger touch */
+static int wait_for_touch (struct vfs_dev *dev)
+{
+	while (GetFingerState(dev) != 2)
+		usleep(50000);
+	return 0;
+}
+
 /* first working version */
 #include "state0.h"
 #include "state1.h"
@@ -764,9 +772,7 @@ static int woot (struct vfs_dev *dev)
 	dev->results = &S1_results;
 	S1_checked(dev);
 	do {
-		int i;
-		while ((i = GetFingerState(dev)) != 2)
-			usleep(50000);
+		wait_for_touch(dev);
 		dev->results = &S2_results;
 		S2_checked(dev);
 	} while (0);
