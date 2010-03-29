@@ -112,6 +112,7 @@ static int dump_frame_1 (unsigned char *d, int n)
 	int i;
 
 	fprintf(stdout, "\n  ---------------------------- Packet %05d -----------------------------\n", n);
+	fprintf(stdout, "  {\n");
 	d += dump_packet(d,  2, "  Line type       ");
 	d += dump_packet(d,  2, "  Sequence        ");
 	d += dump_packet(d,  2, "  ???             ");
@@ -142,7 +143,7 @@ static int dump_frame_1 (unsigned char *d, int n)
 	d += dump_packet(d,  2, "  S_count         ");
 	d += dump_packet(d,  2, "  S_level         ");
 	d += dump_packet(d,  8, "  ???             ");
-	fprintf(stdout, "\n");
+	fprintf(stdout, "  }\n");
 }
 
 static int dump_frame (unsigned char *data, int length, int n)
@@ -182,6 +183,7 @@ static void dump_image (struct vfs_dev *dev)
 
 	if (dev->ilen < 101*PKTSIZE) return;
 	fprintf(stdout, "  %d packets in %d bytes%s\n", length/PKTSIZE, length, (length%PKTSIZE) ? " (incomplete packet(s)?)" : "");
+	fprintf(stdout, "  {\n");
 
 	if (!dev->anonymous) {
 		while (length > 0) {
@@ -191,7 +193,7 @@ static void dump_image (struct vfs_dev *dev)
 		}
 	}
 
-	fprintf(stdout, "\n");
+	fprintf(stdout, "  }\n");
 }
 
 static void dump_pnm_2 (FILE *pnm, int offset, int len)

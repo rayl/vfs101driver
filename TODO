@@ -4,7 +4,6 @@ Functionality
 
 Output
  - write code to extract clean fingerprint from the current raw PNM dump
- - put curly braces around packet printout for vi navigation
 
 Protocol
  - why does period of Info lines vary between machines?
