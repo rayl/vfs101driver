@@ -7,7 +7,10 @@ Output
 
 Protocol
  - why does period of Info lines vary between machines?
+ - how to evaluate LoadImage() results in contrast detection loop?
 
 Cycle routines
- - contrast detection
+ - do proper contrast detection loop
+   - evaluate LoadImage results
+   - use the best value found to program SetParam() later
  - poll GetParam(0x14) until it returns 0x08?

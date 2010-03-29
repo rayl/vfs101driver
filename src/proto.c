@@ -762,6 +762,33 @@ static int wait_for_touch (struct vfs_dev *dev)
 	return 0;
 }
 
+/* The best contrast value tried so far */
+static int best_contrast = 0x00;
+
+/* Try a contrast register setting */
+static int try_contrast (struct vfs_dev *dev, int value)
+{
+	_(  Poke (dev, 0x00ff5038, value, 0x01));
+	_(  GetPrint (dev, 0x000a, type_0));
+	_(  LoadImage (dev));
+	// evaluate the result...
+	best_contrast = value;
+	return 0;
+}
+
+/* Find the best contrast setting */
+static int scan_contrast (struct vfs_dev *dev)
+{
+	best_contrast = 0x00;
+	_(  try_contrast (dev, 0x0e));
+	_(  try_contrast (dev, 0x0d));
+	_(  try_contrast (dev, 0x0c));
+	_(  try_contrast (dev, 0x0b));
+	_(  try_contrast (dev, 0x0a));
+	_(  try_contrast (dev, 0x09));
+	return 0;
+}
+
 /* first working version */
 #include "state0.h"
 #include "state1.h"

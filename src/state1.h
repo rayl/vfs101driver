@@ -139,24 +139,7 @@ int S1_unchecked (struct vfs_dev *dev)
 	_(  Peek (dev, 0x00ff9802, 0x01));
 	_(  Peek (dev, 0x00ff9800, 0x01));
 	_(  Peek (dev, 0x00ff9806, 0x01));
-	_(  Poke (dev, 0x00ff5038, 0x0000000e, 0x01));
-	_(  GetPrint (dev, 0x000a, type_0));
-	_(  LoadImage (dev));
-	_(  Poke (dev, 0x00ff5038, 0x0000000d, 0x01));
-	_(  GetPrint (dev, 0x000a, type_0));
-	_(  LoadImage (dev));
-	_(  Poke (dev, 0x00ff5038, 0x0000000c, 0x01));
-	_(  GetPrint (dev, 0x000a, type_0));
-	_(  LoadImage (dev));
-	_(  Poke (dev, 0x00ff5038, 0x0000000b, 0x01));
-	_(  GetPrint (dev, 0x000a, type_0));
-	_(  LoadImage (dev));
-	_(  Poke (dev, 0x00ff5038, 0x0000000a, 0x01));
-	_(  GetPrint (dev, 0x000a, type_0));
-	_(  LoadImage (dev));
-	_(  Poke (dev, 0x00ff5038, 0x00000009, 0x01));
-	_(  GetPrint (dev, 0x000a, type_0));
-	_(  LoadImage (dev));
+	_(  scan_contrast (dev));
 	_(  Poke (dev, 0x000005f6, 0x00000000, 0x01));
 	_(  Peek (dev, 0x00ff503e, 0x01));
 	_(  Poke (dev, 0x00ff503e, 0x00000010, 0x01));
@@ -333,24 +316,7 @@ int S1_checked (struct vfs_dev *dev)
 	__(  271,    Peek (dev, 0x00ff9802, 0x01));
 	__(  273,    Peek (dev, 0x00ff9800, 0x01));
 	__(  275,    Peek (dev, 0x00ff9806, 0x01));
-	__(  277,    Poke (dev, 0x00ff5038, 0x0000000e, 0x01));
-	__(  279,    GetPrint (dev, 0x000a, type_0));
-	 _(          LoadImage (dev));
-	__(  282,    Poke (dev, 0x00ff5038, 0x0000000d, 0x01));
-	__(  284,    GetPrint (dev, 0x000a, type_0));
-	 _(          LoadImage (dev));
-	__(  287,    Poke (dev, 0x00ff5038, 0x0000000c, 0x01));
-	__(  289,    GetPrint (dev, 0x000a, type_0));
-	 _(          LoadImage (dev));
-	__(  292,    Poke (dev, 0x00ff5038, 0x0000000b, 0x01));
-	__(  294,    GetPrint (dev, 0x000a, type_0));
-	 _(          LoadImage (dev));
-	__(  297,    Poke (dev, 0x00ff5038, 0x0000000a, 0x01));
-	__(  299,    GetPrint (dev, 0x000a, type_0));
-	 _(          LoadImage (dev));
-	__(  302,    Poke (dev, 0x00ff5038, 0x00000009, 0x01));
-	__(  304,    GetPrint (dev, 0x000a, type_0));
-	 _(          LoadImage (dev));
+	 _(          scan_contrast (dev));
 	__(  307,    Poke (dev, 0x000005f6, 0x00000000, 0x01));
 	__(  309,    Peek (dev, 0x00ff503e, 0x01));
 	__(  311,    Poke (dev, 0x00ff503e, 0x00000010, 0x01));
@@ -522,18 +488,6 @@ struct result_table S1_results =
 	[   271 ] = {   8, "\x12\x00\x00\x00\xfb\x00\x00\x00" },
 	[   273 ] = {   8, "\x12\x00\x00\x00\x03\x00\x00\x00" },
 	[   275 ] = {   8, "\x12\x00\x00\x00\x10\x00\x00\x00" },
-	[   277 ] = {   4, "\x13\x00\x00\x00" },
-	[   279 ] = {   4, "\x03\x00\x00\x00" },
-	[   282 ] = {   4, "\x13\x00\x00\x00" },
-	[   284 ] = {   4, "\x03\x00\x00\x00" },
-	[   287 ] = {   4, "\x13\x00\x00\x00" },
-	[   289 ] = {   4, "\x03\x00\x00\x00" },
-	[   292 ] = {   4, "\x13\x00\x00\x00" },
-	[   294 ] = {   4, "\x03\x00\x00\x00" },
-	[   297 ] = {   4, "\x13\x00\x00\x00" },
-	[   299 ] = {   4, "\x03\x00\x00\x00" },
-	[   302 ] = {   4, "\x13\x00\x00\x00" },
-	[   304 ] = {   4, "\x03\x00\x00\x00" },
 	[   307 ] = {   4, "\x13\x00\x00\x00" },
 	[   309 ] = {   8, "\x12\x00\x00\x00\x00\x00\x00\x00" },
 	[   311 ] = {   4, "\x13\x00\x00\x00" },
