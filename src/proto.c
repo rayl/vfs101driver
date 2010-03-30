@@ -26,8 +26,8 @@
 
 
 /* The device seems to send back 16 frames of 292 bytes at a time */
-const unsigned int PKTSIZE = 292;
-const unsigned int N_PKTS = 16;
+const unsigned int FRAME_SIZE = 292;
+const unsigned int N_FRAMES = 16;
 
 #define nitems(x) (sizeof(x)/sizeof(x[0]))
 
@@ -51,7 +51,7 @@ struct vfs_dev {
 	unsigned char buf[0x40];
 	int len;
 
-	/* buffer to hold raw image data packets */
+	/* buffer to hold raw image data frames */
 	unsigned char ibuf[1024*1024];
 	int ilen;
 	int inum;
@@ -162,7 +162,7 @@ static int dump_frame (unsigned char *data, int length, int n)
 		fprintf(stdout, "*** Frame misalignment, skipped %d bytes!!\n", skip);
 
 	// dump short frames as raw data
-	if (length < PKTSIZE) {
+	if (length < FRAME_SIZE) {
 		fprintf(stdout, "*** Short frame, dumping as %d raw bytes!!\n", length);
 		dump_buffer(data, length, "");
 		return skip + length;
@@ -172,7 +172,7 @@ static int dump_frame (unsigned char *data, int length, int n)
 	dump_frame_1(data, n);
 
 	// return number of bytes consumed
-	return skip + PKTSIZE;
+	return skip + FRAME_SIZE;
 }
 
 static void dump_image (struct vfs_dev *dev)
@@ -181,7 +181,7 @@ static void dump_image (struct vfs_dev *dev)
 	unsigned char *data = dev->ibuf;
 	int length = dev->ilen;
 
-	fprintf(stdout, "  %d packets in %d bytes%s\n", length/PKTSIZE, length, (length%PKTSIZE) ? " (incomplete packet(s)?)" : "");
+	fprintf(stdout, "  %d frames in %d bytes%s\n", length/FRAME_SIZE, length, (length%FRAME_SIZE) ? " (incomplete frames(s)?)" : "");
 	fprintf(stdout, "  {\n");
 	while (length > 0) {
 		int n = dump_frame(data, length, f++);
@@ -304,7 +304,7 @@ static void show_pnm (struct vfs_dev *dev, unsigned char dir, int offset, int le
 	c->fmt = fmt;
 	c->offset = offset;
 	c->len = len;
-	c->height = dev->ilen/PKTSIZE;
+	c->height = dev->ilen/FRAME_SIZE;
 	c->file = fopen(name, "w");
 
 	if (c->file != NULL) {
@@ -344,7 +344,7 @@ static void foo_1 (struct pnm_context *c, int y, int yy)
 
 static void foo_2 (struct pnm_context *c, int y, int yy)
 {
-	unsigned char *data = c->dev->ibuf + y * PKTSIZE + c->offset;
+	unsigned char *data = c->dev->ibuf + y * FRAME_SIZE + c->offset;
 	int i;
 
 	for (i=0; i<c->len; i++)
@@ -441,7 +441,7 @@ static int load (struct vfs_dev *dev, unsigned char *buf, int *len)
 	*len = 0;
 
 	do {
-		int r = libusb_bulk_transfer(dev->devh, EP_IN(2), buf, N_PKTS*PKTSIZE, &n, BULK_TIMEOUT);
+		int r = libusb_bulk_transfer(dev->devh, EP_IN(2), buf, N_FRAMES*FRAME_SIZE, &n, BULK_TIMEOUT);
 
 		buf += n;
 		*len += n;
@@ -451,7 +451,7 @@ static int load (struct vfs_dev *dev, unsigned char *buf, int *len)
 			return r;
 		}
 
-	} while (n == N_PKTS*PKTSIZE);
+	} while (n == N_FRAMES*FRAME_SIZE);
 
 	return 0;
 }
