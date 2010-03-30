@@ -293,6 +293,16 @@ static void _pnm_frameruler (struct pnm_context *c, int y, int yy)
 	}
 }
 
+/* fill area with finger detection data */
+static void _pnm_sense (struct pnm_context *c, int y, int yy, int n)
+{
+	unsigned char *data = c->dev->ibuf + y * FRAME_SIZE;
+	int j = xx(data[283],data[282])>>2;
+	if (data[1] == 0x01) j = 0;
+	while (n--)
+		fprintf(c->file, " % 3d", (j>255) ? ((n&y&1) ? 255 : 0) : j);
+}
+
 /* newline in the output pnm file */
 static void _pnm_newline (struct pnm_context *c)
 {
@@ -365,10 +375,10 @@ static struct pnm_formatter foo =
 {
 	.y0     = 5,
 	.y1     = 5,
-	.x0     = 5,
+	.x0     = 40,
 	.x1     = 5,
 	.header = _pnm_frameruler,
-	.left   = _pnm_gradient,
+	.left   = _pnm_sense,
 	.body   = _pnm_frame,
 	.right  = _pnm_ruler,
 	.footer = _pnm_frameruler,
