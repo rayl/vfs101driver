@@ -181,90 +181,199 @@ static void dump_image (struct vfs_dev *dev)
 	unsigned char *data = dev->ibuf;
 	int length = dev->ilen;
 
-	if (dev->ilen < 101*PKTSIZE) return;
 	fprintf(stdout, "  %d packets in %d bytes%s\n", length/PKTSIZE, length, (length%PKTSIZE) ? " (incomplete packet(s)?)" : "");
 	fprintf(stdout, "  {\n");
-
-	if (!dev->anonymous) {
-		while (length > 0) {
-			int n = dump_frame(data, length, f++);
-			data += n;
-			length -= n;
-		}
+	while (length > 0) {
+		int n = dump_frame(data, length, f++);
+		data += n;
+		length -= n;
 	}
-
 	fprintf(stdout, "  }\n");
 }
 
-static void dump_pnm_2 (FILE *pnm, int offset, int len)
+
+/******************************************************************************************************
+ * PNM formatter framework
+ */
+
+struct pnm_context;
+
+typedef void (*pnm_func)   (struct pnm_context *, int, int);
+typedef void (*pnm_func_1) (struct pnm_context *, int, int, int);
+
+struct pnm_formatter {
+
+	/* how many pixels are added on each side of image */
+	int y0;   // top
+	int y1;   // bottom
+	int x0;   // left
+	int x1;   // right
+
+	/* printers for various areas */
+	pnm_func   header;
+	pnm_func_1 left;
+	pnm_func   body;
+	pnm_func_1 right;
+	pnm_func   footer;
+};
+
+struct pnm_context {
+
+	/* vfs_dev to create PNM from */
+	struct vfs_dev *dev;
+
+	/* file to print PNM into */
+	FILE *file;
+
+	/* which PNM formatter to use */
+	struct pnm_formatter *fmt;
+
+	/* how many scan lines are there */
+	int height;
+
+	/* first column of image stripe */
+	int offset;
+
+	/* width of image stripe */
+	int len;
+};
+
+
+static void _pnm_black (struct pnm_context *c, int y, int yy, int n)
 {
+	while (n--)
+		fprintf(c->file, "   0");
+}
+
+static void _pnm_gradient (struct pnm_context *c, int y, int yy, int n)
+{
+	int z = 255*((float)y/(float)yy);
+	while (n--)
+		fprintf(c->file, " %3d", z);
+}
+
+static void _pnm_ruler (struct pnm_context *c, int y, int yy, int n)
+{
+	int z = (y%10) ? 0 : 255;
+	while (n--)
+		fprintf(c->file, " %3d", z ? (n ? z : 128) : 128);
+}
+
+static void _pnm_newline (struct pnm_context *c)
+{
+	fprintf(c->file, "\n");
+}
+
+static void _pnm_header (struct pnm_context *c)
+{
+	struct pnm_formatter *f = c->fmt;
+	int n_x = c->len + f->x0 + f->x1;
+	int n_y = c->height + f->y0 + f->y1;
+	fprintf(c->file, "P2\n%d %d\n256\n", n_x, n_y);
+}
+
+static void _pnm_section (struct pnm_context *c, int y, pnm_func_1 l, pnm_func m, pnm_func_1 r)
+{
+	struct pnm_formatter *f = c->fmt;
+	int i;
+	for (i=0; i<y; i++) {
+		l (c, i, y, f->x0);
+		m (c, i, y);
+		r (c, i, y, f->x1);
+		_pnm_newline(c);
+	}
+}
+
+static void show_pnm_1 (struct pnm_context *c)
+{
+	struct pnm_formatter *f = c->fmt;
+	_pnm_header  (c);
+	_pnm_section (c, f->y0,     _pnm_black, f->header, _pnm_black);
+	_pnm_section (c, c->height, f->left,    f->body,   f->right);
+	_pnm_section (c, f->y1,     _pnm_black, f->footer, _pnm_black);
+}
+
+static void show_pnm (struct vfs_dev *dev, unsigned char dir, int offset, int len, struct pnm_formatter *fmt)
+{
+	struct pnm_context _c, *c = &_c;
+	char name[40];
+
+	sprintf(name, "img/%c/out-%03d-%02x.pnm", dir, dev->inum, dev->inum);
+
+	c->dev = dev;
+	c->fmt = fmt;
+	c->offset = offset;
+	c->len = len;
+	c->height = dev->ilen/PKTSIZE;
+	c->file = fopen(name, "w");
+
+	if (c->file != NULL) {
+		show_pnm_1(c);
+		fclose(c->file);
+
+	} else {
+		fprintf(stderr, "Can't open \"%s\" for writing", name);
+	}
+}
+
+
+
+/******************************************************************************************************
+ * Instance of a PNM formatter
+ */
+
+static void foo_1 (struct pnm_context *c, int y, int yy)
+{
+	int offset = c->offset;
+	int len = c->len;
+
 	while (len--) {
 		switch (offset++) {
 		case 0:
 		case 206:
 		case 246:
 		case 272:
-			fprintf(pnm, " 255");
+			fprintf(c->file, " 255");
 			break;
 		default:
-			fprintf(pnm, "   0");
+			fprintf(c->file, "   0");
 			break;
 		}
 	}
-	fprintf(pnm, "\n");
 }
 
-static void dump_pnm_1 (struct vfs_dev *dev, unsigned char dir, int offset, int len)
+static void foo_2 (struct pnm_context *c, int y, int yy)
 {
-	unsigned char *data = dev->ibuf;
-	int length = dev->ilen;
-	char name[40];
-	FILE *pnm;
+	unsigned char *data = c->dev->ibuf + y * PKTSIZE + c->offset;
 	int i;
 
-	sprintf(name, "img/%c/out-%03d-%02x.%s", dir, dev->inum, dev->inum, dev->ilen ? "pnm" : "pnm");
-
-	pnm = fopen(name, "w");
-
-	if (pnm == NULL) {
-		printf("Can't create image file: %s\n", name);
-		return;
-	}
-
-	fprintf(pnm, "P2\n%d %d\n256\n", len, (length/PKTSIZE)+10);
-
-	
-	for (i=0; i<5; i++)
-		dump_pnm_2(pnm, offset, len);
-
-	while (length > 0) {
-		unsigned char *x = data + offset;
-		int i;
-
-		for (i=0; i<len; i++)
-			fprintf(pnm, " % 3d", *x++);
-		fprintf(pnm, "\n");
-
-		length -= PKTSIZE;
-		data += PKTSIZE;
-	}
-
-	for (i=0; i<5; i++)
-		dump_pnm_2(pnm, offset, len);
-
-
-	fclose(pnm);
+	for (i=0; i<c->len; i++)
+		fprintf(c->file, " % 3d", *data++);
 }
 
-static void dump_pnm (struct vfs_dev *dev)
+static struct pnm_formatter foo =
+{
+	.y0     = 5,
+	.y1     = 5,
+	.x0     = 5,
+	.x1     = 5,
+	.header = foo_1,
+	.left   = _pnm_ruler,
+	.body   = foo_2,
+	.right  = _pnm_gradient,
+	.footer = foo_1,
+};
+
+
+
+
+static void create_pnms (struct vfs_dev *dev)
 {
 	if (dev->anonymous) return;
-	if (dev->ilen < 101*PKTSIZE) return;
-	dump_pnm_1(dev, 'X',   0, 292);
-	//dump_pnm_1(dev, 'A',   0, 206);
-	//dump_pnm_1(dev, 'B', 206,  40);
-	//dump_pnm_1(dev, 'C', 246,  26);
-	//dump_pnm_1(dev, 'D', 272,  20);
+	show_pnm (dev, 'X',   0, 292, &foo);
+	// show_pnm (dev, 'A',   0, 206, &foo);
+	// show_pnm (dev, 'B', 206,  66, &foo);
+	// show_pnm (dev, 'C', 272,  20, &foo);
 	dev->inum++;
 }
 
@@ -566,9 +675,9 @@ static int LoadImage (struct vfs_dev *dev)
 	int r;
 	_();
 	r = load(dev, dev->ibuf, &dev->ilen);
-	if (r == 0) {
+	if ((r == 0) && (!dev->anonymous)) {
 		dump_image(dev);
-		dump_pnm(dev);
+		create_pnms(dev);
 	}
 	return r;
 }
