@@ -191,6 +191,23 @@ Address    R W N Name
 
 0x000005f6   W -- VFS_
 
+
+0x00001b20 R   -- VFS_SCANLINE
+0x00001c60 R   -- VFS_SCANLINE
+0x00001da0 R   -- VFS_SCANLINE
+   These 320 byte buffers look like a single 292 byte scanline with a 01 FE header
+   and a body full of mostly 0x7x numbers, followed by some trailer information
+   before the next scanline.
+
+0x00001ee0 R   -- VFS_???
+
+0x00001fc0 R   -- VFS_VERSION
+  ......
+0x00001fe9 R
+   This looks like the contents of the GetVersion() reply. Strangely, the byte
+   at position 0x0e, which returns 0x20 on windows but 0x44 on linux, reads
+   back as 0x20 when accessed using Peek()
+
 0x00001fe8 R   -- VFS_
 
 0x00001fec R   -- VFS_
@@ -202,6 +219,20 @@ Address    R W N Name
 0x00001ff8 R   -- VFS_
 
 0x00001ffc R   -- VFS_
+
+0x00002020 R   -- VFS_INPUT_BUFFER
+  ......
+0x0000221c R
+   This block appears to be the input buffer for the USB device code on the scanner. The
+   first register returns the sequence number of the current swap(), and the second returns
+   the next 4 bytes of the swap().  Not sure how large the buffer is, probably 512 bytes?
+
+0x00002220 R   -- VFS_OUTPUT_BUFFER
+  ......
+0x0000231c R
+   This block appears to be the output buffer for the USB device code on the scanner. The
+   first register returns the sequence number of the current swap(), and the second returns
+   the next 4 bytes of the swap().  Not sure how large the buffer is, probably 512 bytes?
 
 0x00ff500e R W -- VFS_EXPOSURE
    This register produces an effect very much like adjusting the exposure on a
