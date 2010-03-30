@@ -218,16 +218,18 @@ There appears to be a state machine inside the scanner which handles finger dete
 When a scan starts due to GetFingerState() returning 0x02, the state variables are reflected
 in bytes 276 - 281 of each scan line.
 
-It starts in state 2 for 32 lines, moves to state 3 for 100 lines, moves into state 5
-until the finger is no longer detected. After the finger is not detected, we remain in
-state 5 for 200 more lines and transition to state 6 for a single line and the scan ends.
+It starts in state 2 for 32 lines, moves to state 3 for P_STATE_3_COUNT lines, moves into
+state 5 until the finger is no longer detected. After the finger is not detected, we
+remain in state 5 for P_STATE_5_COUNT more lines and transition to state 6 for a single
+line and the scan ends.
 
 While the scan machine is in state 2, the Scan Level value is jammed to 0xFFFF.
 After we enter state 3, the value tracks the presence of finger on the swipe strip. As long as
-this value stays above 0x96 the counter value for state 5 will not decrement, holding us
-in state 5 for the duration of the finger swipe.  When this value falls below 0x96, the counter
-begins counting down, exiting state 5 and ending the swipe after 200 more lines.  If the
-Scan Level value rises above 0x96 for 24 lines, the Scan Count is reset to its initial value.
+this value stays above P_THRESHOLD the counter value for state 5 will not decrement, holding us
+in state 5 for the duration of the finger swipe.  When this value falls below P_THRESHOLD,
+the counter begins counting down, exiting state 5 and ending the swipe after P_STATE_5_COUNT
+more lines.  If the Scan Level value rises above P_THRESHOLD for 24 lines, the Scan Count is
+reset to P_STATE_5_COUNT.
 
 
 
@@ -341,7 +343,7 @@ For Image lines, the rest of the line decodes as follows:
   For timed states, this appears to be the number of scan lines remaining until we transition to
   a different state.  This different state is loaded into Byte 277 when this counter drops to 0.
   The counter is little-endian.  it is 16 bits, although only the lower 8 bits appear to be
-  visible. The upper 8 bits lways read back 0x00, even though they appear to have a value in
+  visible. The upper 8 bits always read back 0x00, even though they appear to have a value in
   them.
 
 
@@ -375,7 +377,7 @@ entire scan, which is generally somewhat different than the rest of the Info lin
 
 [Byte 02 - 03]   Sequence Number
 --------------------------------
-  This value increments by 0x06 on each line. The value is big-endian.
+  This value increments by 0x06 on each info line. The value is big-endian.
 
 
 [Byte 04 - 05]   ???
