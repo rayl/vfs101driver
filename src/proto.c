@@ -238,12 +238,14 @@ struct pnm_context {
 	int len;
 };
 
+/* fill area with black */
 static void _pnm_black (struct pnm_context *c, int y, int yy, int n)
 {
 	while (n--)
 		fprintf(c->file, "   0");
 }
 
+/* fill area with vertical gradient */
 static void _pnm_gradient (struct pnm_context *c, int y, int yy, int n)
 {
 	int z = 255*((float)y/(float)yy);
@@ -251,6 +253,7 @@ static void _pnm_gradient (struct pnm_context *c, int y, int yy, int n)
 		fprintf(c->file, " %3d", z);
 }
 
+/* fill area with 10 pixel ruler */
 static void _pnm_ruler (struct pnm_context *c, int y, int yy, int n)
 {
 	int z = (y%10) ? 0 : 255;
@@ -260,11 +263,43 @@ static void _pnm_ruler (struct pnm_context *c, int y, int yy, int n)
 		fprintf(c->file, " %3d", z ? (n ? z : 128) : 128);
 }
 
+/* fill area with raw image data */
+static void _pnm_frame (struct pnm_context *c, int y, int yy)
+{
+	unsigned char *data = c->dev->ibuf + y * FRAME_SIZE + c->offset;
+	int i = c->len;
+	while (i--)
+		fprintf(c->file, " % 3d", *data++);
+}
+
+/* file area with image ABCD ruler */
+static void _pnm_frameruler (struct pnm_context *c, int y, int yy)
+{
+	int offset = c->offset;
+	int len = c->len;
+
+	while (len--) {
+		switch (offset++) {
+		case 0:
+		case 206:
+		case 246:
+		case 272:
+			fprintf(c->file, ((y==yy-1) || (y==0)) ? " 128" : " 255");
+			break;
+		default:
+			fprintf(c->file, " 128");
+			break;
+		}
+	}
+}
+
+/* newline in the output pnm file */
 static void _pnm_newline (struct pnm_context *c)
 {
 	fprintf(c->file, "\n");
 }
 
+/* create a PNM header for the output file */
 static void _pnm_header (struct pnm_context *c)
 {
 	struct pnm_formatter *f = c->fmt;
@@ -273,6 +308,7 @@ static void _pnm_header (struct pnm_context *c)
 	fprintf(c->file, "P2\n%d %d\n256\n", n_x, n_y);
 }
 
+/* call the three printers for each row of the section */
 static void _pnm_section (struct pnm_context *c, int y, pnm_func_1 l, pnm_func m, pnm_func_1 r)
 {
 	struct pnm_formatter *f = c->fmt;
@@ -285,6 +321,7 @@ static void _pnm_section (struct pnm_context *c, int y, pnm_func_1 l, pnm_func m
 	}
 }
 
+/* create a pnm file as a set of discrete areas */
 static void show_pnm_1 (struct pnm_context *c)
 {
 	struct pnm_formatter *f = c->fmt;
@@ -294,6 +331,7 @@ static void show_pnm_1 (struct pnm_context *c)
 	_pnm_section (c, f->y1,     _pnm_black, f->footer, _pnm_black);
 }
 
+/* open a new file and invoke the pnm creator */
 static void show_pnm (struct vfs_dev *dev, unsigned char dir, int offset, int len, struct pnm_formatter *fmt)
 {
 	struct pnm_context _c, *c = &_c;
@@ -323,46 +361,17 @@ static void show_pnm (struct vfs_dev *dev, unsigned char dir, int offset, int le
  * Instance of a PNM formatter
  */
 
-static void foo_1 (struct pnm_context *c, int y, int yy)
-{
-	int offset = c->offset;
-	int len = c->len;
-
-	while (len--) {
-		switch (offset++) {
-		case 0:
-		case 206:
-		case 246:
-		case 272:
-			fprintf(c->file, ((y==yy-1) || (y==0)) ? " 128" : " 255");
-			break;
-		default:
-			fprintf(c->file, " 128");
-			break;
-		}
-	}
-}
-
-static void foo_2 (struct pnm_context *c, int y, int yy)
-{
-	unsigned char *data = c->dev->ibuf + y * FRAME_SIZE + c->offset;
-	int i;
-
-	for (i=0; i<c->len; i++)
-		fprintf(c->file, " % 3d", *data++);
-}
-
 static struct pnm_formatter foo =
 {
 	.y0     = 5,
 	.y1     = 5,
 	.x0     = 5,
 	.x1     = 5,
-	.header = foo_1,
+	.header = _pnm_frameruler,
 	.left   = _pnm_ruler,
-	.body   = foo_2,
+	.body   = _pnm_frame,
 	.right  = _pnm_gradient,
-	.footer = foo_1,
+	.footer = _pnm_frameruler,
 };
 
 
