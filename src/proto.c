@@ -812,6 +812,38 @@ static void res_check (struct vfs_dev *dev, int n)
 
 
 /******************************************************************************************************
+ * raw terminal support
+ */
+#include <termios.h> 
+ 
+static void raw (void) 
+{ 
+	struct termios tio; 
+	tcgetattr( 0, &tio ); 
+	tio.c_lflag &= ~ICANON; 
+	tio.c_cc[VMIN] = 0;
+	tio.c_cc[VTIME] = 1;
+	tcsetattr( 0, TCSANOW, &tio ); 
+} 
+ 
+static void noraw (void) 
+{ 
+	struct termios tio; 
+	tcgetattr( 0, &tio ); 
+	tio.c_lflag |= ICANON; 
+	tcsetattr( 0, TCSANOW, &tio ); 
+} 
+ 
+static int getch (void)
+{
+	char c;
+	int n;
+	n = read(0, &c, 1);
+	return (n<0) ? n : (n==0) ? 0 : c;
+}
+
+
+/******************************************************************************************************
  * Cycle routines
  *
  * Each routine is a particular testcase, selectable from the command line.
@@ -832,13 +864,28 @@ static int reset (struct vfs_dev *dev)
 /* Exercise the gain register */
 static int test (struct vfs_dev *dev)
 {
-	const unsigned int VFS_TEST = VFS_EXPOSURE;
-	int i;
-	for (i=0; i<0x100; i++) {
-		_(  Poke (dev, VFS_TEST, i, 0x01));
-		_(  GetPrint  (dev, 100, type_0));
-		_(  LoadImage (dev));
+	int done = 0;
+	int x = 0x00001fe0;
+	raw();
+	while (!done) {
+		int n = getch();
+		if (n < 0)
+			break;
+		switch (n) {
+		case 'q':
+			done = 1;
+			break;
+		case 'a':
+			x -= 4;
+			break;
+		case 's':
+			x += 4;
+			break;
+		}
+		_(  Peek (dev, x, 0x10));
+		//usleep(50000);
 	}
+	noraw();
 	return 0;	
 }
 
