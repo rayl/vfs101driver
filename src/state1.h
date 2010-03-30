@@ -153,7 +153,7 @@ int S1_unchecked (struct vfs_dev *dev)
 	_(  SetParam (dev, 0x0076, 0x0012));
 	_(  SetParam (dev, 0x0078, 0x2230));
 	_(  Poke (dev, 0x00ff5038, 0x00000014, 0x01));
-	_(  Poke (dev, 0x00ff500e, 0x000021bc, 0x02));
+	_(  Poke (dev, 0x00ff500e, exposure, 0x02));
 	_(  Poke (dev, 0x00ff5032, 0x00000031, 0x01));
 	_(  SetParam (dev, 0x0062, info_line_rate));
 	_(  AbortPrint (dev));
@@ -330,7 +330,7 @@ int S1_checked (struct vfs_dev *dev)
 	__(  326,    SetParam (dev, 0x0076, 0x0012));
 	__(  328,    SetParam (dev, 0x0078, 0x2230));
 	__(  330,    Poke (dev, 0x00ff5038, 0x00000014, 0x01));
-	__(  332,    Poke (dev, 0x00ff500e, 0x000021bc, 0x02));
+	__(  332,    Poke (dev, 0x00ff500e, exposure, 0x02));
 	__(  334,    Poke (dev, 0x00ff5032, 0x00000031, 0x01));
 	__(  336,    SetParam (dev, 0x0062, info_line_rate));
 	__(  338,    AbortPrint (dev));

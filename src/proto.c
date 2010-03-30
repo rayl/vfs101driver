@@ -771,6 +771,9 @@ static int info_line_rate = 0x32;
 /* The best contrast value tried so far */
 static int best_contrast = 0x00;
 
+/* Image line exposure level */
+static int exposure = 0x21bc;
+
 /* Try a contrast register setting */
 static int try_contrast (struct vfs_dev *dev, int value)
 {

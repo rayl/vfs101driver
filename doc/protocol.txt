@@ -178,7 +178,7 @@ Peek:
 	0x00001ff4
 	0x00001ff8
 	0x00001ffc
-	0x00ff500e
+	0x00ff500e - VFS_EXPOSURE
 	0x00ff502c
 	0x00ff502e
 	0x00ff5032 - VFS_IMAGE_ABCD
@@ -246,6 +246,18 @@ lines. High values lead to dark fingerprints on very bright backgrounds. Lower v
 to progressively darker and lower contrast lines. If you put 0 into P_INFO_CONTRAST, then
 the fingerprint A portion of each info line disappears, leaving the underlying image line
 visible.
+
+
+
+Exposure Level
+--------------
+
+The VFS_EXPOSURE register produces an effect very much like adjusting the exposure on a
+digital camera. Low values (0x0800 or so) produce very over-exposed images, with little
+or no dark fingerprint visible against a very bright background. Medium values (0x2100 or so)
+produce nicely exposed images. High values (0x3800 or so) produce very dark images, or
+even fail to detect a fingerswipe, looping with a 0x01 response to the GetFingerState().
+
 
 
 ==========================================================================================
