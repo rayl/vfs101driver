@@ -314,9 +314,9 @@ static void _pnm_section (struct pnm_context *c, int y, pnm_func_1 l, pnm_func m
 	struct pnm_formatter *f = c->fmt;
 	int i;
 	for (i=0; i<y; i++) {
-		l (c, i, y, f->x0);
-		m (c, i, y);
-		r (c, i, y, f->x1);
+		if (l) l (c, i, y, f->x0);
+		if (m) m (c, i, y);
+		if (r) r (c, i, y, f->x1);
 		_pnm_newline(c);
 	}
 }
@@ -358,7 +358,7 @@ static void show_pnm (struct vfs_dev *dev, unsigned char dir, int offset, int le
 
 
 /******************************************************************************************************
- * Instance of a PNM formatter
+ * Specific PNM formatters
  */
 
 static struct pnm_formatter foo =
@@ -374,6 +374,19 @@ static struct pnm_formatter foo =
 	.footer = _pnm_frameruler,
 };
 
+static struct pnm_formatter bar =
+{
+	.y0     = 0,
+	.y1     = 0,
+	.x0     = 0,
+	.x1     = 0,
+	.header = NULL,
+	.left   = NULL,
+	.body   = _pnm_frame,
+	.right  = NULL,
+	.footer = NULL,
+};
+
 
 
 
@@ -381,6 +394,7 @@ static void create_pnms (struct vfs_dev *dev)
 {
 	if (dev->anonymous) return;
 	show_pnm (dev, 'X',   0, 292, &foo);
+	show_pnm (dev, 'Y',   0, 292, &bar);
 	// show_pnm (dev, 'A',   0, 206, &foo);
 	// show_pnm (dev, 'B', 206,  66, &foo);
 	// show_pnm (dev, 'C', 272,  20, &foo);
