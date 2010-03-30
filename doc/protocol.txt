@@ -36,7 +36,7 @@ Param List
  * - tried and worked
  - - tried and failed
 
-Parm R W Name                Description
+Parm R W Name
 0x00 - -
 0x01 R *
 0x02 - -
@@ -49,7 +49,8 @@ Parm R W Name                Description
 0x09 * -
 0x0a * W
 0x0b * W
-0x0c * W P_MESS_WITH_BC      Mess with the width of the secondary fingerprint image
+0x0c * W P_MESS_WITH_BC
+       Mess with the width of the secondary fingerprint image
 0x0d * W
 0x0e * W
 0x0f - -
@@ -124,18 +125,22 @@ Parm R W Name                Description
 0x54 R *
 0x55 * W
 0x56 * W
-0x57 * W P_THRESHOLD         S_level threshold to decrement S_count
+0x57 * W P_THRESHOLD
+         S_level threshold to decrement S_count
 0x58 * W
 0x59 * W
 0x5a * *
 0x5b * W
 0x5c * W
 0x5d * W
-0x5e * W P_STATE_3_COUNT     Initial count for state 3 in finger scan state machine
-0x5f * W P_STATE_5_COUNT     Initial count for state 5 in finger scan state machine
+0x5e * W P_STATE_3_COUNT
+         Initial count for state 3 in finger scan state machine
+0x5f * W P_STATE_5_COUNT
+         Initial count for state 5 in finger scan state machine
 0x60 * W
 0x61 * *
-0x62 * W P_INFO_LINE_RATE    How often do info lines replace image lines in a scan?
+0x62 * W P_INFO_LINE_RATE
+         How often do info lines replace image lines in a scan?
 0x63 * W
 0x64 * W
 0x65 * *
@@ -156,7 +161,13 @@ Parm R W Name                Description
 0x74 * *
 0x75 * *
 0x76 * W
-0x77 * W P_INFO_CONTRAST      Set contrast level for info lines
+0x77 * W P_INFO_CONTRAST
+         Set contrast level for info lines.  This parameer determines the overall contrast of
+         the info lines. High values lead to dark fingerprints on very bright backgrounds. Lower
+         values lead to progressively darker and lower contrast lines. If you put 0 into
+         P_INFO_CONTRAST, then the fingerprint A portion of each info line disappears, leaving
+         the underlying image line visible.
+
 0x78 * W
 0x79 - -
 0x7a - -
@@ -164,7 +175,8 @@ Parm R W Name                Description
 0x7c - -
 0x7d - -
 0x7e - -
-0x7f - -                      Write 0x00 will kill device, require powercycle to wake
+0x7f - -
+         Write 0x00 will kill device, require powercycle to wake
 
 
 
@@ -192,6 +204,11 @@ Address    R W N Name
 0x00001ffc R   -- VFS_
 
 0x00ff500e R W -- VFS_EXPOSURE
+   This register produces an effect very much like adjusting the exposure on a
+   digital camera. Low values (0x0800 or so) produce very over-exposed images, with little
+   or no dark fingerprint visible against a very bright background. Medium values (0x2100 or so)
+   produce nicely exposed images. High values (0x3800 or so) produce very dark images, or
+   even fail to detect a fingerswipe, looping with a 0x01 response to the GetFingerState().
 
 0x00ff502c R   -- VFS_DARKEN_CD_1
    values 0-6 produce no image
@@ -281,22 +298,7 @@ into the VFS_CONTRAST register, taking a small scan, then going to the next lowe
 At some point it decides to stop, and the value of VFS_CONTRAST is what gets put into the
 P_INFO_CONTRAST register. This is generally between 0x07 and 0x0a, so far at least.
 
-The value in the P_INFO_CONTRAST parameter determines the overall contrast of the info
-lines. High values lead to dark fingerprints on very bright backgrounds. Lower values lead
-to progressively darker and lower contrast lines. If you put 0 into P_INFO_CONTRAST, then
-the fingerprint A portion of each info line disappears, leaving the underlying image line
-visible.
 
-
-
-Exposure Level
---------------
-
-The VFS_EXPOSURE register produces an effect very much like adjusting the exposure on a
-digital camera. Low values (0x0800 or so) produce very over-exposed images, with little
-or no dark fingerprint visible against a very bright background. Medium values (0x2100 or so)
-produce nicely exposed images. High values (0x3800 or so) produce very dark images, or
-even fail to detect a fingerswipe, looping with a 0x01 response to the GetFingerState().
 
 
 
