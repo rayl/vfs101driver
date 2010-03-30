@@ -50,7 +50,7 @@ To import the results of your Windows USB capture, do this:
 
 Once you've imported your Windows log, or if you just want to use a
 pre-existing cycle, do this:
- $ mkdir img img/A img/B img/C img/D img/X
+ $ mkdir -p img/X
  $ ./bin/proto woot personal > output
 
 This should produce:

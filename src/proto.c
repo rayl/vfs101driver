@@ -261,10 +261,10 @@ static void dump_pnm (struct vfs_dev *dev)
 	if (dev->anonymous) return;
 	if (dev->ilen < 101*PKTSIZE) return;
 	dump_pnm_1(dev, 'X',   0, 292);
-	dump_pnm_1(dev, 'A',   0, 206);
-	dump_pnm_1(dev, 'B', 206,  40);
-	dump_pnm_1(dev, 'C', 246,  26);
-	dump_pnm_1(dev, 'D', 272,  20);
+	//dump_pnm_1(dev, 'A',   0, 206);
+	//dump_pnm_1(dev, 'B', 206,  40);
+	//dump_pnm_1(dev, 'C', 246,  26);
+	//dump_pnm_1(dev, 'D', 272,  20);
 	dev->inum++;
 }
 
