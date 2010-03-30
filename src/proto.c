@@ -368,9 +368,9 @@ static struct pnm_formatter foo =
 	.x0     = 5,
 	.x1     = 5,
 	.header = _pnm_frameruler,
-	.left   = _pnm_ruler,
+	.left   = _pnm_gradient,
 	.body   = _pnm_frame,
-	.right  = _pnm_gradient,
+	.right  = _pnm_ruler,
 	.footer = _pnm_frameruler,
 };
 
