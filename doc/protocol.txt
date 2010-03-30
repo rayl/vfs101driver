@@ -49,7 +49,7 @@ Parm R W Name                Description
 0x09 * -
 0x0a * W
 0x0b * W
-0x0c * W
+0x0c * W P_MESS_WITH_BC      Mess with the width of the secondary fingerprint image
 0x0d * W
 0x0e * W
 0x0f - -

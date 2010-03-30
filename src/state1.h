@@ -26,7 +26,7 @@ int S1_unchecked (struct vfs_dev *dev)
 	_(  SetParam (dev, 0x0007, 0x0000));
 	_(  SetParam (dev, 0x000a, 0x0002));
 	_(  SetParam (dev, 0x000b, 0x010b));
-	_(  SetParam (dev, 0x000c, 0x010c));
+	_(  SetParam (dev, 0x000c, parm_c));
 	_(  SetParam (dev, 0x000d, 0x010d));
 	_(  SetParam (dev, 0x000e, 0x0001));
 	_(  SetParam (dev, 0x0010, 0x0000));
@@ -203,7 +203,7 @@ int S1_checked (struct vfs_dev *dev)
 	__(   49,    SetParam (dev, 0x0007, 0x0000));
 	__(   51,    SetParam (dev, 0x000a, 0x0002));
 	__(   53,    SetParam (dev, 0x000b, 0x010b));
-	__(   55,    SetParam (dev, 0x000c, 0x010c));
+	__(   55,    SetParam (dev, 0x000c, parm_c));
 	__(   57,    SetParam (dev, 0x000d, 0x010d));
 	__(   59,    SetParam (dev, 0x000e, 0x0001));
 	__(   61,    SetParam (dev, 0x0010, 0x0000));

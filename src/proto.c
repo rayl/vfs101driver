@@ -762,6 +762,9 @@ static int wait_for_touch (struct vfs_dev *dev)
 	return 0;
 }
 
+/* mess with the width of secondary image */
+static int parm_c = 0x010c;
+
 /* The frequency of info lines */
 static int info_line_rate = 0x32;
 
