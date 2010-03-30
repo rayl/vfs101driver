@@ -1,10 +1,10 @@
-all: proto
+all: src/proto
 
-proto: proto.o
-	gcc -ggdb `pkg-config --cflags libusb-1.0` `pkg-config --libs libusb-1.0` -obin/proto bin/proto.o
+src/proto: src/proto.o
+	gcc -ggdb `pkg-config --cflags libusb-1.0` `pkg-config --libs libusb-1.0` -o src/proto src/proto.o
 
-proto.o: src/proto.c
-	gcc -ggdb `pkg-config --cflags libusb-1.0` `pkg-config --libs libusb-1.0` -obin/proto.o -c src/proto.c
+src/proto.o: src/proto.c src/*.h
+	gcc -ggdb `pkg-config --cflags libusb-1.0` `pkg-config --libs libusb-1.0` -o src/proto.o -c src/proto.c
 
 clean: 
-	rm bin/proto bin/proto.o
+	rm src/proto src/proto.o

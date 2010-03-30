@@ -5,9 +5,9 @@ Quickstart
 -----------------------------------------------------------------------
 To produce an image of your fingerprint under Linux:
 
- $ mkdir -p bin img/X
+ $ mkdir -p img/X img/Y
  $ make
- $ ./bin/proto woot personal
+ $ ./src/proto woot personal
     ... wait for "00 16 00 00 00 FF FF 01" scrolling by...
     ... swipe your finger ...
 
@@ -58,13 +58,12 @@ To import the results of your Windows USB capture, do this:
  $ vi src/proto.c
     ... hook up mine.h, see commit a2fa7c94ee26d233a259fd84538338c7f6b114b1
     ... you will need to rename PREFIX_ to something else
- $ mkdir bin
  $ make
 
 Once you've imported your Windows log, or if you just want to use a
 pre-existing cycle, do this:
  $ mkdir -p img/X
- $ ./bin/proto woot personal > output
+ $ ./src/proto woot personal > output
 
 This should produce:
   - a logfile of Linux vs Windows USB transactions in output
@@ -83,9 +82,9 @@ reconstruct images of your fingerprints.
 The Snoop2Api.pl script will extract this information and produce PNM images
 under img2/
 
-By default, ./bin/proto will not produce any personal information.  IF you
+By default, ./src/proto will not produce any personal information.  IF you
 explicitly select a cycle routine (eg: 'woot') AND provide a second argument
-"personal", then ./bin/proto may (depending on the cycle you select...)
+"personal", then ./src/proto may (depending on the cycle you select...)
 
   - monitor the fingerprint scanner
   - print on stdout enough information to reconstruct your fingerprints
