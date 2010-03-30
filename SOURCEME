@@ -1,29 +1,6 @@
 
-q () 
-{ 
-    ./bin/proto $1
-}
-
 w ()
 {
     sudo chmod 666 /dev/validity*
 }
-
-e ()
-{
-    rm img/*/*
-    q reset
-    sleep 1
-    w
-    q test
-    r
-}
-
-r () {
-    echo -n "Good: "
-    ls -1 img/X/*.pnm | wc -l
-    echo -n " Bad: "
-    ls -1 img/X/*.pnmx | wc -l
-}
-
 
