@@ -238,7 +238,6 @@ struct pnm_context {
 	int len;
 };
 
-
 static void _pnm_black (struct pnm_context *c, int y, int yy, int n)
 {
 	while (n--)
@@ -255,6 +254,8 @@ static void _pnm_gradient (struct pnm_context *c, int y, int yy, int n)
 static void _pnm_ruler (struct pnm_context *c, int y, int yy, int n)
 {
 	int z = (y%10) ? 0 : 255;
+	fprintf(c->file, " 128");
+	n--;
 	while (n--)
 		fprintf(c->file, " %3d", z ? (n ? z : 128) : 128);
 }
@@ -333,10 +334,10 @@ static void foo_1 (struct pnm_context *c, int y, int yy)
 		case 206:
 		case 246:
 		case 272:
-			fprintf(c->file, " 255");
+			fprintf(c->file, ((y==yy-1) || (y==0)) ? " 128" : " 255");
 			break;
 		default:
-			fprintf(c->file, "   0");
+			fprintf(c->file, " 128");
 			break;
 		}
 	}
