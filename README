@@ -1,6 +1,19 @@
 
 Some tools to examine Validity VFS101 sensors.
 
+Quickstart
+-----------------------------------------------------------------------
+To produce an image of your fingerprint under Linux:
+
+ $ mkdir -p bin img/X
+ $ make
+ $ ./bin/proto woot personal
+    ... wait for "00 16 00 00 00 FF FF 01" scrolling by...
+    ... swipe your finger ...
+
+This _should_ produce a fingerprint in img/X/out-000-00.pnm
+
+
 
 Monitoring the device under Windows
 -----------------------------------------------------------------------
