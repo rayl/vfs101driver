@@ -5,7 +5,7 @@ int S2_unchecked (struct vfs_dev *dev)
 	_(  AbortPrint (dev));
 	_(  LoadImage (dev));
 	_(  GetParam (dev, 0x0011));
-	_(  SetParam (dev, 0x0062, 0x0032));
+	_(  SetParam (dev, 0x0062, info_line_rate));
 	_(  GetPrint (dev, 0x0014, type_0));
 	_(  LoadImage (dev));
 	_(  GetConfig (dev));
@@ -18,7 +18,7 @@ int S2_unchecked (struct vfs_dev *dev)
 	_(  SetParam (dev, 0x0055, 0x0008));
 	_(  GetParam (dev, 0x0014));
 	_(  GetParam (dev, 0x0011));
-	_(  SetParam (dev, 0x0062, 0x0032));
+	_(  SetParam (dev, 0x0062, info_line_rate));
 	_(  GetPrint (dev, 0x0014, type_0));
 	_(  LoadImage (dev));
 	_(  GetParam (dev, 0x0014));
@@ -26,7 +26,7 @@ int S2_unchecked (struct vfs_dev *dev)
 	_(  AbortPrint (dev));
 	_(  LoadImage (dev));
 	_(  GetParam (dev, 0x0011));
-	_(  SetParam (dev, 0x0062, 0x0032));
+	_(  SetParam (dev, 0x0062, info_line_rate));
 	_(  GetPrint (dev, 0x1388, type_1));
 	return 0;
 }
@@ -37,7 +37,7 @@ int S2_checked (struct vfs_dev *dev)
 	__(  404,    AbortPrint (dev));
 	 _(          LoadImage (dev));
 	__(  407,    GetParam (dev, 0x0011));
-	__(  409,    SetParam (dev, 0x0062, 0x0032));
+	__(  409,    SetParam (dev, 0x0062, info_line_rate));
 	__(  411,    GetPrint (dev, 0x0014, type_0));
 	 _(          LoadImage (dev));
 	__(  414,    GetConfig (dev));
@@ -50,7 +50,7 @@ int S2_checked (struct vfs_dev *dev)
 	__(  427,    SetParam (dev, 0x0055, 0x0008));
 	__(  429,    GetParam (dev, 0x0014));
 	__(  431,    GetParam (dev, 0x0011));
-	__(  433,    SetParam (dev, 0x0062, 0x0032));
+	__(  433,    SetParam (dev, 0x0062, info_line_rate));
 	__(  435,    GetPrint (dev, 0x0014, type_0));
 	 _(          LoadImage (dev));
 	__(  438,    GetParam (dev, 0x0014));
@@ -58,7 +58,7 @@ int S2_checked (struct vfs_dev *dev)
 	__(  442,    AbortPrint (dev));
 	 _(          LoadImage (dev));
 	__(  445,    GetParam (dev, 0x0011));
-	__(  447,    SetParam (dev, 0x0062, 0x0032));
+	__(  447,    SetParam (dev, 0x0062, info_line_rate));
 	__(  449,    GetPrint (dev, 0x1388, type_1));
 	return 0;
 }

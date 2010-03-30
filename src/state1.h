@@ -155,15 +155,15 @@ int S1_unchecked (struct vfs_dev *dev)
 	_(  Poke (dev, 0x00ff5038, 0x00000014, 0x01));
 	_(  Poke (dev, 0x00ff500e, 0x000021bc, 0x02));
 	_(  Poke (dev, 0x00ff5032, 0x00000031, 0x01));
-	_(  SetParam (dev, 0x0062, 0x0032));
+	_(  SetParam (dev, 0x0062, info_line_rate));
 	_(  AbortPrint (dev));
 	_(  LoadImage (dev));
-	_(  SetParam (dev, 0x0062, 0x0032));
+	_(  SetParam (dev, 0x0062, info_line_rate));
 	_(  GetVersion (dev));
 	_(  SetParam (dev, 0x0055, 0x0008));
 	_(  GetParam (dev, 0x0014));
 	_(  GetParam (dev, 0x0011));
-	_(  SetParam (dev, 0x0062, 0x0032));
+	_(  SetParam (dev, 0x0062, info_line_rate));
 	_(  GetPrint (dev, 0x0014, type_0));
 	_(  LoadImage (dev));
 	_(  GetParam (dev, 0x0014));
@@ -171,7 +171,7 @@ int S1_unchecked (struct vfs_dev *dev)
 	_(  AbortPrint (dev));
 	_(  LoadImage (dev));
 	_(  GetParam (dev, 0x0011));
-	_(  SetParam (dev, 0x0062, 0x0032));
+	_(  SetParam (dev, 0x0062, info_line_rate));
 	_(  GetPrint (dev, 0x1388, type_1));
 	return 0;
 }
@@ -332,15 +332,15 @@ int S1_checked (struct vfs_dev *dev)
 	__(  330,    Poke (dev, 0x00ff5038, 0x00000014, 0x01));
 	__(  332,    Poke (dev, 0x00ff500e, 0x000021bc, 0x02));
 	__(  334,    Poke (dev, 0x00ff5032, 0x00000031, 0x01));
-	__(  336,    SetParam (dev, 0x0062, 0x0032));
+	__(  336,    SetParam (dev, 0x0062, info_line_rate));
 	__(  338,    AbortPrint (dev));
 	 _(          LoadImage (dev));
-	__(  341,    SetParam (dev, 0x0062, 0x0032));
+	__(  341,    SetParam (dev, 0x0062, info_line_rate));
 	__(  343,    GetVersion (dev));
 	__(  345,    SetParam (dev, 0x0055, 0x0008));
 	__(  347,    GetParam (dev, 0x0014));
 	__(  349,    GetParam (dev, 0x0011));
-	__(  351,    SetParam (dev, 0x0062, 0x0032));
+	__(  351,    SetParam (dev, 0x0062, info_line_rate));
 	__(  353,    GetPrint (dev, 0x0014, type_0));
 	 _(          LoadImage (dev));
 	__(  356,    GetParam (dev, 0x0014));
@@ -348,7 +348,7 @@ int S1_checked (struct vfs_dev *dev)
 	__(  360,    AbortPrint (dev));
 	 _(          LoadImage (dev));
 	__(  363,    GetParam (dev, 0x0011));
-	__(  365,    SetParam (dev, 0x0062, 0x0032));
+	__(  365,    SetParam (dev, 0x0062, info_line_rate));
 	__(  367,    GetPrint (dev, 0x1388, type_1));
 	return 0;
 }

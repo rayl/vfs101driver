@@ -135,7 +135,7 @@ Parm R W Name                Description
 0x5f * W P_STATE_5_COUNT     Initial count for state 5 in finger scan state machine
 0x60 * W
 0x61 * *
-0x62 * W
+0x62 * W P_INFO_LINE_RATE    How often do info lines replace image lines in a scan?
 0x63 * W
 0x64 * W
 0x65 * *
@@ -270,8 +270,9 @@ generally get back several hundred to a thousand lines. Each line is 292 bytes l
   Image lines are the primary type.  All observed patterns appear to operate as if the
   scan was composed entirely of Image lines. However, these Image lines are periodically
   obscured by Info lines.  These Info lines do not disrupt the underlying pattern, but
-  instead overlay patterns of their own.  The first Info line appears after 28 scan lines,
-  then every 50 scan lines after that.
+  instead overlay patterns of their own.  The first Info line appears after a few scan lines,
+  then every P_INFO_LINE_RATE scan lines after that, with very occasional off-by-one
+  irregularities observed, particularly around the discontinuity at scan line 13.
 
 
 
@@ -360,7 +361,7 @@ For Image lines, the rest of the line decodes as follows:
   The rest of the line has some structure, but it is not immediately apparent what it means.
   This section is noticably darker on the line immediately preceding an Info line. It is also
   somewhat different in sections where the scan "smears out" into vertical lines, although
-  the Info lines keep coming every 50 lines.
+  the Info lines keep coming every P_INFO_LINE_RATE lines.
 
 
 
@@ -386,6 +387,9 @@ entire scan, which is generally somewhat different than the rest of the Info lin
 -------------------------
   Next 200 bytes are fingerprint data.  This appears to contain an "alpha mask" describing
   which portions of the swipe sensor are actually in contact with the finger at this instant.
+  Actually if you set the P_INFO_LINE_RATE to 1, you can see that the "alpha mask" is actually
+  a fingerprint image in it's own right, but appears to have lower contrast and is somehow
+  inverted-looking.
 
 
 [Byte 206]   Zero

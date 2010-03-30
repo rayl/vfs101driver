@@ -762,6 +762,9 @@ static int wait_for_touch (struct vfs_dev *dev)
 	return 0;
 }
 
+/* The frequency of info lines */
+static int info_line_rate = 0x32;
+
 /* The best contrast value tried so far */
 static int best_contrast = 0x00;
 
