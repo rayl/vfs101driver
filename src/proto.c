@@ -806,6 +806,7 @@ static int woot (struct vfs_dev *dev)
 		dev->results = &S2_results;
 		S2_checked(dev);
 	} while (0);
+	return 0;
 }
 
 #undef _
