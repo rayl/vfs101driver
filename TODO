@@ -12,5 +12,4 @@ Protocol
 Cycle routines
  - do proper contrast detection loop
    - evaluate LoadImage results
-   - use the best value found to program SetParam() later
  - poll GetParam(0x14) until it returns 0x08?

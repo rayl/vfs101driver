@@ -156,7 +156,7 @@ Parm R W Name                Description
 0x74 * *
 0x75 * *
 0x76 * W
-0x77 * W
+0x77 * W P_INFO_CONTRAST      Set contrast level for info lines
 0x78 * W
 0x79 - -
 0x7a - -
@@ -231,6 +231,21 @@ the counter begins counting down, exiting state 5 and ending the swipe after P_S
 more lines.  If the Scan Level value rises above P_THRESHOLD for 24 lines, the Scan Count is
 reset to P_STATE_5_COUNT.
 
+
+
+Contrast Detection Cycle
+------------------------
+
+Each UsbSnoop.log seems to show the Windows driver going into a scanning loop, poking values
+into the VFS_CONTRAST register, taking a small scan, then going to the next lowest value.
+At some point it decides to stop, and the value of VFS_CONTRAST is what gets put into the
+P_INFO_CONTRAST register. This is generally between 0x07 and 0x0a, so far at least.
+
+The value in the P_INFO_CONTRAST parameter determines the overall contrast of the info
+lines. High values lead to dark fingerprints on very bright backgrounds. Lower values lead
+to progressively darker and lower contrast lines. If you put 0 into P_INFO_CONTRAST, then
+the fingerprint A portion of each info line disappears, leaving the underlying image line
+visible.
 
 
 ==========================================================================================
