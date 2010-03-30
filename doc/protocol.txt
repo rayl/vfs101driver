@@ -171,30 +171,70 @@ Parm R W Name                Description
 Register List
 -------------
 
-Peek:
-	0x00001fe8
-	0x00001fec
-	0x00001ff0
-	0x00001ff4
-	0x00001ff8
-	0x00001ffc
-	0x00ff500e - VFS_EXPOSURE
-	0x00ff502c
-	0x00ff502e
-	0x00ff5032 - VFS_IMAGE_ABCD
-	0x00ff5038 - VFS_CONTRAST
-	0x00ff503e
-	0x00ff9800
-	0x00ff9802
-	0x00ff9806
+ R - Seen Peek
+ W - Seen Poke
+ N - number of bits
 
-Poke:
-	0x000005f6
-	0x00ff500e
-	0x00ff5032
-	0x00ff5038
-	0x00ff503e
-	0x00ff9806
+Address    R W N Name
+
+0x000005f6   W -- VFS_
+
+0x00001fe8 R   -- VFS_
+
+0x00001fec R   -- VFS_
+
+0x00001ff0 R   -- VFS_
+
+0x00001ff4 R   -- VFS_
+
+0x00001ff8 R   -- VFS_
+
+0x00001ffc R   -- VFS_
+
+0x00ff500e R W -- VFS_EXPOSURE
+
+0x00ff502c R   -- VFS_DARKEN_CD_1
+   values 0-6 produce no image
+
+0x00ff502e R   -- VFS_DARKEN_CD_2
+   values 0-6 produce no image
+
+0x00ff5032 R W  8 VFS_IMAGE_ABCD
+   This register clearly demonstrates that type 0 image slices have four subimages,
+   named A, B, C and D.
+
+    Header 1: 000-003 (4 bytes)
+    Image A:  004-205 (202 bytes)
+      - if bit 1 is set,      image A is white, finish (128 cases)
+      - if bit 3 is set,      image A is black, finish ( 64 cases)
+      - if bit 4 XOR bit 7,   image A is black, finish ( 32 cases)
+      - else                  image A is gray          ( 32 cases)
+    Header 2: 206-207 (2 bytes)
+      - seems either white or black
+    Image B:  208-245 (38 bytes)
+      - same rules as Image A
+    Image C:  246-271 (26 bytes)
+      - more complex pattern
+    Header 3: 272-275 (4 bytes)
+      - seems fairly constant
+    Image D:  276-291 (16 bytes)
+      - same rules as Image C
+
+0x00ff5038 R W  7 VFS_CONTRAST
+   This register controls the contrast. When the lower 7 bits are zero, the image
+   has low contrast. Constrast increases as value approached 0x7f, then cycles over
+   from 128 to 255.
+
+0x00ff503e R W -- VFS_GRATING
+   This register seems to produce a "grating" effect with bit 1 set.  also, the image
+   seems to have a slightly elevated contrast if bits 1, 2, and 3 are zero.
+
+0x00ff9800 R   -- VFS_
+
+0x00ff9802 R   -- VFS_KILL4
+   This register kills the device when writing 0x04. Not sure if higher numbers work...
+
+0x00ff9806 R W -- VFS_
 
 
 

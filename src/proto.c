@@ -495,28 +495,28 @@ static int swap (struct vfs_dev *dev, unsigned char *data, size_t len)
 /******************************************************************************************************
  * Protocol-level API routines
 
-     00 00 01 00    - Reset
-     00 00 02 00    - GetVersion
-     00 00 03 00    - GetPrint
-     00 00 04 00    - GetParam
-     00 00 05 00    - SetParam
-     00 00 06 00    - GetConfig
-     00 00 07 00      DownloadPatch
-     00 00 08 00      GetRateData
-     00 00 09 00      IspRequest
-     00 00 0A 00      ProgramFlash
-     00 00 0B 00      EraseFlash
-     00 00 0C 00      LedStates
-     00 00 0D 00      LedEvent
-     00 00 0E 00    - AbortPrint
-     00 00 0F 00      Spare2
-     00 00 10 00      Spare3
-     00 00 11 00      Spare4
-     00 00 12 00    - Peek
-     00 00 13 00    - Poke
-     00 00 14 00    - SensorSpiTrans
-     00 00 15 00      SensorGPIO
-     00 00 16 00    - GetFingerState 
+     01 - Reset
+     02 - GetVersion
+     03 - GetPrint
+     04 - GetParam
+     05 - SetParam
+     06 - GetConfig
+     07   DownloadPatch
+     08   GetRateData
+     09   IspRequest
+     0A   ProgramFlash
+     0B   EraseFlash
+     0C   LedStates
+     0D   LedEvent
+     0E - AbortPrint
+     0F   Spare2
+     10   Spare3
+     11   Spare4
+     12 - Peek
+     13 - Poke
+     14 - SensorSpiTrans
+     15   SensorGPIO
+     16 - GetFingerState 
 */
 
 static int _cmd_no = -1;
@@ -710,8 +710,23 @@ static int LoadImage (struct vfs_dev *dev)
 
 
 /******************************************************************************************************
- * Parameter definitions
+ * Parameters and registers
  */
+
+const unsigned int P_MESS_WITH_BC      = 0x0c;
+const unsigned int P_THRESHOLD         = 0x57;
+const unsigned int P_STATE_3_COUNT     = 0x5e;
+const unsigned int P_STATE_5_COUNT     = 0x5f;
+const unsigned int P_INFO_LINE_RATE    = 0x62;
+const unsigned int P_INFO_CONTRAST     = 0x77;
+
+const unsigned int VFS_EXPOSURE        = 0x00FF500E;
+const unsigned int VFS_DARKEN_CD_1     = 0x00FF502C;
+const unsigned int VFS_DARKEN_CD_2     = 0x00FF502E;
+const unsigned int VFS_IMAGE_ABCD      = 0x00FF5032;
+const unsigned int VFS_CONTRAST        = 0x00FF5038;
+const unsigned int VFS_GRATING         = 0x00FF503E;
+const unsigned int VFS_KILL_4          = 0x00FF9802;
 
 // 0x2a 0x3c 0x41
 static int parm_read[] = 
@@ -745,77 +760,6 @@ static int parm_write[] =
 	0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77,
 	0x78,
 };
-
-/******************************************************************************************************
- * Memory map definitions
- */
-
-const unsigned int VFS_IMAGE_ABCD = 0x00FF5032;
-/*-----------------------------------------------------------------------------------------
-   VFS_IMG_ABCD - 8 bits
-
-   This register clearly demonstrates that type 0 image slices have four subimages,
-   named A, B, C and D.
-
-    Header 1: 000-003 (4 bytes)
-
-    Image A:  004-205 (202 bytes)
-      - if bit 1 is set,      image A is white, finish (128 cases)
-      - if bit 3 is set,      image A is black, finish ( 64 cases)
-      - if bit 4 XOR bit 7,   image A is black, finish ( 32 cases)
-      - else                  image A is gray          ( 32 cases)
-
-    Header 2: 206-207 (2 bytes)
-      - seems either white or black
-
-    Image B:  208-245 (38 bytes)
-      - same rules as Image A
-
-    Image C:  246-271 (26 bytes)
-      - more complex pattern
-
-    Header 3: 272-275 (4 bytes)
-      - seems fairly constant
-
-    Image D:  276-291 (16 bytes)
-      - same rules as Image C
-
- */
-
-
-const unsigned int VFS_DARKEN = 0x00FF500E;
-
-const unsigned int VFS_DARKEN_CD_1 = 0x00FF502C; // values 0-6 produce no image
-const unsigned int VFS_DARKEN_CD_2 = 0x00FF502E; // values 0-6 produce no image
-
-const unsigned int VFS_CONTRAST = 0x00FF5038;
-/*-----------------------------------------------------------------------------------------
-   VFS_CONTRAST - 7 bits
-
-   This register controls the contrast. When the lower 7 bits are zero, the image
-   has low contrast. Constrast increases as value approached 0x7f, then cycles over
-   from 128 to 255.
- */
-
-
-const unsigned int VFS_GRATING = 0x00FF503E;
-/*-----------------------------------------------------------------------------------------
-   VFS_GRATING - n bits
-
-   This register seems to produce a "grating" effect with bit 1 set.  also, the image
-   seems to have a slightly elevated contrast if bits 1, 2, and 3 are zero.
- */
-
-const unsigned int VFS_KILL_4 = 0x00FF9802;
-/*-----------------------------------------------------------------------------------------
-   VFS_KILL_4 - n bits
-
-   This register kills the device when writing 0x04. Not sure if higher numbers work...
- */
-
-const unsigned int VFS_NO_EFFECT_1 = 0x00FF9806;
-
-const unsigned int VFS_TEST = 0x00FF9800;
 
 
 /******************************************************************************************************
@@ -878,6 +822,7 @@ static int reset (struct vfs_dev *dev)
 /* Exercise the gain register */
 static int test (struct vfs_dev *dev)
 {
+	const unsigned int VFS_TEST = VFS_EXPOSURE;
 	int i;
 	for (i=0; i<0x100; i++) {
 		_(  Poke (dev, VFS_TEST, i, 0x01));
@@ -896,7 +841,7 @@ static int wait_for_touch (struct vfs_dev *dev)
 }
 
 /* mess with the width of secondary image */
-static int parm_c = 0x010c;
+static int mess_with_bc = 0x010c;
 
 /* The frequency of info lines */
 static int info_line_rate = 0x32;
