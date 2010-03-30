@@ -713,20 +713,20 @@ static int LoadImage (struct vfs_dev *dev)
  * Parameters and registers
  */
 
-const unsigned int P_MESS_WITH_BC      = 0x0c;
-const unsigned int P_THRESHOLD         = 0x57;
-const unsigned int P_STATE_3_COUNT     = 0x5e;
-const unsigned int P_STATE_5_COUNT     = 0x5f;
-const unsigned int P_INFO_LINE_RATE    = 0x62;
-const unsigned int P_INFO_CONTRAST     = 0x77;
+const unsigned int P_MESS_WITH_BC      = 0x000c;
+const unsigned int P_THRESHOLD         = 0x0057;
+const unsigned int P_STATE_3_COUNT     = 0x005e;
+const unsigned int P_STATE_5_COUNT     = 0x005f;
+const unsigned int P_INFO_LINE_RATE    = 0x0062;
+const unsigned int P_INFO_CONTRAST     = 0x0077;
 
-const unsigned int VFS_EXPOSURE        = 0x00FF500E;
-const unsigned int VFS_DARKEN_CD_1     = 0x00FF502C;
-const unsigned int VFS_DARKEN_CD_2     = 0x00FF502E;
-const unsigned int VFS_IMAGE_ABCD      = 0x00FF5032;
-const unsigned int VFS_CONTRAST        = 0x00FF5038;
-const unsigned int VFS_GRATING         = 0x00FF503E;
-const unsigned int VFS_KILL_4          = 0x00FF9802;
+const unsigned int VFS_EXPOSURE        = 0x00ff500e;
+const unsigned int VFS_DARKEN_CD_1     = 0x00ff502c;
+const unsigned int VFS_DARKEN_CD_2     = 0x00ff502e;
+const unsigned int VFS_IMAGE_ABCD      = 0x00ff5032;
+const unsigned int VFS_CONTRAST        = 0x00ff5038;
+const unsigned int VFS_GRATING         = 0x00ff503e;
+const unsigned int VFS_KILL_4          = 0x00ff9802;
 
 // 0x2a 0x3c 0x41
 static int parm_read[] = 
@@ -855,7 +855,7 @@ static int exposure = 0x21bc;
 /* Try a contrast register setting */
 static int try_contrast (struct vfs_dev *dev, int value)
 {
-	_(  Poke (dev, 0x00ff5038, value, 0x01));
+	_(  Poke (dev, VFS_CONTRAST, value, 0x01));
 	_(  GetPrint (dev, 0x000a, type_0));
 	_(  LoadImage (dev));
 	// evaluate the result...
