@@ -6,7 +6,6 @@ Output
  - write code to extract clean fingerprint from the current raw PNM dump
 
 Protocol
- - why does period of Info lines vary between machines?
  - how to evaluate LoadImage() results in contrast detection loop?
 
 Cycle routines
