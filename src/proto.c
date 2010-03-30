@@ -97,7 +97,7 @@ static inline unsigned short xx (int h, int l)
  * Debug printing routines
  */
 
-static int dump_packet (unsigned char *data, int length, unsigned char *prefix)
+static int dump_buffer (unsigned char *data, int length, unsigned char *prefix)
 {
 	int i = 0;
 	fprintf(stdout, "%s ", prefix);
@@ -113,36 +113,36 @@ static int dump_frame_1 (unsigned char *d, int n)
 
 	fprintf(stdout, "\n  ---------------------------- Packet %05d -----------------------------\n", n);
 	fprintf(stdout, "  {\n");
-	d += dump_packet(d,  2, "  Line type       ");
-	d += dump_packet(d,  2, "  Sequence        ");
-	d += dump_packet(d,  2, "  ???             ");
+	d += dump_buffer(d,  2, "  Line type       ");
+	d += dump_buffer(d,  2, "  Sequence        ");
+	d += dump_buffer(d,  2, "  ???             ");
 	fprintf(stdout, "\n");
 
-	d += dump_packet(d, 16, "  Fingerprint A   ");
+	d += dump_buffer(d, 16, "  Fingerprint A   ");
 	for (i=1; i<12; i++)
-		d += dump_packet(d, 16, "                  ");
-	d += dump_packet(d,  8, "                  ");
+		d += dump_buffer(d, 16, "                  ");
+	d += dump_buffer(d,  8, "                  ");
 	fprintf(stdout, "\n");
 
-	d += dump_packet(d,  2, "  ???             ");
+	d += dump_buffer(d,  2, "  ???             ");
 	fprintf(stdout, "\n");
 
-	d += dump_packet(d, 16, "  IMG B           ");
-	d += dump_packet(d, 16, "                  ");
-	d += dump_packet(d,  6, "                  ");
-	d += dump_packet(d, 16, "  IMG C           ");
-	d += dump_packet(d, 10, "                  ");
+	d += dump_buffer(d, 16, "  IMG B           ");
+	d += dump_buffer(d, 16, "                  ");
+	d += dump_buffer(d,  6, "                  ");
+	d += dump_buffer(d, 16, "  IMG C           ");
+	d += dump_buffer(d, 10, "                  ");
 	fprintf(stdout, "\n");
 
-	d += dump_packet(d,  4, "  Constant        ");
-	d += dump_packet(d,  2, "  Sequence'       ");
+	d += dump_buffer(d,  4, "  Constant        ");
+	d += dump_buffer(d,  2, "  Sequence'       ");
 	fprintf(stdout, "\n");
 
-	d += dump_packet(d,  1, "  S_curr_state    ");
-	d += dump_packet(d,  1, "  S_next_state    ");
-	d += dump_packet(d,  2, "  S_count         ");
-	d += dump_packet(d,  2, "  S_level         ");
-	d += dump_packet(d,  8, "  ???             ");
+	d += dump_buffer(d,  1, "  S_curr_state    ");
+	d += dump_buffer(d,  1, "  S_next_state    ");
+	d += dump_buffer(d,  2, "  S_count         ");
+	d += dump_buffer(d,  2, "  S_level         ");
+	d += dump_buffer(d,  8, "  ???             ");
 	fprintf(stdout, "  }\n");
 }
 
@@ -164,7 +164,7 @@ static int dump_frame (unsigned char *data, int length, int n)
 	// dump short frames as raw data
 	if (length < PKTSIZE) {
 		fprintf(stdout, "*** Short frame, dumping as %d raw bytes!!\n", length);
-		dump_packet(data, length, "");
+		dump_buffer(data, length, "");
 		return skip + length;
 	}
 
@@ -396,7 +396,7 @@ static int send(struct vfs_dev *dev, unsigned char *data, size_t len)
 	data[0] = b0(dev->seq);
 	data[1] = b1(dev->seq);
 
-	dump_packet(data, len, "  --->");
+	dump_buffer(data, len, "  --->");
 	r = libusb_bulk_transfer(dev->devh, EP_OUT(1), data, len, &transferred, BULK_TIMEOUT);
 
 	if (r < 0) {
@@ -424,7 +424,7 @@ static int recv(struct vfs_dev *dev)
 		return r;
 	}
 
-	dump_packet(dev->buf, dev->len, "  <---");
+	dump_buffer(dev->buf, dev->len, "  <---");
 	if ((b0(dev->seq) != dev->buf[0]) || (b1(dev->seq) != dev->buf[1])) {
 		fprintf(stderr, "*********** Seqnum mismatch, got %04x, expected %04x\n", xx(dev->buf[1],dev->buf[0]), dev->seq);
 	}
@@ -828,7 +828,7 @@ static void res_check (struct vfs_dev *dev, int n)
 		printf("  !!!! no result to check against! !!!!\n");
 
 	} else if ((r->len != dev->len - 4) || (memcmp(r->data, dev->buf+4, dev->len-4) != 0)) {
-		dump_packet(r->data, r->len, "  XXXX            ");
+		dump_buffer(r->data, r->len, "  XXXX            ");
 	}
 }
 
