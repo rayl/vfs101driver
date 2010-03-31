@@ -985,6 +985,7 @@ static int test (struct vfs_dev *dev)
 			break;
 		switch (n) {
 		case 27: done = 1; break;
+		case '\\': dev_open(dev); break;
 
 		case '1': w = 1; break;
 		case '2': w = 2; break;
