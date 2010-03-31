@@ -1,0 +1,4 @@
+# This file deals with Validity vfs101 devices
+# See udev(7) for syntax.
+#
+ATTRS{idVendor}=="138a", ATTRS{idProduct}=="0001", ACTION=="add", SYMLINK+="validity-%k", MODE="0666"
