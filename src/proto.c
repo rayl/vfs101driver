@@ -44,6 +44,9 @@ struct vfs_dev {
 	/* libusb device handle for fingerprint reader */
 	struct libusb_device_handle *devh;
 
+	/* init state of the usb subsystem */
+	int state;
+
 	/* sequence number for current send/recv transaction pair */
 	unsigned short seq;
 
@@ -63,6 +66,113 @@ struct vfs_dev {
 	int anonymous;
 };
 
+
+static void dev_init (struct vfs_dev *dev)
+{
+	dev->ctx = NULL;
+	dev->devh = NULL;
+	dev->state = 0;
+	dev->seq = 0;
+	dev->len = 0;
+	dev->ilen = 0;
+	dev->inum = 0;
+	dev->results = NULL;
+	dev->anonymous = 1;
+}
+
+static void dev_close (struct vfs_dev *dev)
+{
+	int r;
+
+	if (dev->state == 4) {
+		r = libusb_reset_device(dev->devh); 
+		if (r != 0)
+			fprintf(stderr, "Failed to reset device\n");
+		dev->state = 3;
+	}
+
+	if (dev->state == 3) {
+		r = libusb_release_interface(dev->devh, 0);
+		if (r != 0)
+			fprintf(stderr, "Failed to release interface\n");
+		dev->state = 2;
+	}
+
+	if (dev->state == 2) {
+		libusb_close(dev->devh);
+		dev->devh = NULL;
+		dev->state = 1;
+	}
+
+	if (dev->state == 1) {
+		libusb_exit(dev->ctx);
+		dev->ctx = NULL;
+		dev->state = 0;
+	}
+}
+
+static void dev_open (struct vfs_dev *dev)
+{
+	int r;
+
+	if (dev->state != 0)
+		dev_close(dev);
+
+	if (dev->state != 0) {
+		fprintf(stderr, "Failed to close device before reopening!\n");
+		return;
+	}
+
+	r = libusb_init(&dev->ctx);
+	if (r != 0) {
+		fprintf(stderr, "Failed to initialise libusb\n");
+		return;
+	}
+	dev->state = 1;
+
+	dev->devh = libusb_open_device_with_vid_pid(NULL, 0x138a, 0x0001);
+	if (dev->devh == NULL) {
+		fprintf(stderr, "Can't open validity device!\n");
+		return;
+	}
+	dev->state = 2;
+
+	int i = 0;
+	for (i; i < 1000000; i++){
+		r = libusb_kernel_driver_active(dev->devh, i);
+		if ( r == 1 ){
+			r = libusb_detach_kernel_driver(dev->devh, 4);
+			if (r < 0)
+				fprintf(stderr, "Error detaching kernel driver!\n");
+		}
+	}
+
+	r = libusb_claim_interface(dev->devh, 0);
+	if (r != 0) {
+		fprintf(stderr, "usb_claim_interface error %d\n", r);
+		return;
+	}
+	dev->state = 3;
+
+	r = libusb_reset_device(dev->devh);
+	if (r != 0) {
+		fprintf(stderr, "Error resetting device");
+		return;
+	}
+
+	r = libusb_control_transfer(dev->devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 1, NULL, 0, 100); 
+        if (r != 0) {
+		fprintf(stderr, "device configuring error %d\n", r);
+		return;
+	}
+	dev->state = 4;
+}
+
+static int dev_okay (struct vfs_dev *dev)
+{
+	return dev->state == 4;
+}
+ 
 
 /******************************************************************************************************
  * Functions to deal with byte swapping.
@@ -1003,66 +1113,20 @@ static cycle_func func (const char *id)
 int main (int argc, char **argv)
 {
 	struct vfs_dev _dev, *dev = &_dev;
-	struct sigaction sigact;
-	int r = 1;
+	int r;
 
-	dev->seq = 0;
-	dev->anonymous = 1;
+	dev_init(dev);
 
 	if ((argc > 2) && (strcmp(argv[2], "personal") == 0))
 		dev->anonymous = 0;
 
-	r = libusb_init(&dev->ctx);
-	if (r < 0) {
-		fprintf(stderr, "failed to initialise libusb\n");
-		exit(1);
-	}
+	dev_open(dev);
 
-	dev->devh = libusb_open_device_with_vid_pid(NULL, 0x138a, 0x0001);
-	if (dev->devh == NULL) {
-		fprintf(stderr, "Can't find validity device!\n");
-		goto out;
-	}
+	if (dev_okay(dev))
+		if ((r = func(argv[1])(dev)) != 0)
+			fprintf(stderr, "got error in main cycle %d\n", r);
 
-	int i = 0;
-	for (i; i < 1000000; i++){
-		r = libusb_kernel_driver_active(dev->devh, i);
-		if ( r == 1 ){
-			r = libusb_detach_kernel_driver(dev->devh, 4);
-			if (r < 0)
-				fprintf(stderr, "Error detaching kernel driver!\n");
-		}
-	}
+	dev_close(dev);
 
-	r = libusb_claim_interface(dev->devh, 0);
-	if (r < 0) {
-		fprintf(stderr, "usb_claim_interface error %d\n", r);
-		goto out;
-	}
-
-	r = libusb_reset_device(dev->devh);
-	if (r != 0) {
-		fprintf(stderr, "Error resetting device");
-		goto out_release;
-	}
-
-	r = libusb_control_transfer(dev->devh, LIBUSB_REQUEST_TYPE_STANDARD, LIBUSB_REQUEST_SET_FEATURE, 1, 1, NULL, 0, BULK_TIMEOUT); 
-        if (r < 0) {
-		fprintf(stderr, "device configuring error %d\n", r);
-		goto out_release;
-	}
-     
-	r = func(argv[1])(dev);
-	if (r != 0) {
-		fprintf(stderr, "got error in main cycle %d\n", r);
-		goto out_release;
-	}
-
-out_release:
-	libusb_release_interface(dev->devh, 0);
-	libusb_reset_device(dev->devh); 
-	libusb_close(dev->devh);
-out:
-	libusb_exit(dev->ctx);
 	return r;
 }
