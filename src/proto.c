@@ -865,24 +865,46 @@ static int reset (struct vfs_dev *dev)
 static int test (struct vfs_dev *dev)
 {
 	int done = 0;
-	int x = 0x00001fe0;
+	int x = 0x00ff8000;
+	int w = 1;
 	raw();
 	while (!done) {
 		int n = getch();
 		if (n < 0)
 			break;
 		switch (n) {
-		case 'q':
+		case 'p':
 			done = 1;
 			break;
+		case 'z':
+			x -= w;
+			break;
+		case 'x':
+			x += w;
+			break;
 		case 'a':
-			x -= 4;
+			x -= 0x10;
 			break;
 		case 's':
-			x += 4;
+			x += 0x10;
+			break;
+		case 'q':
+			x -= 0x100;
+			break;
+		case 'w':
+			x += 0x100;
+			break;
+		case '1':
+			w = 1;
+			break;
+		case '2':
+			w = 2;
+			break;
+		case '4':
+			w = 4;
 			break;
 		}
-		_(  Peek (dev, x, 0x10));
+		_(  Peek (dev, x, w));
 		//usleep(50000);
 	}
 	noraw();
