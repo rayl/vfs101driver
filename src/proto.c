@@ -853,6 +853,7 @@ static int getch (void)
 static int r;
 #define _(x) if ((r = x) != 0) return r
 #define __(n, x) _cmd_no=n; if ((r = x) != 0) return r; res_check(dev,n)
+#define ___(x) if ((r = x) != 0) printf("Error %d\n", r)
 
 /* Reset the scanner device */
 static int reset (struct vfs_dev *dev)
@@ -904,7 +905,7 @@ static int test (struct vfs_dev *dev)
 			w = 4;
 			break;
 		}
-		_(  Peek (dev, x, w));
+		___(  Peek (dev, x, w));
 		//usleep(50000);
 	}
 	noraw();
