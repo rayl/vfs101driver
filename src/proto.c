@@ -874,36 +874,36 @@ static int test (struct vfs_dev *dev)
 		if (n < 0)
 			break;
 		switch (n) {
-		case 'p':
-			done = 1;
-			break;
-		case 'z':
-			x -= w;
-			break;
-		case 'x':
-			x += w;
-			break;
-		case 'a':
-			x -= 0x10;
-			break;
-		case 's':
-			x += 0x10;
-			break;
-		case 'q':
-			x -= 0x100;
-			break;
-		case 'w':
-			x += 0x100;
-			break;
-		case '1':
-			w = 1;
-			break;
-		case '2':
-			w = 2;
-			break;
-		case '4':
-			w = 4;
-			break;
+		case 27: done = 1; break;
+
+		case '1': w = 1; break;
+		case '2': w = 2; break;
+		case '4': w = 4; break;
+
+		case 'q': x += w; break;
+		case 'a': x -= w; break;
+
+		case 'w': x += 0x10; break;
+		case 's': x -= 0x10; break;
+
+		case 'e': x += 0x100; break;
+		case 'd': x -= 0x100; break;
+
+		case 'r': x += 0x1000; break;
+		case 'f': x -= 0x1000; break;
+
+		case 't': x += 0x10000; break;
+		case 'g': x -= 0x10000; break;
+
+		case 'y': x += 0x100000; break;
+		case 'h': x -= 0x100000; break;
+
+		case 'u': x += 0x1000000; break;
+		case 'j': x -= 0x1000000; break;
+
+		case 'i': x += 0x10000000; break;
+		case 'k': x -= 0x10000000; break;
+
 		}
 		___(  Peek (dev, x, w));
 		//usleep(50000);
