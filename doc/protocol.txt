@@ -1,6 +1,7 @@
 
-Command List
-------------
+==========================================================================================
+===  Protocol Commands                                                                 ===
+==========================================================================================
 
      01 - Reset
      02 - GetVersion
@@ -27,8 +28,9 @@ Command List
 
 
 
-Param List
-----------
+==========================================================================================
+===  Parameter List                                                                    ===
+==========================================================================================
 
  R - Seen GetParam, tried and worked
  W - Seen SetParam, tried and worked
@@ -180,18 +182,86 @@ Parm R W Name
 
 
 
-Register List
--------------
+==========================================================================================
+===  Memory Map                                                                        ===
+==========================================================================================
 
- R - Seen Peek
- W - Seen Poke
- N - number of bits
+There appear to be several regions mapped, with partial decoding resulting in several
+aliased images.
 
-Address    R W N Name
+0x00000000-0x00001fff
+  - Region 1
+  - 16K
+  - 7 aliases at
+      - 0x00002000
+      - 0x00004000
+      - 0x00006000
+      - 0x00008000
+      - 0x0000a000
+      - 0x0000c000
+      - 0x0000e000
+
+0x00ff5000-0x00ff57ff
+  - Region 2
+  - 8 K
+  - 1 alias at
+      - 0x00ff5800
+
+
+Descriptions of each region follow, with the following format:
+
+address    r w n name
+ r - seen peek
+ w - seen poke
+ n - number of bits
+
+
+------------------------------------------------------------------------------------------
+   Region 1
+------------------------------------------------------------------------------------------
+
+0x00000020 r   -- VFS_INPUT_BUFFER
+  ......
+0x0000021c r
+   this block appears to be the input buffer for the usb device code on the scanner. the
+   first register returns the sequence number of the current swap(), and the second returns
+   the next 4 bytes of the swap().  not sure how large the buffer is, probably 512 bytes?
+
+0x00000220 R   -- VFS_OUTPUT_BUFFER
+  ......
+0x0000031c R
+   This block appears to be the output buffer for the USB device code on the scanner. The
+   first register returns the sequence number of the current swap(), and the second returns
+   the next 4 bytes of the swap().  Not sure how large the buffer is, probably 512 bytes?
 
 0x000005f6   W -- VFS_
 
+0x0000069E   W -- VFS_16BIT_CLOCK
+   A fast 16 bit counter
 
+0x00000BA8 R   -- VFS_6BYTE
+  .......
+0x00000C70 R   -- VFS_6BYTE
+   A series of 6 byte records?  10 00 E0 01 xx xx
+
+0x00000C70 R   -- VFS_6BYTE
+  .......
+0x0000127C R   -- VFS_6BYTE
+   A series of 6 byte records?  10 00 E0 02 xx xx
+
+0x0000127C R   -- VFS_FLUCTUATE
+   .....
+0x00001344 R   -- VFS_FLUCTUATE
+0x00001390 R   -- VFS_FLUCTUATE
+0x00001394 R   -- VFS_FLUCTUATE
+   These areas seem to fluctuate fairly quickly
+
+0x000013a0 R   -- VFS_SCANLINE
+0x000014e0 R   -- VFS_SCANLINE
+0x00001620 R   -- VFS_SCANLINE
+0x00001760 R   -- VFS_SCANLINE
+0x000018a0 R   -- VFS_SCANLINE
+0x000019e0 R   -- VFS_SCANLINE
 0x00001b20 R   -- VFS_SCANLINE
 0x00001c60 R   -- VFS_SCANLINE
 0x00001da0 R   -- VFS_SCANLINE
@@ -220,19 +290,10 @@ Address    R W N Name
 
 0x00001ffc R   -- VFS_
 
-0x00002020 R   -- VFS_INPUT_BUFFER
-  ......
-0x0000221c R
-   This block appears to be the input buffer for the USB device code on the scanner. The
-   first register returns the sequence number of the current swap(), and the second returns
-   the next 4 bytes of the swap().  Not sure how large the buffer is, probably 512 bytes?
 
-0x00002220 R   -- VFS_OUTPUT_BUFFER
-  ......
-0x0000231c R
-   This block appears to be the output buffer for the USB device code on the scanner. The
-   first register returns the sequence number of the current swap(), and the second returns
-   the next 4 bytes of the swap().  Not sure how large the buffer is, probably 512 bytes?
+------------------------------------------------------------------------------------------
+   Region 2
+------------------------------------------------------------------------------------------
 
 0x00ff500e R W -- VFS_EXPOSURE
    This register produces an effect very much like adjusting the exposure on a
@@ -276,6 +337,19 @@ Address    R W N Name
 0x00ff503e R W -- VFS_GRATING
    This register seems to produce a "grating" effect with bit 1 set.  also, the image
    seems to have a slightly elevated contrast if bits 1, 2, and 3 are zero.
+
+0x00ff5200 R   -- VFS_FEFEFE
+0x00ff5400 R   -- VFS_FEFEFE
+0x00ff5500 R   -- VFS_FEFEFE
+0x00ff5600 R   -- VFS_FEFEFE
+0x00ff5700 R   -- VFS_FEFEFE
+
+
+
+0x00ff6xxx  - kills the test program
+0x00ff7xxx  - kills the test program
+
+0x00ff8xxx  - kills the test program if width 4, width 1 or 2 is okay
 
 0x00ff9800 R   -- VFS_
 
